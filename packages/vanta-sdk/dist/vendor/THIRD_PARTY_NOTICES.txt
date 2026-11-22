@@ -1,0 +1,4 @@
+Bundled third-party source retains its upstream licenses and copyright notices.
+circomlibjs 0.1.7: https://github.com/iden3/circomlibjs
+Fresh credential proofs import the separately installed snarkjs 0.7.6 dependency.
+See licenses/ and the bundled source notices. Source hashes and execution-only build restrictions are in runtime-provenance.json.

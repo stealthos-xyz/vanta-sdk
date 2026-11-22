@@ -1,0 +1,13 @@
+{
+  "name": "vanta-sdk-workspace",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/vanta-sdk"],
+  "engines": {"node": ">=24.14.1", "npm": ">=11"},
+  "packageManager": "npm@11.11.0",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/test.mjs",
+    "verify:release": "node scripts/verify-release.mjs"
+  }
+}

@@ -1,0 +1,14 @@
+import {createVantaFamilyEnhancedHost,createVantaFamilyDepositHost,createVantaFamilyPartnerSignup,createVantaFreshPrivateWallet} from "../fresh/index.mjs";
+import type {VantaFamilyEnhancedHostOptions} from "../fresh/family-enhanced-host.mjs";
+import type {FamilyDepositHostOptions} from "../fresh/family-deposit-host.mjs";
+import type {VantaFreshPrivateWallet} from "../fresh/wallet-runtime.mjs";
+declare const enhancedOptions:VantaFamilyEnhancedHostOptions;
+declare const depositOptions:FamilyDepositHostOptions;
+declare const wallet:VantaFreshPrivateWallet;
+const enhanced=await createVantaFamilyEnhancedHost(enhancedOptions);
+const deposit=await createVantaFamilyDepositHost(depositOptions);
+const review=await deposit.prepareDeposit({amountAtomic:"1000",partnerHandle:"partner.stealth"});
+await deposit.executeDeposit({preparedId:review.preparedId});
+await deposit.reconcileDeposit({preparedId:review.preparedId});
+await wallet.signFamilyDepositQuoteAuthorization({networkId:"eip155:6281971",generationId:"0x00",asset:"DOGE",handleId:"0x00",request:{}});
+void enhanced;void createVantaFamilyPartnerSignup;void createVantaFreshPrivateWallet;

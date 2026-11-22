@@ -1,0 +1,579 @@
+{
+  "bin": {},
+  "dependencies": {
+    "@noble/ciphers": "^0.4.0",
+    "@noble/curves": "^1.9.7",
+    "@noble/hashes": "^1.3.0",
+    "@scure/base": "^1.1.0",
+    "assert": "^2.1.0",
+    "buffer": "^6.0.3",
+    "ethers": "^6.17.0",
+    "events": "^3.3.0",
+    "snarkjs": "0.7.6"
+  },
+  "description": "StealthOS SDK 0.4.45 for DogeOS Chikyu",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "circomlibjs": "0.1.7",
+    "esbuild": "0.25.12",
+    "typescript": "^5.0.0"
+  },
+  "displayName": "StealthOS SDK",
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": {
+      "default": "./fresh/index.mjs",
+      "import": "./fresh/index.mjs",
+      "types": "./fresh/index.d.mts"
+    },
+    "./browser": {
+      "import": "./browser/app-wallet.mjs",
+      "types": "./browser/app-wallet.ts"
+    },
+    "./browser/storage": {
+      "import": "./browser/encrypted-store.mjs",
+      "types": "./browser/encrypted-store.ts"
+    },
+    "./browser/worker": {
+      "import": "./browser/app-wallet-worker.mjs",
+      "types": "./browser/app-wallet-worker.d.mts"
+    },
+    "./dogeos-network": {
+      "default": "./fresh/dogeos-network.mjs",
+      "import": "./fresh/dogeos-network.mjs",
+      "types": "./fresh/dogeos-network.d.mts"
+    },
+    "./enhanced-host": {
+      "default": "./fresh/enhanced-host.mjs",
+      "import": "./fresh/enhanced-host.mjs",
+      "types": "./fresh/enhanced-host.d.mts"
+    },
+    "./enhanced-payouts": {
+      "default": "./fresh/enhanced-payouts.mjs",
+      "import": "./fresh/enhanced-payouts.mjs",
+      "types": "./fresh/enhanced-payouts.d.mts"
+    },
+    "./family-customer-handles": {
+      "default": "./fresh/family-customer-handles.mjs",
+      "import": "./fresh/family-customer-handles.mjs",
+      "types": "./fresh/family-customer-handles.d.mts"
+    },
+    "./family-deposit-errors": "./fresh/family-deposit-errors.mjs",
+    "./family-deposit-host": {
+      "default": "./fresh/family-deposit-host.mjs",
+      "import": "./fresh/family-deposit-host.mjs",
+      "types": "./fresh/family-deposit-host.d.mts"
+    },
+    "./family-enhanced-components": {
+      "default": "./fresh/family-enhanced-components.mjs",
+      "import": "./fresh/family-enhanced-components.mjs",
+      "types": "./fresh/family-enhanced-components.d.mts"
+    },
+    "./family-enhanced-fees": {
+      "default": "./fresh/family-enhanced-fees.mjs",
+      "import": "./fresh/family-enhanced-fees.mjs",
+      "types": "./fresh/family-enhanced-fees.d.mts"
+    },
+    "./family-enhanced-host": {
+      "default": "./fresh/family-enhanced-host.mjs",
+      "import": "./fresh/family-enhanced-host.mjs",
+      "types": "./fresh/family-enhanced-host.d.mts"
+    },
+    "./family-enhanced-relay": {
+      "default": "./fresh/family-enhanced-relay.mjs",
+      "import": "./fresh/family-enhanced-relay.mjs",
+      "types": "./fresh/family-enhanced-relay.d.mts"
+    },
+    "./family-exit-host": {
+      "default": "./fresh/family-exit-host.mjs",
+      "import": "./fresh/family-exit-host.mjs",
+      "types": "./fresh/family-exit-host.d.mts"
+    },
+    "./family-fee-policy": {
+      "default": "./fresh/family-fee-policy.mjs",
+      "import": "./fresh/family-fee-policy.mjs",
+      "types": "./fresh/family-fee-policy.d.mts"
+    },
+    "./family-network": {
+      "default": "./fresh/family-network.mjs",
+      "import": "./fresh/family-network.mjs",
+      "types": "./fresh/family-network.d.mts"
+    },
+    "./family-normal-host": {
+      "default": "./fresh/family-normal-host.mjs",
+      "import": "./fresh/family-normal-host.mjs",
+      "types": "./fresh/family-normal-host.d.mts"
+    },
+    "./family-partner-app-config": {
+      "default": "./fresh/family-partner-app-config.mjs",
+      "import": "./fresh/family-partner-app-config.mjs",
+      "types": "./fresh/family-partner-app-config.d.mts"
+    },
+    "./family-partner-signup": {
+      "default": "./fresh/family-partner-signup.mjs",
+      "import": "./fresh/family-partner-signup.mjs",
+      "types": "./fresh/family-partner-signup.d.mts"
+    },
+    "./family-proof-driver": {
+      "default": "./fresh/family-proof-driver.mjs",
+      "import": "./fresh/family-proof-driver.mjs",
+      "types": "./fresh/family-proof-driver.d.mts"
+    },
+    "./family-proof-resources": {
+      "default": "./fresh/family-proof-resources.mjs",
+      "import": "./fresh/family-proof-resources.mjs",
+      "types": "./fresh/family-proof-resources.d.mts"
+    },
+    "./family-proofs": {
+      "default": "./fresh/family-proof-runtime.mjs",
+      "import": "./fresh/family-proof-runtime.mjs",
+      "types": "./fresh/family-proof-runtime.d.mts"
+    },
+    "./family-routed-host": {
+      "default": "./fresh/family-routed-host.mjs",
+      "import": "./fresh/family-routed-host.mjs",
+      "types": "./fresh/family-routed-host.d.mts"
+    },
+    "./family-rpc": {
+      "default": "./fresh/family-rpc.mjs",
+      "import": "./fresh/family-rpc.mjs",
+      "types": "./fresh/family-rpc.d.mts"
+    },
+    "./family-sdk-update": {
+      "default": "./fresh/family-sdk-update.mjs",
+      "import": "./fresh/family-sdk-update.mjs",
+      "types": "./fresh/family-sdk-update.d.mts"
+    },
+    "./family-wallet-generations": {
+      "default": "./fresh/family-wallet-generations.mjs",
+      "import": "./fresh/family-wallet-generations.mjs",
+      "types": "./fresh/family-wallet-generations.d.mts"
+    },
+    "./host-family-runtime": {
+      "default": "./fresh/host-family-runtime.mjs",
+      "import": "./fresh/host-family-runtime.mjs",
+      "types": "./fresh/host-family-runtime.d.mts"
+    },
+    "./host-storage": {
+      "default": "./fresh/host-storage.mjs",
+      "import": "./fresh/host-storage.mjs",
+      "types": "./fresh/host-storage.d.mts"
+    },
+    "./host-wallet": {
+      "default": "./fresh/host-wallet.mjs",
+      "import": "./fresh/host-wallet.mjs",
+      "types": "./fresh/host-wallet.d.mts"
+    },
+    "./host-worker": {
+      "default": "./fresh/host-worker.mjs",
+      "import": "./fresh/host-worker.mjs",
+      "types": "./fresh/host-worker.d.mts"
+    },
+    "./host-worker-endpoint": {
+      "default": "./fresh/host-worker-endpoint.mjs",
+      "import": "./fresh/host-worker-endpoint.mjs",
+      "types": "./fresh/host-worker-endpoint.d.mts"
+    },
+    "./node/encrypted-sqlite-store": "./node/encrypted-sqlite-store.mjs",
+    "./node/family-partner-auth-handler": {
+      "default": "./node/family-partner-auth-handler.mjs",
+      "import": "./node/family-partner-auth-handler.mjs",
+      "types": "./node/family-partner-auth-handler.d.mts"
+    },
+    "./node/fresh-wallet-vault": "./node/fresh-wallet-vault.mjs",
+    "./node/partner-authorization-service": {
+      "import": "./node/partner-authorization-service.mjs",
+      "types": "./node/partner-authorization-service.d.mts"
+    },
+    "./node/partner-wallet-loader": {
+      "import": "./node/partner-wallet-loader.mjs",
+      "types": "./node/partner-wallet-loader.d.mts"
+    },
+    "./partner-app": {
+      "import": "./browser/partner-app.mjs",
+      "types": "./browser/partner-app.d.mts"
+    },
+    "./partner-application": {
+      "import": "./fresh/partner-application.mjs",
+      "types": "./fresh/partner-application.d.mts"
+    },
+    "./payouts": {
+      "default": "./fresh/payouts.mjs",
+      "import": "./fresh/payouts.mjs",
+      "types": "./fresh/payouts.d.mts"
+    },
+    "./token-allowlist": {
+      "default": "./dist/vanta/token-allowlist.js",
+      "import": "./dist/vanta/token-allowlist.js",
+      "types": "./dist/vanta/token-allowlist.d.ts"
+    },
+    "./token-allowlist.json": "./token-allowlist.json",
+    "./token-policy": {
+      "default": "./dist/vanta/token-policy.js",
+      "import": "./dist/vanta/token-policy.js",
+      "types": "./dist/vanta/token-policy.d.ts"
+    },
+    "./transaction-confirmations": {
+      "default": "./fresh/transaction-confirmations.mjs",
+      "import": "./fresh/transaction-confirmations.mjs",
+      "types": "./fresh/transaction-confirmations.d.mts"
+    },
+    "./wallet": {
+      "default": "./fresh/wallet-runtime.mjs",
+      "import": "./fresh/wallet-runtime.mjs",
+      "types": "./fresh/wallet-runtime.d.mts"
+    },
+    "./wallet-core": {
+      "default": "./fresh/wallet-core-client.mjs",
+      "import": "./fresh/wallet-core-client.mjs",
+      "types": "./fresh/wallet-core-client.d.mts"
+    },
+    "./family-route-review": "./fresh/family-route-review.mjs",
+    "./family-bridge-gateway": {
+      "types": "./fresh/family-bridge-gateway.d.mts",
+      "import": "./fresh/family-bridge-gateway.mjs",
+      "default": "./fresh/family-bridge-gateway.mjs"
+    }
+  },
+  "files": [
+    "PARTNER_INTEGRATION.md",
+    "README.md",
+    "browser/app-wallet-worker.d.mts",
+    "browser/app-wallet-worker.mjs",
+    "browser/app-wallet.mjs",
+    "browser/app-wallet.ts",
+    "browser/consent-message.ts",
+    "browser/consent-signer.ts",
+    "browser/encrypted-store.mjs",
+    "browser/encrypted-store.ts",
+    "browser/enhanced-types.ts",
+    "browser/partner-app.d.mts",
+    "browser/partner-app.mjs",
+    "browser/routing.d.mts",
+    "browser/routing.mjs",
+    "dist/vanta/token-allowlist-data.d.ts",
+    "dist/vanta/token-allowlist-data.js",
+    "dist/vanta/token-allowlist.d.ts",
+    "dist/vanta/token-allowlist.js",
+    "dist/vanta/token-policy.d.ts",
+    "dist/vanta/token-policy.js",
+    "dist/vendor/THIRD_PARTY_NOTICES.txt",
+    "dist/vendor/circom-crypto.browser.js",
+    "dist/vendor/circom-crypto.node.js",
+    "dist/vendor/licenses",
+    "dist/vendor/runtime-provenance.json",
+    "fresh/ENHANCED_HOST.md",
+    "fresh/ENHANCED_PAYOUTS.md",
+    "fresh/FAMILY_NOTE_DELIVERY.md",
+    "fresh/FAMILY_PROOFS.md",
+    "fresh/HOST_INTEGRATION.md",
+    "fresh/PAYOUT_INTENTS.md",
+    "fresh/SDK_0_3_0_ACCEPTANCE.md",
+    "fresh/SDK_UPGRADES.md",
+    "fresh/dogeos-network.d.mts",
+    "fresh/dogeos-network.mjs",
+    "fresh/enhanced-host-core.mjs",
+    "fresh/enhanced-host.d.mts",
+    "fresh/enhanced-host.mjs",
+    "fresh/enhanced-payouts.d.mts",
+    "fresh/enhanced-payouts.mjs",
+    "fresh/enhanced-wallet-journal.d.mts",
+    "fresh/enhanced-wallet-journal.mjs",
+    "fresh/family-bridge-delivery.mjs",
+    "fresh/family-catalog-core.mjs",
+    "fresh/family-customer-handles.d.mts",
+    "fresh/family-customer-handles.mjs",
+    "fresh/family-deposit-approval.mjs",
+    "fresh/family-deposit-errors.mjs",
+    "fresh/family-deposit-host.d.mts",
+    "fresh/family-deposit-host.mjs",
+    "fresh/family-deposit-journal.mjs",
+    "fresh/family-deposit-route.mjs",
+    "fresh/family-deposit-wire.mjs",
+    "fresh/family-direct-deposit.mjs",
+    "fresh/family-enhanced-components-core.mjs",
+    "fresh/family-enhanced-components.d.mts",
+    "fresh/family-enhanced-components.mjs",
+    "fresh/family-enhanced-consent.mjs",
+    "fresh/family-enhanced-fees-core.mjs",
+    "fresh/family-enhanced-fees.d.mts",
+    "fresh/family-enhanced-fees.mjs",
+    "fresh/family-enhanced-funding-runtime.mjs",
+    "fresh/family-enhanced-host.d.mts",
+    "fresh/family-enhanced-host.mjs",
+    "fresh/family-enhanced-plan.mjs",
+    "fresh/family-enhanced-reconcile.mjs",
+    "fresh/family-enhanced-relay-core.mjs",
+    "fresh/family-enhanced-relay.d.mts",
+    "fresh/family-enhanced-relay.mjs",
+    "fresh/family-enhanced-runtime.mjs",
+    "fresh/family-enhanced-wire.mjs",
+    "fresh/family-exit-host.d.mts",
+    "fresh/family-exit-host.mjs",
+    "fresh/family-exit-wire.mjs",
+    "fresh/family-fee-policy-core.mjs",
+    "fresh/family-fee-policy.d.mts",
+    "fresh/family-fee-policy.mjs",
+    "fresh/family-funding-resources.mjs",
+    "fresh/family-handle.mjs",
+    "fresh/family-native-clearance.mjs",
+    "fresh/family-network.d.mts",
+    "fresh/family-network.mjs",
+    "fresh/family-normal-address.mjs",
+    "fresh/family-normal-host.d.mts",
+    "fresh/family-normal-host.mjs",
+    "fresh/family-normal-plan.mjs",
+    "fresh/family-normal-selection.mjs",
+    "fresh/family-normal-wire.mjs",
+    "fresh/family-note-delivery.d.mts",
+    "fresh/family-note-delivery.mjs",
+    "fresh/family-note-recovery.d.mts",
+    "fresh/family-note-recovery.mjs",
+    "fresh/family-operation-review.d.mts",
+    "fresh/family-operation-review.mjs",
+    "fresh/family-partner-app-config-core.mjs",
+    "fresh/family-partner-app-config.d.mts",
+    "fresh/family-partner-app-config.mjs",
+    "fresh/family-partner-asset-signup.mjs",
+    "fresh/family-partner-receipt.mjs",
+    "fresh/family-partner-registry.d.mts",
+    "fresh/family-partner-registry.mjs",
+    "fresh/family-partner-signup.d.mts",
+    "fresh/family-partner-signup.mjs",
+    "fresh/family-proof-driver.d.mts",
+    "fresh/family-proof-driver.mjs",
+    "fresh/family-proof-module.mjs",
+    "fresh/family-proof-platform.mjs",
+    "fresh/family-proof-resources.d.mts",
+    "fresh/family-proof-resources.mjs",
+    "fresh/family-proof-runtime.d.mts",
+    "fresh/family-proof-runtime.mjs",
+    "fresh/family-role-contract.mjs",
+    "fresh/family-routed-host.d.mts",
+    "fresh/family-routed-host.mjs",
+    "fresh/family-routed-resources.d.mts",
+    "fresh/family-routed-resources.mjs",
+    "fresh/family-routed-wire.mjs",
+    "fresh/family-rpc.d.mts",
+    "fresh/family-rpc.mjs",
+    "fresh/family-sdk-update.d.mts",
+    "fresh/family-sdk-update.mjs",
+    "fresh/family-spend-fence.mjs",
+    "fresh/family-wallet-generations.d.mts",
+    "fresh/family-wallet-generations.mjs",
+    "fresh/funded-indexeddb-store.mjs",
+    "fresh/generated-family-catalog.mjs",
+    "fresh/generated-family-proof-resources.mjs",
+    "fresh/generated-family-release.mjs",
+    "fresh/host-family-runtime.d.mts",
+    "fresh/host-family-runtime.mjs",
+    "fresh/host-storage.d.mts",
+    "fresh/host-storage.mjs",
+    "fresh/host-wallet.d.mts",
+    "fresh/host-wallet.mjs",
+    "fresh/host-worker-endpoint.d.mts",
+    "fresh/host-worker-endpoint.mjs",
+    "fresh/host-worker.d.mts",
+    "fresh/host-worker.mjs",
+    "fresh/index.d.mts",
+    "fresh/index.mjs",
+    "fresh/partner-application.d.mts",
+    "fresh/partner-application.mjs",
+    "fresh/partner-policy-kzg.d.mts",
+    "fresh/partner-policy-kzg.mjs",
+    "fresh/payouts.d.mts",
+    "fresh/payouts.mjs",
+    "fresh/sdk-version.mjs",
+    "fresh/transaction-confirmations.d.mts",
+    "fresh/transaction-confirmations.mjs",
+    "fresh/unified-bound4-bootstrap-worker.js",
+    "fresh/wallet-core-client.d.mts",
+    "fresh/wallet-core-client.mjs",
+    "fresh/wallet-runtime.d.mts",
+    "fresh/wallet-runtime.mjs",
+    "node/FAMILY_PARTNER_AUTH_HOST.md",
+    "node/encrypted-sqlite-store.mjs",
+    "node/family-partner-auth-handler.d.mts",
+    "node/family-partner-auth-handler.mjs",
+    "node/fresh-wallet-vault.mjs",
+    "node/partner-authorization-service.d.mts",
+    "node/partner-authorization-service.mjs",
+    "node/partner-wallet-loader.d.mts",
+    "node/partner-wallet-loader.mjs",
+    "token-allowlist.json",
+    "fresh/family-route-review.mjs",
+    "fresh/family-public-payment-receipt.mjs",
+    "fresh/family-batch-review.mjs",
+    "fresh/family-batch-payout-deployment.mjs",
+    "fresh/family-batch-payout-wire.mjs",
+    "fresh/family-balance-projection.mjs",
+    "fresh/family-private-swap-output-wire.mjs",
+    "fresh/family-private-swap-settlement.mjs",
+    "fresh/family-publication-authority.mjs",
+    "fresh/family-bridge-gateway.mjs",
+    "fresh/family-bridge-gateway.d.mts",
+    "fresh/generated-family-bridge-gateway.mjs",
+    "fresh/family-unsigned-reservations.mjs",
+    "fresh/family-binding-factories.mjs",
+    "fresh/family-balance-cache.mjs",
+    "fresh/family-enhanced-authorization-worker.mjs"
+  ],
+  "imports": {
+    "#vanta-circom-crypto": {
+      "browser": "./dist/vendor/circom-crypto.browser.js",
+      "default": "./dist/vendor/circom-crypto.browser.js",
+      "node": "./dist/vendor/circom-crypto.node.js"
+    },
+    "#vanta-family-proof-platform": "./fresh/family-proof-platform.mjs"
+  },
+  "main": "./fresh/index.mjs",
+  "module": "./fresh/index.mjs",
+  "name": "@stealthos/vanta-sdk",
+  "packageManager": "npm@11.11.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check:token-allowlist": "node scripts/sync-token-allowlist.mjs --check",
+    "harness:host": "node examples/native-host-harness/run.mjs",
+    "prepack": "npm run build && node scripts/check-family-package.mjs",
+    "sync:token-allowlist": "node scripts/sync-token-allowlist.mjs",
+    "test": "npm run test:family-current && npm run test:types",
+    "test:family-current": "npm run build && node --test test/fresh-family-*.test.mjs fresh/family-deposit.test.mjs test/enhanced-*.test.mjs test/fresh-host-*.test.mjs test/fresh-dogeos-network.test.mjs test/fresh-package-manifest.test.mjs",
+    "test:fresh": "npm run build && node --test test/fresh-*.test.mjs test/enhanced-*.test.mjs",
+    "test:host": "node --test test/fresh-host-*.test.mjs test/fresh-dogeos-network.test.mjs",
+    "test:types": "tsc --noEmit --strict --skipLibCheck --target ES2022 --module NodeNext --moduleResolution NodeNext test/family-current-consumer.mts test/host-consumer.mts test/host-worker-browser-consumer.mts test/family-proof-consumer.mts test/fresh-payouts-consumer.mts test/enhanced-payouts-consumer.mts test/enhanced-host-consumer.mts test/family-note-delivery-consumer.mts test/family-upgrade-consumer.mts",
+    "test:types:headless": "tsc --noEmit --strict --lib ES2022 --types node --target ES2022 --module NodeNext --moduleResolution NodeNext test/host-worker-consumer.mts test/host-consumer.mts test/family-proof-consumer.mts"
+  },
+  "type": "module",
+  "types": "./fresh/index.d.mts",
+  "typesVersions": {
+    "*": {
+      "browser": [
+        "browser/app-wallet.ts"
+      ],
+      "browser/storage": [
+        "browser/encrypted-store.ts"
+      ],
+      "browser/worker": [
+        "browser/app-wallet-worker.d.mts"
+      ],
+      "dogeos-network": [
+        "fresh/dogeos-network.d.mts"
+      ],
+      "enhanced-host": [
+        "fresh/enhanced-host.d.mts"
+      ],
+      "enhanced-payouts": [
+        "fresh/enhanced-payouts.d.mts"
+      ],
+      "family-customer-handles": [
+        "fresh/family-customer-handles.d.mts"
+      ],
+      "family-deposit-host": [
+        "fresh/family-deposit-host.d.mts"
+      ],
+      "family-enhanced-components": [
+        "fresh/family-enhanced-components.d.mts"
+      ],
+      "family-enhanced-fees": [
+        "fresh/family-enhanced-fees.d.mts"
+      ],
+      "family-enhanced-host": [
+        "fresh/family-enhanced-host.d.mts"
+      ],
+      "family-enhanced-relay": [
+        "fresh/family-enhanced-relay.d.mts"
+      ],
+      "family-exit-host": [
+        "fresh/family-exit-host.d.mts"
+      ],
+      "family-fee-policy": [
+        "fresh/family-fee-policy.d.mts"
+      ],
+      "family-network": [
+        "fresh/family-network.d.mts"
+      ],
+      "family-normal-host": [
+        "fresh/family-normal-host.d.mts"
+      ],
+      "family-partner-app-config": [
+        "fresh/family-partner-app-config.d.mts"
+      ],
+      "family-partner-signup": [
+        "fresh/family-partner-signup.d.mts"
+      ],
+      "family-proof-driver": [
+        "fresh/family-proof-driver.d.mts"
+      ],
+      "family-proof-resources": [
+        "fresh/family-proof-resources.d.mts"
+      ],
+      "family-proofs": [
+        "fresh/family-proof-runtime.d.mts"
+      ],
+      "family-routed-host": [
+        "fresh/family-routed-host.d.mts"
+      ],
+      "family-rpc": [
+        "fresh/family-rpc.d.mts"
+      ],
+      "family-sdk-update": [
+        "fresh/family-sdk-update.d.mts"
+      ],
+      "family-wallet-generations": [
+        "fresh/family-wallet-generations.d.mts"
+      ],
+      "host-family-runtime": [
+        "fresh/host-family-runtime.d.mts"
+      ],
+      "host-storage": [
+        "fresh/host-storage.d.mts"
+      ],
+      "host-wallet": [
+        "fresh/host-wallet.d.mts"
+      ],
+      "host-worker": [
+        "fresh/host-worker.d.mts"
+      ],
+      "host-worker-endpoint": [
+        "fresh/host-worker-endpoint.d.mts"
+      ],
+      "node/family-partner-auth-handler": [
+        "node/family-partner-auth-handler.d.mts"
+      ],
+      "node/partner-authorization-service": [
+        "node/partner-authorization-service.d.mts"
+      ],
+      "node/partner-wallet-loader": [
+        "node/partner-wallet-loader.d.mts"
+      ],
+      "partner-app": [
+        "browser/partner-app.d.mts"
+      ],
+      "partner-application": [
+        "fresh/partner-application.d.mts"
+      ],
+      "payouts": [
+        "fresh/payouts.d.mts"
+      ],
+      "token-allowlist": [
+        "dist/vanta/token-allowlist.d.ts"
+      ],
+      "token-policy": [
+        "dist/vanta/token-policy.d.ts"
+      ],
+      "transaction-confirmations": [
+        "fresh/transaction-confirmations.d.mts"
+      ],
+      "wallet": [
+        "fresh/wallet-runtime.d.mts"
+      ],
+      "wallet-core": [
+        "fresh/wallet-core-client.d.mts"
+      ]
+    }
+  },
+  "version": "0.4.57"
+}

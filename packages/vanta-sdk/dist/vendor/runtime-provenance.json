@@ -1,0 +1,138 @@
+{
+  "schema": "vanta-selected-upstream-crypto-v1",
+  "versions": {
+    "circomlibjs": "0.1.7",
+    "snarkjs": "0.7.6",
+    "esbuild": "0.25.12"
+  },
+  "execution": "Selected Poseidon and BabyJub wallet crypto only. Custody proving uses the fresh STREAM_BOUND4 runtime.",
+  "credentialProofs": {
+    "package": "snarkjs",
+    "version": "0.7.6",
+    "execution": "Fresh handle and partner-owner authorization import the pinned dependency directly and use singleThread:true."
+  },
+  "buildRestrictions": [
+    "Only buildPoseidon and buildBabyjub are bundled from circomlibjs.",
+    "No generic custody prover bundle or historical bootstrap worker is built."
+  ],
+  "bundles": [
+    {
+      "file": "circom-crypto.node.js",
+      "bytes": 1907929,
+      "sha256": "8b4441933cae5bb9d3b85c4ff1d3a87ea9db7c776c6f1d520c36d4535b13f9d2",
+      "forbiddenActiveModules": 0
+    },
+    {
+      "file": "circom-crypto.browser.js",
+      "bytes": 1906642,
+      "sha256": "f28d1b4b013995b3fbb0fd78566e4947931e4197a0e08f7776728c78fe4d5457",
+      "forbiddenActiveModules": 0
+    }
+  ],
+  "sources": {
+    "circomlibjs/src/poseidon_constants_opt.js": "5d24cde82a0858cc17f4941bd2a18f4a69906f3d050cd5f19d0d221802abd1bd",
+    "ffjavascript/src/scalar.js": "3b4437c0395d3097a5f6fc320bee7c9a5fafae5731b404483ea11151d1fe529e",
+    "ffjavascript/src/polfield.js": "b577afbe974bd395f21c5c5b5bc2afcf5309b153125ef3ed417c629e94deb056",
+    "ffjavascript/src/futils.js": "77a6838f87b866c1a08266a5c1d43aeb91ab615650baf682cbe413dc6df2b39d",
+    "ffjavascript/src/fsqrt.js": "430d93a6755db6cea84d8e21bdc0b33491f3ac9d1bc2a93a5523c4824e66c1b9",
+    "ffjavascript/src/chacha.js": "45c5e8933ff70b7625650a1cb9f0ada742106554e394b173926dc97c2850c1df",
+    "ffjavascript/src/random.js": "3f5fc7a84bdadfb8846bff3fad4ac0f2b368ca7339a7e7c9409f67e224f7b451",
+    "ffjavascript/src/fft.js": "5129e49a38760293ae0d014dca5efbd2ec291b6b1979b216911f1d81010fcff1",
+    "ffjavascript/src/f1field.js": "7e2e6512a15ed3212d6337ec8225225760b2a2d3014150d7db7b111846e6335d",
+    "ffjavascript/src/f2field.js": "efc27420bb3e2228955a1da11a520e514ff562a8722ab8d6e47dcaa2acc1b873",
+    "ffjavascript/src/f3field.js": "9327945dff502acf270259307b43d61a95212eebbd626f251350e8a2bd12fdd9",
+    "ffjavascript/src/ec.js": "4fe411e597c5de7a1879bbe4727707bebde3ea28ace415398bec618a30c9ed7b",
+    "wasmcurves/src/utils.js": "1da17413512b2fa2b6c05df25839466441aa583a27fd2bf71ce28a62d7615958",
+    "wasmcurves/src/build_int.js": "9890602f9d7645117b07dd08f54f4373ba6b8a8424550c036e27ec9fd6d9ad3a",
+    "wasmcurves/src/build_timesscalar.js": "796d425eb5a8e6df2ea955544975db74914053616d00acbe2a21be5a5e6d2362",
+    "wasmcurves/src/build_batchinverse.js": "23ed28abc6ff228337c71aa1782f1420d7d98797c648d42df686f84785ea2380",
+    "wasmcurves/src/build_batchconvertion.js": "41179bbd5057530853fa79a4690bb3b717df5c3bfb25a6ae4062e604b5a5791c",
+    "wasmcurves/src/build_batchop.js": "0e7aceb8a44d3d3345d9aed6eee429bae129728b7139d1fc14be512a34971db5",
+    "wasmcurves/src/bigint.js": "1dbed2b98b1d029b099d00bd8490a7e498cebd95c23f3325a2a8a86b28e32413",
+    "wasmcurves/src/build_f1m.js": "760b60074c0f4e1bb833a01287813b218331987a05a6f5ffac1ce34b21f350d8",
+    "wasmcurves/src/build_f1.js": "4bbe71121b924e7e77a23d2e888a3113036f3b520a541c8aba99f526746c20fc",
+    "wasmcurves/src/build_f2m.js": "d6e418c30f291610befdace1b43766775a56416f1daabd3d5604462de8717926",
+    "wasmcurves/src/build_f3m.js": "2cd7bd0c113b1be96af4a42b4342b33b080d809ba931fcab4de11b9f35c2b0be",
+    "wasmcurves/src/build_timesscalarnaf.js": "7c9dbcb7174a044862a7ad386153113e24085aa0413ddf40fc12368dcab1e3a7",
+    "wasmcurves/src/build_multiexp.js": "374e948083e177c0b81140e78d6b539c40f6ba1b652d4d5f93cc4a8a83bf336e",
+    "wasmcurves/src/build_curve_jacobian_a0.js": "b311b202ef10ed8cba6c75bb680c39b4ecc73fd5b123913e4122fac005cc5603",
+    "wasmcurves/src/build_fft.js": "f4a51ccd9e4f27ca469692322346f4a0674387222cbda0312159f1062c3ca958",
+    "wasmcurves/src/build_pol.js": "30ba698039988a1c4908567b575b57eaf4dc0c2ec5c7f242f43efa05063f6548",
+    "wasmcurves/src/build_qap.js": "7e09d2ee04f327772d67d28a63dcb32fe653b6d8f66496a9da3ca56e1dc5f069",
+    "wasmcurves/src/build_applykey.js": "5d9648afe3a6abb18e4f3ec80ee3b51a56707b7441d683372adbbe7fc34fabdc",
+    "wasmcurves/src/bn128/build_bn128.js": "c6f15f33e2ea9a66b199d0728915d1cdb91fc1f33e7bdf52459978d26f79578d",
+    "wasmcurves/src/bls12381/build_bls12381.js": "a5b6a8ff8d98da5c21d4f5422c764ae566c2fdae62b019f04cff1dcfe4aefb73",
+    "wasmcurves/index.js": "01700d3c06016a5894623c935e5eaf884f124780bac879b42f245c6298393162",
+    "ffjavascript/src/utils.js": "67c1d6766a705b96b95112aec28aa97e12f931149b76699ab1137ff8eab3ed4e",
+    "ffjavascript/src/bigbuffer.js": "54b18b7c74087485af62309b0b05f878f0894a0862a9ad937ba7e5453a9a648d",
+    "ffjavascript/src/engine_batchconvert.js": "250bc37b3ebb69e3e99e1d88e327d41a5858affcb3169b3f9376fa1ccdea28a1",
+    "ffjavascript/src/wasm_field1.js": "0d0fff47604876a4afa8e280fe6594c272d12d222f55c95c76f7ee1ab2fbf146",
+    "ffjavascript/src/wasm_field2.js": "8bc75fb10a9d40ad492167f13fe12bab94440c26a9203b1d8c6cd7489dea62aa",
+    "ffjavascript/src/wasm_field3.js": "50f81db8d23de9abadc5cf63dc46a643e495e0ffa6a67906937b3e2252de135b",
+    "ffjavascript/src/wasm_curve.js": "b90be331c7703c78e934c5614b7b63e00a3c9c1237647f2630c5e4e8b8765bc7",
+    "ffjavascript/src/threadman_thread.js": "1a59efc8330f68587dc0c9f09947363cd847d697daca01605b2eacbc10908d13",
+    "web-worker/cjs/node.js": "92ebb9ee1099aa5da7009e72edfc9818fe289ba85523a4f958526a4e6fa0fbd1",
+    "ffjavascript/src/threadman.js": "2fa5bcae281c7fcc0c9e2804f118de1b9d4c3832e5e25e38094d3bc34e5a3622",
+    "ffjavascript/src/engine_applykey.js": "aef6b1d98d13c7e0fed521573810efbcde30879e90697695a9f50b80e6b6a854",
+    "ffjavascript/src/engine_pairing.js": "af47ee375defc84001d0347059bdfd6912ec09b50c3d921348d266d0fcb10b0a",
+    "ffjavascript/src/engine_multiexp.js": "d130947e303e0b9a29cf5e3998fc9f74a107ebab0c607a65a9acb96f90653ec0",
+    "ffjavascript/src/engine_fft.js": "6bcb2c583364602e78f1d83b037f6b17ba38e21aa83d593538b9e762b83624fb",
+    "ffjavascript/src/engine.js": "43c3423dd270f1d912e13d0a2aa7d149de083a025a6285131fd7ebd93fd098a0",
+    "wasmbuilder/src/utils.js": "a6e5c30d64c8507acf5c3684750e1624d8623be1cf7a144729310b19e02af11e",
+    "wasmbuilder/src/codebuilder.js": "bf62e37bb93db86d87fba79ba6da51e842a9c5f2caf00449cd4db4033039f038",
+    "wasmbuilder/src/functionbuilder.js": "cbf9fb26d956d5ff38e715230df33b739154aca4dd69785cbbb85a94c551ee10",
+    "wasmbuilder/src/modulebuilder.js": "eec8540d92f355f344b8b8e5cea9dcfad6be57ae908ca6f96fa479223ef88d5b",
+    "wasmbuilder/src/codebuilder_wat.js": "80b17c23f1843a6c362d11b781c5bbb04fc58f1baf5e2db6ee99ba5f4be5695f",
+    "wasmbuilder/src/functionbuilder_wat.js": "d800dadfcccc6ae8ce45bdfc99a5c8dff07cc21895f6ecf3e74741d3e2b22d75",
+    "wasmbuilder/src/modulebuilder_wat.js": "6a57b38c446d5cdcb6c4dc5a63d5f29b9fef360c55426a016d2dbbb4b846a9b8",
+    "wasmbuilder/src/protoboard.js": "5daaaaf486af21cdd0f6265deca191d22b68f9126aed125e4f78dd21d0876949",
+    "wasmbuilder/main.js": "5b1c847bff5a126919f4d71402f34a5339e2d76489b2c71c5ea081ed59f765fa",
+    "ffjavascript/src/bn128.js": "042a4a93c8bb75814791349def1b07da4897972c86a6b0119dba281e1bf884c4",
+    "ffjavascript/src/bls12381.js": "0bd732c00d88c0660016a3e86ab246f6dedbf4cb88e507f88aa1d509851198a4",
+    "ffjavascript/src/curves.js": "73291ac0d089d9733d33898918ace948d0bdc943477782348b725809d7c8bc92",
+    "ffjavascript/main.js": "9425a0b85916388119934338563d270d450e8b64684385d13ebf320aab19e958",
+    "circomlibjs/src/poseidon_wasm.js": "ef05f1c1ab5a533049d60fa993e3c985a3f9b8e1f74662d1c8ffa20b96334338",
+    "circomlibjs/src/babyjub.js": "68c3e5d2e3b2c5f4012b06df0a68829606bce8f5227dab64e43fbd7e675160c5",
+    "ffjavascript/build/browser.esm.js": "ce6f4f516810aa494fd8544c1aaca9405edf8f58ba09e18b1b71cc05fa06800c"
+  },
+  "packages": [
+    {
+      "name": "circomlibjs",
+      "version": "0.1.7",
+      "license": "GPL-3.0",
+      "licenseFiles": []
+    },
+    {
+      "name": "ffjavascript",
+      "version": "0.2.63",
+      "license": "GPL-3.0",
+      "licenseFiles": [
+        "ffjavascript-0.2.63-COPYING"
+      ]
+    },
+    {
+      "name": "wasmcurves",
+      "version": "0.2.2",
+      "license": "GPL-3.0",
+      "licenseFiles": [
+        "wasmcurves-0.2.2-COPYING"
+      ]
+    },
+    {
+      "name": "web-worker",
+      "version": "1.2.0",
+      "license": "Apache-2.0",
+      "licenseFiles": [
+        "web-worker-1.2.0-LICENSE"
+      ]
+    },
+    {
+      "name": "wasmbuilder",
+      "version": "0.0.16",
+      "license": "GPL-3.0",
+      "licenseFiles": [
+        "wasmbuilder-0.0.16-COPYING"
+      ]
+    }
+  ]
+}

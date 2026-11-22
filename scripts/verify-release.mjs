@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {mkdtempDisposable, readFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join, resolve} from 'node:path';
+import {assertSignedChikyuSdkPublication} from './sdk-publication-signature.mjs';
+
+const root = resolve(import.meta.dirname, '..');
+const sdk = join(root, 'packages/vanta-sdk');
+const {version} = JSON.parse(await readFile(join(sdk, 'package.json')));
+const release = join(root, 'releases', version);
+const publication = JSON.parse(await readFile(join(release, 'publication.json')));
+assert.equal(publication.version, version);
+const publicationDigest = assertSignedChikyuSdkPublication(publication);
+const archive = 'stealthos-vanta-sdk-' + version + '.tgz';
+const expected = await readFile(join(release, archive));
+assert.equal(expected.length, publication.sdkPackage.bytes);
+assert.equal(createHash('sha256').update(expected).digest('hex'), publication.sdkPackage.sha256);
+await using destination = await mkdtempDisposable(join(tmpdir(), 'vanta-sdk-pack-'));
+execFileSync(process.execPath, [process.env.npm_execpath, 'pack', '--ignore-scripts', '--json', '--pack-destination', destination.path], {cwd: sdk});
+const packed = await readFile(join(destination.path, archive));
+assert.ok(packed.equals(expected), 'Checkout package differs from the signed archive');
+console.log('Verified SDK', version, 'and reproduced the signed archive. Publication digest', publicationDigest);

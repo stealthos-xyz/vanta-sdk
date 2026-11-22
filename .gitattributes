@@ -1,0 +1,4 @@
+* text=auto eol=lf
+/packages/vanta-sdk/** -text
+/releases/** -text
+*.tgz -diff -text
