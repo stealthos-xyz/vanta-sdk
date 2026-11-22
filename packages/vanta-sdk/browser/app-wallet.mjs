@@ -1,172 +1,36 @@
-// packages/vanta-sdk/fresh/family-deposit-errors.mjs
-import { id } from "ethers";
-var known = /* @__PURE__ */ new WeakSet();
-var DEPOSIT_STAGES = Object.freeze(["Wallet asset", "Handle claim", "Handle submission", "Handle status", "Handle recovery", "Handle availability", "Batch fee review", "Batch preparation", "Batch submission", "Transfer fee review", "Transfer preparation", "Route fee review", "Route preparation", "Withdrawal fee review", "Withdrawal preparation", "Transaction authorization", "Wallet session", "Supported asset", "Pool bindings", "Receiving routes", "Partner fee policy", "Private note encryption", "Native wallet screening", "Deposit intent", "Proof generation", "Append keys", "Recovery verification", "Contract simulation", "Pending deposit journal", "Deposit approval", "Wallet submission", "Deposit status"]);
-var errors = new Map(["UnapprovedPreAuditSetup", "InvalidQuote", "InvalidSignature", "FeeAuthorizationRequired", "InvalidEncryptedNote", "InvalidRow", "InvalidProof", "InvalidSource", "Replay", "InsufficientEscrow", "AssetTransferMismatch", "ReentrantCall", "DepositCapacityReached", "InvalidClearance", "Unauthorized"].map((n) => [id(n + "()").slice(0, 10), n]));
-var safe = (text) => typeof text === "string" && text.length <= 300 && !/[{}\r\n]|0x[0-9a-f]{32,}|(?:password|mnemonic|recovery phrase|seed|witness)\s*[:=]/iu.test(text);
-var DEPOSIT_INSUFFICIENT_FUNDS = "INSUFFICIENT_FUNDS";
-function depositWalletSubmissionCode(error) {
-  const candidates = [error, error?.info?.error, error?.error, error?.data?.originalError];
-  for (const candidate of candidates) {
-    if (candidate?.code === DEPOSIT_INSUFFICIENT_FUNDS) return DEPOSIT_INSUFFICIENT_FUNDS;
-    if ([-32e3, -32003].includes(candidate?.code) && typeof candidate.message === "string" && /\binsufficient funds for (?:gas\s*\*\s*price\s*\+\s*value|intrinsic transaction cost|transaction cost)\b/iu.test(candidate.message))
-      return DEPOSIT_INSUFFICIENT_FUNDS;
-  }
-  return void 0;
-}
-function depositFailure(error, stage) {
-  if (known.has(error)) return error;
-  if (!DEPOSIT_STAGES.includes(stage)) stage = "Deposit intent";
-  const fundedOperation = /^(?:Handle|Batch|Transfer|Route|Withdrawal|Transaction)/u.test(stage);
-  const code = typeof error?.code === "string" && /^[A-Z_]{1,64}$/u.test(error.code) ? error.code : fundedOperation ? "TRANSACTION_FAILED" : "DEPOSIT_FAILED";
-  const nested = error?.info?.error ?? error?.error;
-  const rpcMessage = String(nested?.message ?? error?.shortMessage ?? "").toLowerCase();
-  let data = error?.data ?? nested?.data;
-  if (data && typeof data === "object") data = data.data ?? data.result ?? data.originalError?.data;
-  const selector = typeof data === "string" && /^0x[0-9a-f]{8}/iu.test(data) ? data.slice(0, 10).toLowerCase() : null;
-  let cause;
-  if (code === DEPOSIT_INSUFFICIENT_FUNDS && stage === "Wallet submission") cause = "The connected wallet does not have enough native tokens to cover this deposit and its network fee.";
-  else if (selector && errors.has(selector)) cause = "Contract reverted: " + errors.get(selector) + " (" + selector + ").";
-  else if (/rate.?limit|too many requests/u.test(rpcMessage) || nested?.code === -32005) cause = "RPC rate limit reached.";
-  else if (/insufficient (?:funds|balance)/u.test(rpcMessage)) cause = "RPC rejected the deposit simulation: insufficient funds for value and gas.";
-  else if (/timeout|timed out/u.test(rpcMessage) || code === "TIMEOUT") cause = "The RPC request timed out.";
-  else if (code === "CALL_EXCEPTION") cause = selector ? "Contract reverted with error " + selector + "." : "Contract simulation reverted; the RPC returned no revert reason.";
-  else if (safe(error?.message) && /^(?:Private handle:|Private handle relay:|Public payment:|Private transfer(?::| plan | proof)|Enhanced fee service |Enhanced wallet |No available source epoch |Insufficient unlocked |Family [A-Za-z -]{1,50}[: ]|SDK family release:|Native wallet (?:screening|clearance) |Native clearance response |Partner (?:asset|configuration) |Configuration belongs |Asset is outside |This asset is not enabled |Current |Invalid direct deposit |Local deposit |Deposit source |The signed |Pinned |Missing signed |Invalid family )/u.test(error.message)) cause = error.message;
-  else if (["Failed to fetch", "NetworkError when attempting to fetch resource.", "Load failed"].includes(error?.message)) cause = "The network request failed.";
-  else if (error?.name === "AbortError") cause = "The operation was cancelled.";
-  else if (code === "AUTHORIZATION_UNCERTAIN") cause = "Submission could not be confirmed. The wallet is checking History and keeping the selected funds reserved until the outcome is clear.";
-  else if (code === "SESSION_EXPIRED" || code === "PASSWORD_REQUIRED") cause = "The wallet session has expired. Reconnect the wallet.";
-  else cause = "The " + stage.toLowerCase() + " step failed (" + code + ").";
-  const failure = Object.freeze({ stage, code, cause });
-  const result = Object.assign(Error(stage + ": " + cause), { code, depositFailure: failure });
-  known.add(result);
-  return result;
-}
-function publicDepositFailure(error) {
-  return known.has(error) ? error.depositFailure : void 0;
-}
-function readDepositFailure(value) {
-  if (!value || Object.keys(value).sort().join() !== "cause,code,stage" || !DEPOSIT_STAGES.includes(value.stage) || typeof value.code !== "string" || !/^[A-Z_]{1,64}$/u.test(value.code) || !safe(value.cause)) return null;
-  const result = Object.assign(Error(value.stage + ": " + value.cause), { code: value.code, depositFailure: Object.freeze({ ...value }) });
-  known.add(result);
-  return result;
-}
+// browser/app-wallet.ts
+import { depositWalletSubmissionCode, readDepositFailure, depositFailure, publicDepositFailure } from "../fresh/family-deposit-errors.mjs";
+import { matchesFamilyDepositApproval } from "../fresh/family-deposit-approval.mjs";
+import { encodeVantaFamilyReceivingAddress, decodeVantaFamilyReceivingAddress } from "../fresh/family-normal-address.mjs";
+import { SDK_TRANSACTION_CONFIRMATIONS } from "../fresh/transaction-confirmations.mjs";
+import { getAddress as getAddress3, getBytes, toBeHex, keccak256 as keccak2562, Interface } from "ethers";
+import { getCompiledFamilyEvmRelease as getCompiledFamilyEvmRelease2 } from "../fresh/family-network.mjs";
+import { getCompiledVantaFamilyProofResources } from "../fresh/family-proof-resources.mjs";
+import { familyBridgeRoutes } from "../fresh/family-bridge-gateway.mjs";
+import { parseCustomerHandleCalldata, normalizeVantaFamilyHandle } from "../fresh/family-customer-handles.mjs";
+import { depositTransactionDigest } from "../fresh/family-deposit-host.mjs";
 
-// packages/vanta-sdk/fresh/family-deposit-approval.mjs
-import { getAddress } from "ethers";
-function matchesFamilyDepositApproval(review, actual, { wallet, pool, generationId, nowSeconds }) {
-  try {
-    return Boolean(review && actual && Object.keys(actual).sort().join() === Object.keys(review).sort().join() && Object.entries(review).every(([key, value]) => actual[key] === value) && getAddress(review.payer) === getAddress(wallet) && getAddress(review.pool) === getAddress(pool) && review.generationId === generationId && Number.isSafeInteger(review.deadline) && review.deadline > nowSeconds);
-  } catch {
-    return false;
-  }
-}
+// browser/consent-signer.ts
+import { getAddress as getAddress2, hexlify, toUtf8Bytes, verifyMessage } from "ethers";
+import { getCompiledFamilyEvmRelease } from "../fresh/family-network.mjs";
 
-// packages/vanta-sdk/fresh/family-normal-address.mjs
-import { encodeBase64, decodeBase64, toUtf8Bytes, toUtf8String, getAddress as getAddress2 } from "ethers";
-var fields = ["schema", "familyTag", "chainId", "genesisHash", "generationId", "setupId", "pool", "asset", "masterPublicKey", "viewingPublicKey"];
-var FR = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
-var fail = () => {
-  throw Error("Invalid StealthOS private receiving address.");
-};
-function recipient(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join() !== fields.slice().sort().join() || value.schema !== "vanta-family-note-recipient-v1" || !Number.isSafeInteger(value.chainId) || value.chainId < 1) fail();
-  for (const name of ["familyTag", "genesisHash", "generationId", "setupId", "masterPublicKey", "viewingPublicKey"])
-    if (typeof value[name] !== "string" || !/^0x[0-9a-f]{64}$/u.test(value[name]) || BigInt(value[name]) === 0n) fail();
-  if (BigInt(value.familyTag) >= FR || BigInt(value.masterPublicKey) >= FR) fail();
-  for (const name of ["pool", "asset"]) {
-    try {
-      if (getAddress2(value[name]).toLowerCase() !== value[name] || name === "pool" && BigInt(value[name]) === 0n) fail();
-    } catch {
-      fail();
-    }
-  }
-  return Object.freeze(Object.fromEntries(fields.map((name) => [name, value[name]])));
-}
-function encodeVantaFamilyReceivingAddress(value) {
-  const checked = recipient(value);
-  return "vanta:1:" + encodeBase64(toUtf8Bytes(JSON.stringify(checked))).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/u, "");
-}
-function decodeVantaFamilyReceivingAddress(value) {
-  if (typeof value !== "string" || value.length > 2048 || !/^vanta:1:[A-Za-z0-9_-]+$/u.test(value)) fail();
-  try {
-    const payload = value.slice(8).replaceAll("-", "+").replaceAll("_", "/"), padded = payload + "=".repeat((4 - payload.length % 4) % 4), checked = recipient(JSON.parse(toUtf8String(decodeBase64(padded))));
-    if (encodeVantaFamilyReceivingAddress(checked) !== value) fail();
-    return checked;
-  } catch {
-    fail();
-  }
-}
-
-// packages/vanta-sdk/fresh/transaction-confirmations.mjs
-var SDK_TRANSACTION_CONFIRMATIONS = 2;
-var SDK_SETTLEMENT_POLICY = Object.freeze({
-  mode: "confirmations",
-  confirmations: SDK_TRANSACTION_CONFIRMATIONS,
-  consensusFinality: false
-});
-
-// packages/vanta-sdk/browser/app-wallet.ts
-import { getAddress as getAddress5, getBytes, toBeHex, keccak256 as keccak2563, Interface } from "ethers";
-import { getCompiledFamilyEvmRelease as getCompiledFamilyEvmRelease2 } from "@stealthos/vanta-sdk/family-network";
-import { getCompiledVantaFamilyProofResources } from "@stealthos/vanta-sdk/family-proof-resources";
-
-// packages/vanta-sdk/fresh/family-bridge-gateway.mjs
-import { keccak256 } from "ethers";
-
-// packages/vanta-sdk/fresh/family-rpc.mjs
-import { JsonRpcProvider } from "ethers";
-
-// packages/vanta-sdk/fresh/generated-family-bridge-gateway.mjs
-var FAMILY_CHIKYU_BRIDGE_GATEWAY = Object.freeze({
-  networkId: "eip155:6281971",
-  genesisHash: "0xf9f7c524dce38b51a4d28ec2f18680773e5ba9d3f5f430d0e05f92cfeb65b1bc",
-  setupId: "0xb4676558822d9964f45f716c27ea00f0f22f629b799dfaf61cb446db60e1ed70",
-  generationId: "0x2acecbe256faf24f04b0c5ddd06a40cfa7d832677ce6e476e2eb69fa2321c7e0",
-  lockId: "0x57e6d1e911046c7810dc3ae934fc85a155a4c1ba8ca6f6b09e24e8995ed961d4",
-  previousGateway: "0xe58df513b94b93f6f7847074b92d35ab5ebf3f38",
-  previousCodehash: "0x0ab7c9ab6662a793161a5770226de4863f93caa5cd77693bf387c4b40b79de8b",
-  gateway: Object.freeze({ address: "0x48915564ba08e1bd10d7134194fcdd10e6adf728", codehash: "0x69946bdeb5328eeab0e9e435fb97b902a18d94f3a215b29f17b83f3098f7d42b", deploymentBlock: 9658900 }),
-  transactionHash: "0xcb6cf7469061bf9aafd6a80da8822fc2cdb4e929f733260130c9579640ceb2f1",
-  maximumDeliveryFee: "50000000000000000000"
-});
-
-// packages/vanta-sdk/fresh/family-bridge-gateway.mjs
-var fail2 = () => {
-  throw Error("Family bridge gateway: The reviewed bridge deployment differs.");
-};
-var scoped = (release) => ["networkId", "genesisHash", "setupId", "generationId", "lockId"].every((k) => release?.pins?.[k] === FAMILY_CHIKYU_BRIDGE_GATEWAY[k]);
-function familyBridgeRoutes(release, routes, operation = 5) {
-  if (operation !== 5 || !scoped(release)) return routes;
-  if (routes?.gateway?.address !== FAMILY_CHIKYU_BRIDGE_GATEWAY.previousGateway || routes.gateway.codehash !== FAMILY_CHIKYU_BRIDGE_GATEWAY.previousCodehash || routes.maximumDeliveryFee !== "30000000000000000000") fail2();
-  return Object.freeze({ ...routes, gateway: FAMILY_CHIKYU_BRIDGE_GATEWAY.gateway, maximumDeliveryFee: FAMILY_CHIKYU_BRIDGE_GATEWAY.maximumDeliveryFee });
-}
-
-// packages/vanta-sdk/browser/app-wallet.ts
-import { parseCustomerHandleCalldata, normalizeVantaFamilyHandle } from "@stealthos/vanta-sdk/family-customer-handles";
-import { depositTransactionDigest } from "@stealthos/vanta-sdk/family-deposit-host";
-
-// packages/vanta-sdk/browser/consent-signer.ts
-import { getAddress as getAddress4, hexlify, toUtf8Bytes as toUtf8Bytes2, verifyMessage } from "ethers";
-import { getCompiledFamilyEvmRelease } from "@stealthos/vanta-sdk/family-network";
-
-// packages/vanta-sdk/browser/consent-message.ts
-import { getAddress as getAddress3, keccak256 as keccak2562 } from "ethers";
+// browser/consent-message.ts
+import { getAddress, keccak256 } from "ethers";
 var WORD = /^0x[0-9a-f]{64}$/u;
 var ID = /^[A-Za-z0-9:_-]{8,128}$/u;
 var BYTES = /^0x(?:[0-9a-f]{2})+$/u;
-function fail3() {
+function fail() {
   throw Error("Enhanced consent does not match the compiled family release.");
 }
 function buildEnhancedConsentMessage(release, context, request, approvedIntentId) {
-  if (!release || !context || !request || Object.keys(request).sort().join() !== "asset,calldata,intentId,pool,requestId" || !ID.test(request.requestId) || !ID.test(request.intentId) || request.intentId !== approvedIntentId || !release.setup?.family?.id || !/^eip155:[1-9][0-9]*$/u.test(release.pins.networkId) || release.activation.network.id !== release.pins.networkId || context.networkId !== release.pins.networkId || !WORD.test(release.setup.family.tag) || BigInt(release.setup.family.tag) === 0n || release.setup.family.tag !== release.activation.familyTag || release.setup.family.tag !== release.lock.familyTag || !WORD.test(release.pins.genesisHash) || BigInt(release.pins.genesisHash) === 0n || release.activation.network.genesisHash !== release.pins.genesisHash || !WORD.test(release.pins.generationId) || BigInt(release.pins.generationId) === 0n || release.pins.generationId !== context.generationId || !BYTES.test(request.calldata) || request.calldata.length > 512 * 1024) fail3();
+  if (!release || !context || !request || Object.keys(request).sort().join() !== "asset,calldata,intentId,pool,requestId" || !ID.test(request.requestId) || !ID.test(request.intentId) || request.intentId !== approvedIntentId || !release.setup?.family?.id || !/^eip155:[1-9][0-9]*$/u.test(release.pins.networkId) || release.activation.network.id !== release.pins.networkId || context.networkId !== release.pins.networkId || !WORD.test(release.setup.family.tag) || BigInt(release.setup.family.tag) === 0n || release.setup.family.tag !== release.activation.familyTag || release.setup.family.tag !== release.lock.familyTag || !WORD.test(release.pins.genesisHash) || BigInt(release.pins.genesisHash) === 0n || release.activation.network.genesisHash !== release.pins.genesisHash || !WORD.test(release.pins.generationId) || BigInt(release.pins.generationId) === 0n || release.pins.generationId !== context.generationId || !BYTES.test(request.calldata) || request.calldata.length > 512 * 1024) fail();
   let pool, asset;
   try {
-    pool = getAddress3(request.pool).toLowerCase();
-    asset = getAddress3(request.asset).toLowerCase();
-    if (pool !== getAddress3(context.pool).toLowerCase() || asset !== getAddress3(context.assetAddress).toLowerCase() || !release.lock.contracts.some((contract) => contract.kind === "pool" && getAddress3(contract.address).toLowerCase() === pool)) fail3();
+    pool = getAddress(request.pool).toLowerCase();
+    asset = getAddress(request.asset).toLowerCase();
+    if (pool !== getAddress(context.pool).toLowerCase() || asset !== getAddress(context.assetAddress).toLowerCase() || !release.lock.contracts.some((contract) => contract.kind === "pool" && getAddress(contract.address).toLowerCase() === pool)) fail();
   } catch {
-    fail3();
+    fail();
   }
   return "Vanta private settlement authorization v1\n" + JSON.stringify([
     release.setup.family.tag,
@@ -176,13 +40,13 @@ function buildEnhancedConsentMessage(release, context, request, approvedIntentId
     pool,
     asset,
     request.requestId,
-    keccak2562(request.calldata)
+    keccak256(request.calldata)
   ]);
 }
 
-// packages/vanta-sdk/browser/consent-signer.ts
+// browser/consent-signer.ts
 var SIGNATURE = /^0x[0-9a-f]{130}$/u;
-var fail4 = () => {
+var fail2 = () => {
   throw Error("Wallet authorization is unavailable for this reviewed intent.");
 };
 async function signCompiledEnhancedConsent({
@@ -196,30 +60,30 @@ async function signCompiledEnhancedConsent({
   await assertCurrent();
   const release = getCompiledFamilyEvmRelease();
   const message = buildEnhancedConsentMessage(release, context, request, intentId);
-  const expected = getAddress4(wallet).toLowerCase();
+  const expected = getAddress2(wallet).toLowerCase();
   const [accounts, chainId] = await Promise.all([
     provider.request({ method: "eth_accounts" }),
     provider.request({ method: "eth_chainId" })
   ]);
-  if (!Array.isArray(accounts) || accounts.length === 0 || getAddress4(String(accounts[0])).toLowerCase() !== expected || BigInt(chainId) !== BigInt(release.pins.networkId.split(":")[1])) fail4();
+  if (!Array.isArray(accounts) || accounts.length === 0 || getAddress2(String(accounts[0])).toLowerCase() !== expected || BigInt(chainId) !== BigInt(release.pins.networkId.split(":")[1])) fail2();
   await assertCurrent();
   const signed = await provider.request({
     method: "personal_sign",
-    params: [hexlify(toUtf8Bytes2(message)), expected]
+    params: [hexlify(toUtf8Bytes(message)), expected]
   });
   const signature = typeof signed === "string" ? signed.toLowerCase() : "";
-  if (!SIGNATURE.test(signature)) fail4();
-  if (verifyMessage(message, signature).toLowerCase() !== expected) fail4();
+  if (!SIGNATURE.test(signature)) fail2();
+  if (verifyMessage(message, signature).toLowerCase() !== expected) fail2();
   const [afterAccounts, afterChain] = await Promise.all([
     provider.request({ method: "eth_accounts" }),
     provider.request({ method: "eth_chainId" })
   ]);
-  if (!Array.isArray(afterAccounts) || afterAccounts.length === 0 || getAddress4(String(afterAccounts[0])).toLowerCase() !== expected || BigInt(afterChain) !== BigInt(release.pins.networkId.split(":")[1])) fail4();
+  if (!Array.isArray(afterAccounts) || afterAccounts.length === 0 || getAddress2(String(afterAccounts[0])).toLowerCase() !== expected || BigInt(afterChain) !== BigInt(release.pins.networkId.split(":")[1])) fail2();
   await assertCurrent();
   return Object.freeze({ signature });
 }
 
-// packages/vanta-sdk/browser/routing.mjs
+// browser/routing.mjs
 var FAMILY_ROUTING_HEADERS = Object.freeze([
   "X-StealthOS-Network",
   "X-StealthOS-Generation",
@@ -243,7 +107,7 @@ function assertFamilyRelayContext(routing, context) {
   return routing;
 }
 
-// packages/vanta-sdk/browser/app-wallet.ts
+// browser/app-wallet.ts
 function activityAsset(options) {
   return options.historyAsset === void 0 ? {} : { historyAsset: options.historyAsset };
 }
@@ -288,7 +152,7 @@ async function createStealthOSAppWallet(input) {
     const accounts = await input.provider.request({ method: "eth_accounts" });
     const chain = await input.provider.request({ method: "eth_chainId" });
     if (!Array.isArray(accounts) || !accounts.length || typeof chain !== "string" || !/^0x[0-9a-f]+$/iu.test(chain) || BigInt(chain) !== BigInt(chainId)) throw unavailable();
-    return getAddress5(accounts[0]).toLowerCase();
+    return getAddress3(accounts[0]).toLowerCase();
   };
   const stop = (reason) => {
     revision++;
@@ -363,13 +227,13 @@ async function createStealthOSAppWallet(input) {
   const send = (message, transfer = []) => {
     if (!worker || disposed) return Promise.reject(unavailable());
     return new Promise((accept, reject) => {
-      const id2 = ++nextId, timer = setTimeout(() => stop("locked"), 10 * 60 * 1e3);
-      pending.set(id2, { accept, reject, timer });
+      const id = ++nextId, timer = setTimeout(() => stop("locked"), 10 * 60 * 1e3);
+      pending.set(id, { accept, reject, timer });
       try {
-        worker.postMessage({ ...message, id: id2 }, transfer);
+        worker.postMessage({ ...message, id }, transfer);
       } catch {
         clearTimeout(timer);
-        pending.delete(id2);
+        pending.delete(id);
         reject(unavailable());
       }
     });
@@ -418,7 +282,7 @@ async function createStealthOSAppWallet(input) {
           result = await authFetch(data.value.path, data.value.body, current.wallet, data.value.headers);
         else if ((data.kind === "handleStatus" || data.kind === "handleSubmit" && activeHandleName && !handleSubmissionAttempted) && opened) {
           const request = data.value, pin = release.lock.contracts.find((c) => c.name === "handle-registry");
-          if (request?.chainId !== chainId || data.kind === "handleSubmit" && request.handle !== activeHandleName || request.value !== "0" || !pin || getAddress5(request.to) !== getAddress5(pin.address) || keccak2563(request.data) !== request.transactionDigest) throw unavailable();
+          if (request?.chainId !== chainId || data.kind === "handleSubmit" && request.handle !== activeHandleName || request.value !== "0" || !pin || getAddress3(request.to) !== getAddress3(pin.address) || keccak2562(request.data) !== request.transactionDigest) throw unavailable();
           const record = await parseCustomerHandleCalldata(request.data, release);
           if (data.kind === "handleSubmit" && record.route.handle !== activeHandleName || await selected() !== current.wallet || active !== revision) throw unavailable();
           const statusOnly = data.kind === "handleStatus";
@@ -440,7 +304,7 @@ async function createStealthOSAppWallet(input) {
         } else if (data.kind === "privateSendApprove" && activeSendId && !sendApprovalAttempted && opened) {
           sendApprovalAttempted = true;
           const review = sendReviews.get(activeSendId);
-          if (!review || JSON.stringify(data.value) !== JSON.stringify(review) || getAddress5(review.pool) !== getAddress5(opened.context.pool) || review.generationId !== opened.context.generationId || review.deadline <= Date.now() / 1e3 || !review.transactionDigest) throw unavailable();
+          if (!review || JSON.stringify(data.value) !== JSON.stringify(review) || getAddress3(review.pool) !== getAddress3(opened.context.pool) || review.generationId !== opened.context.generationId || review.deadline <= Date.now() / 1e3 || !review.transactionDigest) throw unavailable();
           sendApproved = true;
           result = true;
         } else if (data.kind === "routedApprove" && activeRouteId && !routeApprovalAttempted && opened) {
@@ -449,7 +313,7 @@ async function createStealthOSAppWallet(input) {
           const release2 = getCompiledFamilyEvmRelease2();
           const routes = getCompiledVantaFamilyProofResources(release2).funding.routes;
           const gateway = review?.operation === 5 ? familyBridgeRoutes(release2, routes)?.gateway.address : release2.lock.contracts.find((c) => c.name === "private-swap-gateway")?.address ?? routes?.gateway.address;
-          if (!review || JSON.stringify(data.value) !== JSON.stringify(review) || getAddress5(review.pool) !== getAddress5(opened.context.pool) || review.generationId !== opened.context.generationId || review.deadline <= Date.now() / 1e3 || !review.transactionDigest || gateway?.toLowerCase() !== review.transactionTarget) throw unavailable();
+          if (!review || JSON.stringify(data.value) !== JSON.stringify(review) || getAddress3(review.pool) !== getAddress3(opened.context.pool) || review.generationId !== opened.context.generationId || review.deadline <= Date.now() / 1e3 || !review.transactionDigest || gateway?.toLowerCase() !== review.transactionTarget) throw unavailable();
           routeApproved = true;
           result = true;
         } else if (data.kind === "depositApprove" && activeDepositId && !depositApprovalAttempted && depositContext) {
@@ -466,7 +330,7 @@ async function createStealthOSAppWallet(input) {
         } else if (data.kind === "depositSubmit" && activeDepositId && depositApproved && !depositSubmissionAttempted && depositContext) {
           depositSubmissionAttempted = true;
           const review = depositReviews.get(activeDepositId), tx = data.value;
-          if (!review || !tx || Object.keys(tx).sort().join() !== "chainId,data,from,preparedId,to,transactionDigest,value" || tx.preparedId !== activeDepositId || tx.chainId !== chainId || getAddress5(tx.from).toLowerCase() !== current.wallet || getAddress5(tx.to).toLowerCase() !== review.pool.toLowerCase() || tx.transactionDigest !== review.transactionDigest || depositTransactionDigest(tx) !== review.transactionDigest || review.deadline <= Date.now() / 1e3 || await selected() !== current.wallet) throw unavailable();
+          if (!review || !tx || Object.keys(tx).sort().join() !== "chainId,data,from,preparedId,to,transactionDigest,value" || tx.preparedId !== activeDepositId || tx.chainId !== chainId || getAddress3(tx.from).toLowerCase() !== current.wallet || getAddress3(tx.to).toLowerCase() !== review.pool.toLowerCase() || tx.transactionDigest !== review.transactionDigest || depositTransactionDigest(tx) !== review.transactionDigest || review.deadline <= Date.now() / 1e3 || await selected() !== current.wallet) throw unavailable();
           let transactionHash;
           try {
             transactionHash = await input.provider.request({ method: "eth_sendTransaction", params: [{
@@ -553,17 +417,17 @@ async function createStealthOSAppWallet(input) {
       const privateSendSigning = name === "executePrivateSend" || regularWithdrawal || normalBatch;
       const routeSigning = name === "executeRoute";
       if (routeSigning) {
-        const id2 = payload.preparedId;
-        if (typeof id2 !== "string" || activeRouteId !== null || !routeReviews.has(id2)) throw unavailable();
-        activeRouteId = id2;
+        const id = payload.preparedId;
+        if (typeof id !== "string" || activeRouteId !== null || !routeReviews.has(id)) throw unavailable();
+        activeRouteId = id;
         routeApproved = false;
         routeApprovalAttempted = false;
         routeSubmissionAttempted = false;
       }
       if (privateSendSigning) {
-        const id2 = regularWithdrawal || normalBatch ? batchIntent : payload.preparedId;
-        if (typeof id2 !== "string" || activeSendId !== null || !sendReviews.has(id2)) throw unavailable();
-        activeSendId = id2;
+        const id = regularWithdrawal || normalBatch ? batchIntent : payload.preparedId;
+        if (typeof id !== "string" || activeSendId !== null || !sendReviews.has(id)) throw unavailable();
+        activeSendId = id;
         sendApproved = false;
         sendApprovalAttempted = false;
         sendSubmissionAttempted = false;
@@ -652,7 +516,7 @@ async function createStealthOSAppWallet(input) {
   const approveDepositAsset = async ({ quoteId }) => {
     const quote = paymentQuotes.get(quoteId), current = session, started = revision;
     const context = paymentRecipient ? paymentContext : opened?.context;
-    if (!context || !current || !quote || approvingPaymentAsset || quote.deadline <= Date.now() / 1e3 || getAddress5(quote.payer) !== getAddress5(current.wallet) || getAddress5(quote.pool) !== getAddress5(context.pool) || getAddress5(quote.asset) !== getAddress5(context.assetAddress) || paymentRecipient && quote.recipient !== recipientAddress) throw unavailable();
+    if (!context || !current || !quote || approvingPaymentAsset || quote.deadline <= Date.now() / 1e3 || getAddress3(quote.payer) !== getAddress3(current.wallet) || getAddress3(quote.pool) !== getAddress3(context.pool) || getAddress3(quote.asset) !== getAddress3(context.assetAddress) || paymentRecipient && quote.recipient !== recipientAddress) throw unavailable();
     if (BigInt(quote.asset) === 0n) return { transactionHash: null };
     const abi = new Interface(["function allowance(address,address) view returns(uint256)", "function approve(address,uint256) returns(bool)"]);
     const assertCurrent = async () => {
@@ -725,7 +589,7 @@ async function createStealthOSAppWallet(input) {
             ({ receipt, tx, block, head } = canonical);
           }
           if (!quantity(tx?.value) || !quantity(tx?.chainId) || !quantity(receipt.blockNumber) || !quantity(receipt.status) || !quantity(head)) throw Error("Token approval confirmation is missing required transaction metadata. No approval was resent.");
-          if (!tx || getAddress5(tx.from) !== getAddress5(current.wallet) || getAddress5(tx.to) !== getAddress5(quote.asset) || (tx.input ?? tx.data).toLowerCase() !== data.toLowerCase() || BigInt(tx.value) !== 0n || BigInt(tx.chainId) !== BigInt(chainId) || !block || String(block.hash).toLowerCase() !== String(receipt.blockHash).toLowerCase()) throw Error("Token approval transaction differs from the reviewed deposit.");
+          if (!tx || getAddress3(tx.from) !== getAddress3(current.wallet) || getAddress3(tx.to) !== getAddress3(quote.asset) || (tx.input ?? tx.data).toLowerCase() !== data.toLowerCase() || BigInt(tx.value) !== 0n || BigInt(tx.chainId) !== BigInt(chainId) || !block || String(block.hash).toLowerCase() !== String(receipt.blockHash).toLowerCase()) throw Error("Token approval transaction differs from the reviewed deposit.");
           if (BigInt(head) - BigInt(receipt.blockNumber) + 1n >= BigInt(SDK_TRANSACTION_CONFIRMATIONS)) {
             if (BigInt(receipt.status) !== 1n || await allowance() < BigInt(quote.amountAtomic)) throw Error("Token approval failed.");
             return { transactionHash: saved.transactionHash };
@@ -747,7 +611,7 @@ async function createStealthOSAppWallet(input) {
       if (!paymentRecipient) throw Error("A public payment recipient is required.");
       if (paymentContext) return paymentContext;
       const context = await command("openPublicPayment");
-      if (context.networkId !== networkId || context.generationId !== release.pins.generationId || getAddress5(context.pool) !== getAddress5(paymentRecipient.pool) || getAddress5(context.assetAddress) !== getAddress5(paymentRecipient.asset)) throw unavailable();
+      if (context.networkId !== networkId || context.generationId !== release.pins.generationId || getAddress3(context.pool) !== getAddress3(paymentRecipient.pool) || getAddress3(context.assetAddress) !== getAddress3(paymentRecipient.asset)) throw unavailable();
       paymentContext = Object.freeze(context);
       return paymentContext;
     },
@@ -839,7 +703,7 @@ async function createStealthOSAppWallet(input) {
     },
     async quoteDeposit(payload) {
       const quote = await command("quoteDeposit", payload);
-      if (paymentRecipient && (quote.recipient !== recipientAddress || getAddress5(quote.pool) !== getAddress5(paymentRecipient.pool) || getAddress5(quote.asset) !== getAddress5(paymentRecipient.asset))) throw unavailable();
+      if (paymentRecipient && (quote.recipient !== recipientAddress || getAddress3(quote.pool) !== getAddress3(paymentRecipient.pool) || getAddress3(quote.asset) !== getAddress3(paymentRecipient.asset))) throw unavailable();
       if (paymentQuotes.size >= 8) paymentQuotes.delete(paymentQuotes.keys().next().value);
       paymentQuotes.set(quote.quoteId, quote);
       return quote;

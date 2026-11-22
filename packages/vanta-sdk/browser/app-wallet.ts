@@ -8,19 +8,19 @@ import {SDK_TRANSACTION_CONFIRMATIONS} from '../fresh/transaction-confirmations.
 /** A local module-worker transport for the real SDK family host. Existing
  * authenticated wallet sessions authorize HTTP; private proofs stay local. */
 import {getAddress, getBytes,toBeHex,keccak256,Interface} from "ethers";
-import type {FamilyPrivateSendReview,FamilyNoteRecipient} from '@stealthos/vanta-sdk/family-normal-host';
-import type {FamilyRoutedReview} from '@stealthos/vanta-sdk/family-routed-host';
-import {getCompiledFamilyEvmRelease} from '@stealthos/vanta-sdk/family-network';
-import {getCompiledVantaFamilyProofResources} from '@stealthos/vanta-sdk/family-proof-resources';
+import type {FamilyPrivateSendReview,FamilyNoteRecipient} from '../fresh/family-normal-host.mjs';
+import type {FamilyRoutedReview} from '../fresh/family-routed-host.mjs';
+import {getCompiledFamilyEvmRelease} from '../fresh/family-network.mjs';
+import {getCompiledVantaFamilyProofResources} from '../fresh/family-proof-resources.mjs';
 import {familyBridgeRoutes} from '../fresh/family-bridge-gateway.mjs';
-import {parseCustomerHandleCalldata,normalizeVantaFamilyHandle} from '@stealthos/vanta-sdk/family-customer-handles';
-import {depositTransactionDigest} from "@stealthos/vanta-sdk/family-deposit-host";
-import type {FamilyDepositReview,FamilyDepositTransaction} from "@stealthos/vanta-sdk/family-deposit-host";
-import {signCompiledEnhancedConsent} from "./consent-signer";
-import type {EnhancedConsentRequest} from "./consent-message";
+import {parseCustomerHandleCalldata,normalizeVantaFamilyHandle} from '../fresh/family-customer-handles.mjs';
+import {depositTransactionDigest} from "../fresh/family-deposit-host.mjs";
+import type {FamilyDepositReview,FamilyDepositTransaction} from "../fresh/family-deposit-host.mjs";
+import {signCompiledEnhancedConsent} from "./consent-signer.js";
+import type {EnhancedConsentRequest} from "./consent-message.js";
 
-import type {EnhancedWithdrawalHost, EnhancedWithdrawalAvailability} from "./enhanced-types";
-import type {createVantaFamilyEnhancedHost} from "@stealthos/vanta-sdk/family-enhanced-host";
+import type {EnhancedWithdrawalHost, EnhancedWithdrawalAvailability} from "./enhanced-types.d.mts";
+import type {createVantaFamilyEnhancedHost} from "../fresh/family-enhanced-host.mjs";
 import {readFamilyRelayRouting, assertFamilyRelayContext, familyRelayRoutingHeaders} from './routing.mjs';
 
 function activityAsset(options: {historyAsset?: FamilyAsset}) {

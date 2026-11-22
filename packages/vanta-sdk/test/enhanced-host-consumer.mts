@@ -1,10 +1,10 @@
 import { createEnhancedWithdrawalHost, createEnhancedWithdrawalAgentTools,
   type EnhancedWithdrawalHost, type EnhancedWithdrawalHostContext,
   type EnhancedWithdrawalHostRuntime, type EnhancedWithdrawalHostSession,
-  type EnhancedWithdrawalStatus } from "@stealthos/vanta-sdk/enhanced-host";
+  type EnhancedWithdrawalStatus } from "../fresh/enhanced-host.mjs";
 import { createEnhancedWithdrawalHost as rootFactory, createVantaHostAtomicStore,
-  type VantaHostStorageBackend } from "@stealthos/vanta-sdk";
-import type { EnhancedWithdrawalReview } from "@stealthos/vanta-sdk/enhanced-payouts";
+  type VantaHostStorageBackend } from "../fresh/index.mjs";
+import type { EnhancedWithdrawalReview } from "../fresh/enhanced-payouts.mjs";
 
 declare const context: EnhancedWithdrawalHostContext;
 declare const runtime: EnhancedWithdrawalHostRuntime;

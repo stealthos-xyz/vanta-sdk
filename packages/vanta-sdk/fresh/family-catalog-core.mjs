@@ -1,10 +1,10 @@
+import {canonicalJson as canonical} from './canonical-json.mjs';
 /** Metadata validation only. Public selection is exclusively through the
  * separately compiled catalog in family-network.mjs, never caller manifests. */
 import {getAddress,sha256,toUtf8Bytes,keccak256,verifyMessage,getBytes} from 'ethers';
 const fail=message=>{throw Error('SDK KZG catalog: '+message);};
 const check=(ok,message)=>{if(!ok)fail(message);};
-const canonical=v=>Array.isArray(v)?'['+v.map(canonical).join(',')+']':v&&typeof v==='object'?
- '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}':JSON.stringify(v);
+
 export const freezeFamilyCatalogValue=v=>{if(v&&typeof v==='object'){for(const x of Object.values(v))freezeFamilyCatalogValue(x);Object.freeze(v);}return v;};
 const hash=text=>sha256(toUtf8Bytes(text)).slice(2);
 const exact=(v,keys)=>v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).sort().join()===keys.slice().sort().join();

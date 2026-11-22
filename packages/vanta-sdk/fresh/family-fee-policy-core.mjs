@@ -10,8 +10,7 @@ const abi=new Interface([
  'function enhancedFeeVerifier() view returns(address)', 'function protocolBps() view returns(uint16)',
  'function releaseSetupId() view returns(bytes32)', 'function releaseGenerationId() view returns(bytes32)',
  'function releaseFamilyTag() view returns(bytes32)', 'function releaseChainId() view returns(uint256)',
- 'function releaseGenesisHash() view returns(bytes32)',
- 'function updateRates(uint64 expectedRevision,uint16[6] next)'
+ 'function releaseGenesisHash() view returns(bytes32)'
 ]);
 const policyBlock=(provider,tag)=>['confirmed','latest','safe','finalized'].includes(tag)?getConfirmedBlock(provider):provider.getBlock(tag);
 const lower=v=>String(v).toLowerCase();
@@ -91,16 +90,4 @@ export async function readFamilyProtocolFeesCore({provider,verificationProvider,
  if(current.some(v=>lower(v?.hash)!==lower(x.hash)))fail();
  return Object.freeze({address:getAddress(p.address),administrator,revision:revision.toString(),rates:Object.freeze(rates),
   policyHash:digest,basePolicyHash,blockNumber:height,blockHash:x.hash});
-}
-
-/** The operator's wallet submits this ordinary policy transaction. An expected
- * revision prevents another admin update from silently replacing the review. */
-export async function prepareFamilyProtocolFeeUpdateCore({rates,...options}={}){
- if(!Array.isArray(rates)||rates.length!==6||rates[2]!==0||rates.some(n=>!Number.isInteger(n)||n<0||n>=10000))
-  throw Error('Choose six protocol rates below 10000 basis points; protocol deposits must be zero.');
- const policy=await readFamilyProtocolFeesCore(options);
- const release=options.release;
- return Object.freeze({policy,rates:Object.freeze([...rates]),transaction:Object.freeze({
-  chainId:'0x'+BigInt(release.pins.networkId.split(':')[1]).toString(16),from:policy.administrator,
-  to:policy.address,value:'0x0',data:abi.encodeFunctionData('updateRates',[policy.revision,rates])})});
 }

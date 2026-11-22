@@ -2,12 +2,12 @@
 
 Register your private partner handle, assets, fees and app origins in the partner portal. Download the public configuration and matching signed SDK archive. Partners do not deploy pools, perform ceremonies, host an authorization endpoint or put recovery credentials on a backend.
 
-SDK 0.4.0 requires the direct-deposit deployment generation. Its bootstrap reuses the completed ceremony and proof artifacts. It is a source candidate until the new contracts, exact SDK archive and operator publication are activated. Pin the published archive digest and retain the package lockfile; do not relabel an old deployment as direct-deposit capable.
+Use the public configuration and archive for the same signed SDK version and deployment generation.
 
 ## Browser application
 
 ```js
-import { openStealthOSPartnerApp } from '@stealthos/vanta-sdk/partner-app';
+import { openStealthOSPartnerApp } from '@stealthos/vanta-sdk';
 import configuration from './stealthos-partner-config.json';
 
 // DogeOS: pass useAccount().currentProvider, the connected EVM provider.
@@ -18,15 +18,22 @@ const wallet = await openStealthOSPartnerApp({
 });
 ```
 
-Bundle `@stealthos/vanta-sdk/browser/worker` as a module worker on your app origin. For an esbuild project:
+Bundle the exported wallet worker as an ES module. Copy the proof worker alongside it, using its original filename. For esbuild:
 
-```sh
-npx esbuild node_modules/@stealthos/vanta-sdk/browser/app-wallet-worker.mjs --bundle --platform=browser --format=esm --outfile=public/stealthos/app-wallet-worker.mjs
+```js
+import {build} from 'esbuild';
+import {copyFile, mkdir} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+
+await mkdir('public/stealthos', {recursive: true});
+await build({
+  entryPoints: [fileURLToPath(import.meta.resolve('@stealthos/vanta-sdk/worker'))],
+  outfile: 'public/stealthos/app-wallet-worker.mjs',
+  bundle: true, format: 'esm', platform: 'browser', target: 'es2022',
+  define: {'process.env.NODE_ENV': '"production"', 'process.env': '{}'},
+});
+await copyFile(new URL(import.meta.resolve('@stealthos/vanta-sdk/proof-worker')), 'public/stealthos/unified-bound4-bootstrap-worker.js');
 ```
-
-Your CSP must allow that worker, the configured HTTPS RPC/service/artifact origins and WebAssembly compilation. Keep transaction and key approvals in trusted application UI. Account or network changes lock the wallet; opening a wallet extension or switching tabs does not reset it.
-
-`createPrivateWallet` and `restoreWallet` manage the customer's private identity. It is separate from the partner's fee wallet. The SDK provides encrypted browser storage, review/execute/reconcile APIs for deposit and private transfer, receiving addresses, note recovery, swap/bridge routes and the enhanced withdrawal host. Call `getEnhancedHost()` for withdrawal and enhanced privacy controls. The app's partner handle is bound by `openStealthOSPartnerApp`; customers never choose it.
 
 The shared service authenticates each customer for a specific partner, origin, network and deployment. No protocol JWT or HMAC secret is given to the partner. Use the configured swap and bridge routes; unsupported venue/network combinations do not become available through registration. SwapKit Chikyu support still requires DogeOS's provider integration.
 

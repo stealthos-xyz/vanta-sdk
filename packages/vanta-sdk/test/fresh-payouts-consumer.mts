@@ -1,6 +1,6 @@
 import {createFreshAgentPayoutTools,getFreshPayoutCapabilities,
   prepareFreshPayoutIntent,type FreshPayoutContext,
-  type FreshPayoutIntent} from "@stealthos/vanta-sdk/payouts";
+  type FreshPayoutIntent} from "../fresh/payouts.mjs";
 
 // Compile-only consumer fixture. No release, wallet or payment is activated.
 const context:FreshPayoutContext={networkId:"eip155:6281971",

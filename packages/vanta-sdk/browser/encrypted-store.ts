@@ -1,6 +1,6 @@
 /** Browser implementation of the SDK's existing encrypted, atomic host store.
  * Other wallets use separate databases and are never read or migrated. */
-import type {VantaHostStorageBackend} from "@stealthos/vanta-sdk/host-storage";
+import type {VantaHostStorageBackend} from "../fresh/host-storage.mjs";
 
 const DATABASE = "stealthos-vanta-family-host-v1", TABLE = "ciphertexts";
 const SCHEMA = "vanta-family-browser-store-v1", ITERATIONS = 600_000;

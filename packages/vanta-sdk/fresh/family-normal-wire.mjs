@@ -1,14 +1,9 @@
+import {encodeProofGates, G1, G2, VK, GATE0, GATE1, LINK, ROW} from './proof-gates.mjs';
 /** Family-bound normal private sends. All six Gate0 and forty KZG fee
  * signals remain bound to the same quote, outputs and source checkpoint. */
 import {Interface,TypedDataEncoder,keccak256,toUtf8Bytes,ZeroAddress} from 'ethers';
 import {enhancedCoder as coder,enhancedField as field,ENHANCED_FIELD as FR,
  enhancedHashOutputs,enhancedHashNullifiers,enhancedHashEnvelopes} from './family-enhanced-wire.mjs';
-const G1='(uint256 x,uint256 y)',G2='(uint256 xIm,uint256 xRe,uint256 yIm,uint256 yRe)',
- VK=`(${G1} alpha,${G2} beta,${G2} gamma,${G2} delta,${G1}[] ic)`,
- G0=`(${VK} vk,(${G1} a,${G2} b,${G1} c,${G1} d) proof,uint256[6] publicInputs)`,
- GATE1=`((uint256 n,${G1} commitment,${G1} zH,${G1} query) table,(${G1} g1,${G2} g20,${G2} g21) srs,(${G1} zI,${G1} cI,${G1} u,${G2} w,${G1} h,uint256 v1,uint256 v2,${G1} pi1,${G1} pi2,${G1} pi3) proof,bytes context)`,
- LINK=`(${G1} pi,${G2} a2,${G2} c1,${G2} c2)`,
- ROW=`(${G1} a,${G1} u,bytes32 aCompressed,bytes32 uCompressed,bytes32[16] siblings)`;
 export const FAMILY_NORMAL_FIELDS=Object.freeze([['chainId','uint64'],['pool','address'],['asset','address'],['width','uint8'],['mode','uint8'],
  ['sourceEpoch','uint64'],['sourceCheckpoint','uint256'],['targetEpoch','uint64'],['targetCheckpoint','uint256'],
  ['recipient','address'],['payout','uint128'],['protocolFeeCap','uint128'],['partnerFeeCap','uint128'],['relayerFeeCap','uint128'],
@@ -16,7 +11,7 @@ export const FAMILY_NORMAL_FIELDS=Object.freeze([['chainId','uint64'],['pool','a
  ['envelopesHash','bytes32'],['saltedAmountHash','uint256'],['feeSlotsHash','bytes32'],['feeTermsHash','uint256'],['partnerRegistryRoot','uint256'],
  ['nonce','bytes32'],['deadline','uint64'],['feePolicyHash','bytes32']].map(([name,type])=>Object.freeze({name,type})));
 export const FAMILY_NORMAL_QUOTE='('+FAMILY_NORMAL_FIELDS.map(({name,type})=>type+' '+name).join(',')+')';
-export const familyNormalProofType=w=>`((address pool,address token,address recipient,address protocolFeeRecipient,address partnerFeeRecipient,uint64 sourceSlotCount,uint256 checkpointX,uint256 checkpointY,uint256 batchDigestField,uint256 feeQuoteDigestField,uint8 legIndex,uint8 feeLegIndex,uint8 legCount,uint128 protocolFeeCap,uint128 partnerFeeCap,uint256 saltedAmountHash,uint256[${w}] nullifiers,uint256[5] outputs) action,${G0} gate0,${GATE1} gate1,${LINK} link,${VK} aggregateVk,(${G1} a,${G2} b,${G1} c) aggregateProof,uint256[11] aggregateInputs,${ROW}[5] rowKeys,bytes[5] encryptedOutputs,uint8[3] feeSlots,bytes combinedFeePartnerProof)`;
+export const familyNormalProofType=w=>`((address pool,address token,address recipient,address protocolFeeRecipient,address partnerFeeRecipient,uint64 sourceSlotCount,uint256 checkpointX,uint256 checkpointY,uint256 batchDigestField,uint256 feeQuoteDigestField,uint8 legIndex,uint8 feeLegIndex,uint8 legCount,uint128 protocolFeeCap,uint128 partnerFeeCap,uint256 saltedAmountHash,uint256[${w}] nullifiers,uint256[5] outputs) action,${GATE0} gate0,${GATE1} gate1,${LINK} link,${VK} aggregateVk,(${G1} a,${G2} b,${G1} c) aggregateProof,uint256[11] aggregateInputs,${ROW}[5] rowKeys,bytes[5] encryptedOutputs,uint8[3] feeSlots,bytes combinedFeePartnerProof)`;
 export const familyNormalAbi=new Interface([
  ...[8,32].map(w=>`function settleNormalEpoch${w}(${FAMILY_NORMAL_QUOTE},${familyNormalProofType(w)},bytes)`),
  `function normalQuoteDigest(${FAMILY_NORMAL_QUOTE}) view returns(bytes32)`,
@@ -73,10 +68,7 @@ function encodeFamilyNormalSpend({domain,q,signature,preview,bundle,combined,agg
  const proof={action:{pool:q.pool,token:q.asset,recipient:q.recipient,protocolFeeRecipient:q.protocolRecipient,partnerFeeRecipient:q.partnerRecipient,
   sourceSlotCount:source.rows,checkpointX:source.x,checkpointY:source.y,batchDigestField:batch,feeQuoteDigestField:quote,legIndex:0,feeLegIndex:0,legCount:1,
   protocolFeeCap:q.protocolFeeCap,partnerFeeCap:q.partnerFeeCap,saltedAmountHash:q.saltedAmountHash,nullifiers:preview.nullifiers,outputs:preview.output_commitments},
-  gate0:{vk:{alpha:g0.vk.alpha_g1,beta:g0.vk.beta_g2,gamma:g0.vk.gamma_g2,delta:g0.vk.delta_g2,ic:g0.vk.gamma_abc_g1},proof:{a:g0.a,b:g0.b,c:g0.c,d:g0.d},publicInputs:signals},
-  gate1:{table:{n:g1.table.n,commitment:g1.table.commitment,zH:g1.table.z_h_g1,query:g1.query},srs:{g1:g1.srs.g1[0],g20:g1.srs.g2[0],g21:g1.srs.g2[1]},
-   proof:{zI:g1.proof.z_i,cI:g1.proof.c_i,u:g1.proof.u,w:g1.proof.w,h:g1.proof.h,v1:g1.proof.v1,v2:g1.proof.v2,pi1:g1.proof.pi1,pi2:g1.proof.pi2,pi3:g1.proof.pi3},context:g1.transcript_context_hex},
-  link:{pi:link.pi,a2:link.a2,c1:link.c1,c2:link.c2},aggregateVk:{alpha:zero,beta:zero2,gamma:zero2,delta:zero2,ic:[]},aggregateProof:{a:zero,b:zero2,c:zero},aggregateInputs:Array(11).fill(0),
+  ...encodeProofGates(g0, g1, link, signals),aggregateVk:{alpha:zero,beta:zero2,gamma:zero2,delta:zero2,ic:[]},aggregateProof:{a:zero,b:zero2,c:zero},aggregateInputs:Array(11).fill(0),
   rowKeys,encryptedOutputs:envelopes,feeSlots:[1,2,3],combinedFeePartnerProof:combined.proof};
  if(routed){
   const expected=[batch,field(1),field(q.payout),field(q.saltedAmountHash),...Array(7).fill(field(0,true)),domain.familyTag,field(q.chainId)];

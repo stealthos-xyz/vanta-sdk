@@ -3,19 +3,9 @@
  * The caller invokes trusted, already-instantiated WASM inside the wallet.
  * No witness, viewing key, note opening or proving key is ever sent to HTTP.
  */
-import { getAddress, isHexString, sha256 } from "ethers";
+import { getAddress, isHexString } from "ethers";
 
 const FR = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
-const MAX_PK_BYTES = 64 * 1024 * 1024;
-const KEY_DIGEST = /^[0-9a-f]{64}$/i;
-
-export type VantaV8CombinedFeeWasm = Readonly<{
-  proveVantaV8UnifiedCombinedFeePartner(
-    provingKey: Uint8Array,
-    expectedSha256: string,
-    walletWitness: unknown,
-  ): string;
-}>;
 
 export type VantaV8CombinedFeeProof = Readonly<{
   schema: "vanta-v8-unified-combined-fee-partner-proof-v1";
@@ -66,31 +56,6 @@ function field(value: unknown): bigint {
   const parsed = BigInt(value);
   if (parsed >= FR) throw Error("Noncanonical combined fee public signal.");
   return parsed;
-}
-
-/**
- * Only return the 256-byte Groth16 proof after the wallet-local WASM has
- * verified all 37 public signals against the signed action quote.
- */
-export function proveVantaV8CombinedFeePartnerInWallet(input: Readonly<{
-  wasm: VantaV8CombinedFeeWasm;
-  provingKey: Uint8Array;
-  approvedKeySha256: string;
-  walletWitness: unknown;
-  expected: VantaV8CombinedProofExpectation;
-}>): VantaV8CombinedFeeProof {
-  const { wasm, provingKey, approvedKeySha256, walletWitness, expected } = input;
-  if (typeof wasm?.proveVantaV8UnifiedCombinedFeePartner !== "function" ||
-      !(provingKey instanceof Uint8Array) || !provingKey.length ||
-      provingKey.length > MAX_PK_BYTES || !KEY_DIGEST.test(approvedKeySha256) ||
-      sha256(provingKey).slice(2).toLowerCase() !== approvedKeySha256.toLowerCase())
-    throw Error("Combined fee proving key is not trusted.");
-
-  return validateVantaV8CombinedFeeProofResponse(
-    wasm.proveVantaV8UnifiedCombinedFeePartner(
-      provingKey, approvedKeySha256, walletWitness,
-    ), expected,
-  );
 }
 
 /** Validate the public transcript for BOTH conventional and STREAM_BOUND4

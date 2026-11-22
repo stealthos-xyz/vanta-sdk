@@ -1,14 +1,14 @@
 import {createEip1193HostWallet,createNativeHostWallet,
   type VantaNativeWalletHost,type VantaEip1193Provider}
-  from "@stealthos/vanta-sdk/host-wallet";
+  from "../fresh/host-wallet.mjs";
 import {createVantaHostAtomicStore,createVantaHostPrivacyVault,
   createVantaLocalPrivacyWallet,type VantaHostStorageBackend}
-  from "@stealthos/vanta-sdk/host-storage";
-import {createVantaHostWorker} from "@stealthos/vanta-sdk/host-worker";
+  from "../fresh/host-storage.mjs";
+import {createVantaHostWorker} from "../fresh/host-worker.mjs";
 import {createVantaFamilyHostRuntimeFactory}
-  from "@stealthos/vanta-sdk/host-family-runtime";
+  from "../fresh/host-family-runtime.mjs";
 import {DOGEOS_CHIKYU_NETWORK,dogeOsAssetKey}
-  from "@stealthos/vanta-sdk/dogeos-network";
+  from "../fresh/dogeos-network.mjs";
 
 declare const provider:VantaEip1193Provider;
 declare const native:VantaNativeWalletHost;

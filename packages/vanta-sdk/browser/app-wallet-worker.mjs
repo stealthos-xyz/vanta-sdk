@@ -1,268 +1,25 @@
-// packages/vanta-sdk/browser/app-wallet-worker.ts
-import { quoteFamilyNetRoute } from "@stealthos/vanta-sdk/family-route-review";
-
-// packages/vanta-sdk/fresh/family-balance-cache.mjs
-var WORD = /^0x[0-9a-f]{64}$/u;
-var UNITS = /^(?:0|[1-9][0-9]{0,77})$/u;
-var validAnchor = (row) => Number.isSafeInteger(row?.blockNumber) && row.blockNumber >= 0 && typeof row.blockHash === "string" && WORD.test(row.blockHash);
-function createFamilyBalanceCache({ store: store2, identity, generationId, pools }) {
-  const namespace = "family-balance-display-v1/" + identity;
-  const assets = new Map(pools.map((pool) => [pool.pool, pool]));
-  const validSnapshot = (record) => {
-    if (!validAnchor(record) || record.generationId !== generationId || !Array.isArray(record.pools) || record.pools.length !== assets.size || new Set(record.pools.map((row) => row?.pool)).size !== assets.size)
-      return false;
-    return record.pools.every((row) => {
-      const pin = assets.get(row?.pool);
-      return pin && row.asset === pin.asset && row.assetDecimals === pin.assetDecimals && typeof row.displayBalanceUnits === "string" && UNITS.test(row.displayBalanceUnits);
-    });
-  };
-  return Object.freeze({
-    async readSnapshot() {
-      const rows = await store2.read(namespace);
-      return rows.length === 1 && validSnapshot(rows[0]) ? rows[0] : null;
-    },
-    async saveSnapshot(summary) {
-      const { generationId: generationId2, blockNumber, blockHash } = summary;
-      const pools2 = summary.pools.map((row) => {
-        const pin = assets.get(row.pool);
-        return {
-          pool: row.pool,
-          asset: pin?.asset,
-          assetDecimals: row.assetDecimals,
-          displayBalanceUnits: row.projectedBalanceUnits ?? row.unreservedBalanceUnits ?? "0"
-        };
-      });
-      const record = { generationId: generationId2, blockNumber, blockHash, pools: pools2 };
-      if (!validSnapshot(record)) return;
-      await store2.transact(namespace, (rows) => ({
-        next: rows[0]?.blockNumber > blockNumber ? rows : [record],
-        result: null
-      }));
-    },
-    async readCheckpoint(pool) {
-      if (!assets.has(pool)) return null;
-      const rows = await store2.read("family-balance-events-v1/" + identity + "/" + pool);
-      return rows.length === 1 ? rows[0] : null;
-    },
-    async saveCheckpoint(pool, checkpoint) {
-      if (!assets.has(pool)) return;
-      await store2.transact("family-balance-events-v1/" + identity + "/" + pool, (rows) => ({
-        next: rows[0]?.anchor?.number > checkpoint.anchor.number ? rows : [checkpoint],
-        result: null
-      }));
-    }
-  });
-}
-
-// packages/vanta-sdk/fresh/family-public-artifact-cache.mjs
-import { sha256 } from "ethers";
-var LIMIT = 64 * 1024 * 1024;
-function depositWarmupPins(inventory) {
-  const p = inventory.profiles.combined, policy = inventory.partnerPolicyKzg;
-  return [
-    p.runtime.glue,
-    p.runtime.wasm,
-    p.keyManifest,
-    p.matrixManifest,
-    p.fixedKey,
-    p.matrix,
-    ...Object.values(p.queries),
-    p.policyLookupKey,
-    inventory.profiles.normal8.runtime.glue,
-    inventory.profiles.normal8.runtime.wasm,
-    policy.corpus,
-    policy.corpusMetadata
-  ].filter(Boolean);
-}
-function walletWarmupPins(inventory) {
-  const c = inventory.funding.publicCache;
-  const pins = [
-    ...depositWarmupPins(inventory),
-    ...["normal8", "normal32"].flatMap((name) => {
-      const p = inventory.profiles[name];
-      return p ? [p.runtime.glue, p.runtime.wasm, p.m2Manifest, p.matrixManifest, p.publicMaterial, p.m2Key, p.matrix] : [];
-    }),
-    c.corpus,
-    c.metadata,
-    c.runtime.glue,
-    c.runtime.wasm,
-    c.runtime.build
-  ];
-  return [...new Map(pins.filter(Boolean).map((p) => [p.sha256 + ":" + p.bytes, p])).values()];
-}
-function enhancedWarmupPins(inventory) {
-  const profile = inventory.profiles.enhanced;
-  return [
-    profile.keyManifest,
-    profile.matrixManifest,
-    profile.fixedKey,
-    profile.policyLookupKey,
-    profile.matrix,
-    ...Object.values(profile.queries)
-  ].filter(Boolean);
-}
-function createFamilyPublicArtifactCache({ baseUrl, pins, enhancedPins = [], fetcher: fetcher2 = fetch, cacheStorage = globalThis.caches, locks = globalThis.navigator?.locks } = {}) {
-  const base = new URL(baseUrl), allowed = /* @__PURE__ */ new Map(), inflight = /* @__PURE__ */ new Map(), memory = /* @__PURE__ */ new Map();
-  let memoryBytes = 0;
-  const remember = (url, bytes2) => {
-    const bound = 32 * 1024 * 1024;
-    if (bytes2.byteLength > bound) return bytes2;
-    const old = memory.get(url);
-    if (old) {
-      memory.delete(url);
-      memoryBytes -= old.byteLength;
-    }
-    while (memoryBytes + bytes2.byteLength > bound) {
-      const key = memory.keys().next().value;
-      memoryBytes -= memory.get(key).byteLength;
-      memory.delete(key);
-    }
-    memory.set(url, bytes2);
-    memoryBytes += bytes2.byteLength;
-    return bytes2;
-  };
-  const register = (pin) => {
-    const hash = pin.sha256?.replace(/^0x/u, "");
-    if (!/^[0-9a-f]{64}$/u.test(hash) || !Number.isSafeInteger(pin.bytes) || pin.bytes < 1 || pin.bytes > LIMIT) throw Error("Invalid pinned public cache artifact.");
-    const url = new URL(pin.path, base);
-    if (url.origin !== base.origin || !url.pathname.startsWith(base.pathname)) throw Error("Public cache artifact escaped its origin.");
-    allowed.set(url.href, { ...pin, hash });
-    return url.href;
-  };
-  const startupUrls = pins.map(register), enhancedUrls = enhancedPins.map(register);
-  const valid = (bytes2, pin) => bytes2.length === pin.bytes && sha256(bytes2) === "0x" + pin.hash;
-  const response = (bytes2, pin) => new Response(bytes2, { status: 200, headers: { "Content-Length": String(pin.bytes), "Content-Type": pin.path.endsWith(".mjs") ? "text/javascript" : "application/octet-stream" } });
-  const load = async (url, pin, init) => {
-    const work = async () => {
-      let cache;
-      try {
-        cache = await cacheStorage?.open("stealthos-public-proof-artifacts-v1");
-      } catch {
-      }
-      const key = new Request(new URL("/" + pin.hash + "/" + pin.bytes, base.origin));
-      try {
-        const hit = await cache?.match(key);
-        if (hit) {
-          const bytes3 = new Uint8Array(await hit.arrayBuffer());
-          if (valid(bytes3, pin)) return remember(url, bytes3);
-          await cache.delete(key);
-        }
-      } catch {
-      }
-      let res;
-      for (let attempt = 0; attempt < 2; attempt++) {
-        init?.signal?.throwIfAborted();
-        try {
-          res = await fetcher2(url, { ...init, method: "GET", headers: void 0, credentials: "omit", redirect: "error", cache: attempt ? "reload" : "force-cache" });
-        } catch (error) {
-          if (attempt || init?.signal?.aborted) throw error;
-          continue;
-        }
-        if (attempt === 0 && [429, 502, 503, 504].includes(res.status)) {
-          await res.body?.cancel();
-          continue;
-        }
-        break;
-      }
-      if (res.status !== 200 || res.redirected || res.type === "opaque" || !res.body) throw Error("Family public artifact: download unavailable.");
-      const bytes2 = new Uint8Array(pin.bytes), reader = res.body.getReader();
-      let size = 0;
-      try {
-        for (; ; ) {
-          const part = await reader.read();
-          if (part.done) break;
-          if (size + part.value.length > bytes2.length) throw Error("Family public artifact: oversized download.");
-          bytes2.set(part.value, size);
-          size += part.value.length;
-        }
-        if (size !== pin.bytes || !valid(bytes2, pin)) throw Error("Family public artifact: SHA-256 or size differs.");
-      } catch (error) {
-        try {
-          await reader.cancel();
-        } catch {
-        }
-        throw error;
-      } finally {
-        reader.releaseLock();
-      }
-      try {
-        await cache?.put(key, response(bytes2, pin));
-      } catch {
-      }
-      return remember(url, bytes2);
-    };
-    return locks?.request ? locks.request("stealthos-public-" + pin.hash, work) : work();
-  };
-  const bytes = (url, pin, init) => {
-    const hit = memory.get(url);
-    if (hit) {
-      memory.delete(url);
-      memory.set(url, hit);
-      return Promise.resolve(hit);
-    }
-    let task = inflight.get(url);
-    if (!task) {
-      task = load(url, pin, init);
-      inflight.set(url, task);
-      task.finally(() => {
-        if (inflight.get(url) === task) inflight.delete(url);
-      }).catch(() => {
-      });
-    }
-    return task;
-  };
-  const cachedFetch = async (input, init) => {
-    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-    const pin = allowed.get(url), method = init?.method ?? (input instanceof Request ? input.method : "GET");
-    if (!pin || method !== "GET") return fetcher2(input, init);
-    const range = new Headers(init?.headers ?? (input instanceof Request ? input.headers : void 0)).get("Range");
-    if (range) {
-      const m = /^bytes=(\d+)-(\d+)$/u.exec(range);
-      if (!m) return fetcher2(input, init);
-      const start = Number(m[1]), end = Number(m[2]);
-      if (start > end || end >= pin.bytes) return fetcher2(input, init);
-      const full = await bytes(url, pin, init);
-      return new Response(full.slice(start, end + 1), { status: 206, headers: { "Content-Length": String(end - start + 1), "Content-Range": `bytes ${start}-${end}/${pin.bytes}` } });
-    }
-    return response(await bytes(url, pin, init), pin);
-  };
-  const warm = async (urls) => {
-    for (const url of urls) await bytes(url, allowed.get(url));
-  };
-  let warmingEnhanced;
-  return Object.freeze({
-    fetch: cachedFetch,
-    warm: () => warm(startupUrls),
-    // Quotes with edited inputs share the same immutable proof files. Keep one
-    // background download at a time and let proving reuse any in-flight read.
-    warmEnhanced() {
-      warmingEnhanced ??= warm(enhancedUrls).finally(() => {
-        warmingEnhanced = void 0;
-      });
-      return warmingEnhanced;
-    }
-  });
-}
-
-// packages/vanta-sdk/browser/app-wallet-worker.ts
-import { DEPOSIT_INSUFFICIENT_FUNDS, depositFailure, publicDepositFailure, readDepositFailure } from "@stealthos/vanta-sdk/family-deposit-errors";
+// browser/app-wallet-worker.ts
+import { quoteFamilyNetRoute } from "../fresh/family-route-review.mjs";
+import { createFamilyBalanceCache } from "../fresh/family-balance-cache.mjs";
+import { createFamilyPublicArtifactCache, walletWarmupPins, depositWarmupPins, enhancedWarmupPins } from "../fresh/family-public-artifact-cache.mjs";
+import { DEPOSIT_INSUFFICIENT_FUNDS, depositFailure, publicDepositFailure, readDepositFailure } from "../fresh/family-deposit-errors.mjs";
 import { hexlify, keccak256, toUtf8Bytes, randomBytes } from "ethers";
-import { getCompiledFamilyEvmRelease } from "@stealthos/vanta-sdk/family-network";
-import { getCompiledVantaFamilyProofResources } from "@stealthos/vanta-sdk/family-proof-resources";
-import { createFamilyRpcProviders } from "@stealthos/vanta-sdk/family-rpc";
-import { createFamilyCustomerHandles } from "@stealthos/vanta-sdk/family-customer-handles";
+import { getCompiledFamilyEvmRelease } from "../fresh/family-network.mjs";
+import { getCompiledVantaFamilyProofResources } from "../fresh/family-proof-resources.mjs";
+import { createFamilyRpcProviders } from "../fresh/family-rpc.mjs";
+import { createFamilyCustomerHandles } from "../fresh/family-customer-handles.mjs";
 import {
   createVantaHostAtomicStore,
   createVantaHostPrivacyVault,
   createVantaLocalPrivacyWallet,
   vantaHostStorageScope
-} from "@stealthos/vanta-sdk/host-storage";
-import { createVantaFamilyEnhancedHost } from "@stealthos/vanta-sdk/family-enhanced-host";
-import { createVantaFamilyDepositHost } from "@stealthos/vanta-sdk/family-deposit-host";
-import { createVantaFamilyPrivateSendHost, createVantaFamilyWithdrawalHost } from "@stealthos/vanta-sdk/family-normal-host";
-import { createVantaFamilyRoutedHost } from "@stealthos/vanta-sdk/family-routed-host";
+} from "../fresh/host-storage.mjs";
+import { createVantaFamilyEnhancedHost } from "../fresh/family-enhanced-host.mjs";
+import { createVantaFamilyDepositHost } from "../fresh/family-deposit-host.mjs";
+import { createVantaFamilyPrivateSendHost, createVantaFamilyWithdrawalHost } from "../fresh/family-normal-host.mjs";
+import { createVantaFamilyRoutedHost } from "../fresh/family-routed-host.mjs";
 
-// packages/vanta-sdk/browser/encrypted-store.ts
+// browser/encrypted-store.ts
 var DATABASE = "stealthos-vanta-family-host-v1";
 var TABLE = "ciphertexts";
 var SCHEMA = "vanta-family-browser-store-v1";
@@ -592,7 +349,7 @@ async function createFamilyWalletStoreBackend({
   return Object.freeze(backend2);
 }
 
-// packages/vanta-sdk/browser/routing.mjs
+// browser/routing.mjs
 var FAMILY_ROUTING_HEADERS = Object.freeze([
   "X-StealthOS-Network",
   "X-StealthOS-Generation",
@@ -612,7 +369,7 @@ function familyRelayRoutingHeaders(context) {
   return headers;
 }
 
-// packages/vanta-sdk/browser/app-wallet-worker.ts
+// browser/app-wallet-worker.ts
 var compiledRelease = getCompiledFamilyEvmRelease();
 var chainId = Number(compiledRelease.pins.networkId.split(":")[1]);
 var scope = globalThis;

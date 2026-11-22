@@ -1,25 +1,25 @@
-import {quoteFamilyNetRoute} from '@stealthos/vanta-sdk/family-route-review';
+import {quoteFamilyNetRoute} from '../fresh/family-route-review.mjs';
 import {createFamilyBalanceCache} from '../fresh/family-balance-cache.mjs';
 import {createFamilyPublicArtifactCache,walletWarmupPins,depositWarmupPins,enhancedWarmupPins} from '../fresh/family-public-artifact-cache.mjs';
-import {DEPOSIT_INSUFFICIENT_FUNDS,depositFailure,publicDepositFailure,readDepositFailure} from '@stealthos/vanta-sdk/family-deposit-errors';
+import {DEPOSIT_INSUFFICIENT_FUNDS,depositFailure,publicDepositFailure,readDepositFailure} from '../fresh/family-deposit-errors.mjs';
 /// <reference lib="webworker" />
 /** Trusted local SDK bootstrap. Only reviews, public identity and status leave
  * this worker; the separate UI port handles local unlock and encrypted HTTP. */
 import {JsonRpcProvider, Interface, hexlify, getAddress,keccak256,toUtf8Bytes,randomBytes} from "ethers";
-import {getCompiledFamilyEvmRelease} from "@stealthos/vanta-sdk/family-network";
-import {getCompiledVantaFamilyProofResources} from '@stealthos/vanta-sdk/family-proof-resources';
-import {createFamilyRpcProviders} from '@stealthos/vanta-sdk/family-rpc';
-import {createFamilyCustomerHandles} from '@stealthos/vanta-sdk/family-customer-handles';
+import {getCompiledFamilyEvmRelease} from "../fresh/family-network.mjs";
+import {getCompiledVantaFamilyProofResources} from '../fresh/family-proof-resources.mjs';
+import {createFamilyRpcProviders} from '../fresh/family-rpc.mjs';
+import {createFamilyCustomerHandles} from '../fresh/family-customer-handles.mjs';
 import {createVantaHostAtomicStore, createVantaHostPrivacyVault, createVantaLocalPrivacyWallet,
-  vantaHostStorageScope} from "@stealthos/vanta-sdk/host-storage";
-import {createVantaFamilyEnhancedHost} from "@stealthos/vanta-sdk/family-enhanced-host";
-import {createVantaFamilyDepositHost} from "@stealthos/vanta-sdk/family-deposit-host";
-import {createVantaFamilyPrivateSendHost,createVantaFamilyWithdrawalHost} from "@stealthos/vanta-sdk/family-normal-host";
-import {createVantaFamilyRoutedHost} from "@stealthos/vanta-sdk/family-routed-host";
-import type {FamilyNoteRecipient,FamilyPrivateSendReview} from "@stealthos/vanta-sdk/family-normal-host";
-import type {EnhancedWithdrawalHostSession} from "@stealthos/vanta-sdk/enhanced-host";
-import {createFamilyWalletStoreBackend} from "./encrypted-store";
-import type {FamilyBootstrap, FamilyCommand, FamilyAsset} from "./app-wallet";
+  vantaHostStorageScope} from "../fresh/host-storage.mjs";
+import {createVantaFamilyEnhancedHost} from "../fresh/family-enhanced-host.mjs";
+import {createVantaFamilyDepositHost} from "../fresh/family-deposit-host.mjs";
+import {createVantaFamilyPrivateSendHost,createVantaFamilyWithdrawalHost} from "../fresh/family-normal-host.mjs";
+import {createVantaFamilyRoutedHost} from "../fresh/family-routed-host.mjs";
+import type {FamilyNoteRecipient,FamilyPrivateSendReview} from "../fresh/family-normal-host.mjs";
+import type {EnhancedWithdrawalHostSession} from "../fresh/enhanced-host.mjs";
+import {createFamilyWalletStoreBackend} from "./encrypted-store.js";
+import type {FamilyBootstrap, FamilyCommand, FamilyAsset} from "./app-wallet.js";
 
 import {readFamilyRelayRouting, familyRelayRoutingHeaders} from './routing.mjs';
 

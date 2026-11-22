@@ -9,7 +9,3 @@ export interface FamilyProtocolFeeOptions {
  releaseContext?: import('./family-network.mjs').FamilyReleaseContext;
 }
 export function readVantaFamilyProtocolFees(options: FamilyProtocolFeeOptions): Promise<FamilyProtocolFeePolicy>;
-export function prepareVantaFamilyProtocolFeeUpdate(options: FamilyProtocolFeeOptions & {rates: number[]}): Promise<{
- readonly policy: FamilyProtocolFeePolicy; readonly rates: readonly number[];
- readonly transaction: Readonly<{chainId: string; from: string; to: string; value: string; data: string}>;
-}>;

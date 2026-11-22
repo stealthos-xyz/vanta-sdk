@@ -13,6 +13,7 @@ const exists=async path=>{try{return (await stat(path)).isFile();}catch(error){i
 while(queued.length){
   let name=queued.pop().replace(/^\.\//u,"");if(seen.has(name))continue;
   let full=resolve(root,name);
+  if(!await exists(full)&&name.endsWith(".js")&&await exists(full.slice(0,-3)+".ts")){name=name.slice(0,-3)+".ts";full=resolve(root,name);}
   if(!await exists(full)){for(const ext of [".ts",".d.mts",".mjs"]){if(await exists(full+ext)){name+=ext;full+=ext;break;}}}
   if(seen.has(name))continue;
   if(!full.startsWith(root+sep))throw Error("Package graph escaped root: "+name);
@@ -42,8 +43,8 @@ while(queued.length){
     ts.forEachChild(node,visit);
   };visit(tree);
 }
-const documents=["README.md","PARTNER_INTEGRATION.md","fresh/HOST_INTEGRATION.md","fresh/SDK_UPGRADES.md","fresh/SDK_0_3_0_ACCEPTANCE.md","fresh/FAMILY_PROOFS.md","fresh/PAYOUT_INTENTS.md","fresh/ENHANCED_PAYOUTS.md","fresh/ENHANCED_HOST.md","fresh/FAMILY_NOTE_DELIVERY.md","node/FAMILY_PARTNER_AUTH_HOST.md"];
-const assets=["dist/vendor/runtime-provenance.json","dist/vendor/THIRD_PARTY_NOTICES.txt","dist/vendor/licenses","fresh/family-balance-cache.mjs"];
+const documents=["README.md","PARTNER_INTEGRATION.md"];
+const assets=["dist/vendor/runtime-provenance.json","dist/vendor/THIRD_PARTY_NOTICES.txt","dist/vendor/licenses"];
 const files=[...new Set([...seen,...documents,...assets])].sort();
 if(process.argv.includes("--write")){
   pkg.files=files;await writeFile(resolve(root,"package.json"),JSON.stringify(pkg,null,2)+"\n");

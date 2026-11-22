@@ -1,19 +1,15 @@
+import {encodeProofGates, G1, G2, VK, GATE0, GATE1, LINK} from './proof-gates.mjs';
 /** Current family KZG no-append exits. Public metadata only; never an older
  * transaction engine or a relayer-supplied key/deployment manifest. */
 import {Interface,TypedDataEncoder,keccak256,toUtf8Bytes,ZeroAddress} from 'ethers';
 import {enhancedCoder as coder,enhancedField as field,ENHANCED_FIELD as FR,enhancedFail as fail,
  enhancedHashOutputs,enhancedHashNullifiers} from './family-enhanced-wire.mjs';
-const G1='(uint256 x,uint256 y)',G2='(uint256 xIm,uint256 xRe,uint256 yIm,uint256 yRe)',
- VK=`(${G1} alpha,${G2} beta,${G2} gamma,${G2} delta,${G1}[] ic)`,
- G0=`(${VK} vk,(${G1} a,${G2} b,${G1} c,${G1} d) proof,uint256[6] publicInputs)`,
- GATE1=`((uint256 n,${G1} commitment,${G1} zH,${G1} query) table,(${G1} g1,${G2} g20,${G2} g21) srs,(${G1} zI,${G1} cI,${G1} u,${G2} w,${G1} h,uint256 v1,uint256 v2,${G1} pi1,${G1} pi2,${G1} pi3) proof,bytes context)`,
- LINK=`(${G1} pi,${G2} a2,${G2} c1,${G2} c2)`;
 const specs=[['chainId','uint64'],['pool','address'],['asset','address'],['width','uint8'],['sourceEpoch','uint64'],
  ['sourceCheckpoint','uint256'],['recipient','address'],['payout','uint128'],['protocolFee','uint128'],['partnerFee','uint128'],
  ['protocolFeeCap','uint128'],['partnerFeeCap','uint128'],['protocolRecipient','address'],['partnerRecipient','address'],['relayer','address'],
  ['nullifiersHash','bytes32'],['outputsHash','bytes32'],['saltedAmountHash','uint256'],['nonce','bytes32'],['deadline','uint64'],['feePolicyHash','bytes32']];
 export const FAMILY_EXIT_QUOTE='('+specs.map(([n,t])=>t+' '+n).join(',')+')';
-const proofType=w=>`((address pool,address token,address recipient,address protocolFeeRecipient,address partnerFeeRecipient,uint64 sourceSlotCount,uint256 checkpointX,uint256 checkpointY,uint256 batchDigestField,uint256 feeQuoteDigestField,uint8 legIndex,uint8 feeLegIndex,uint8 legCount,uint128 protocolFeeCap,uint128 partnerFeeCap,uint256 saltedAmountHash,uint256[${w}] nullifiers,uint256[5] outputs) action,${G0} gate0,${GATE1} gate1,${LINK} link,${VK} aggregateVk,(${G1} a,${G2} b,${G1} c) aggregateProof,uint256[11] aggregateInputs)`;
+const proofType=w=>`((address pool,address token,address recipient,address protocolFeeRecipient,address partnerFeeRecipient,uint64 sourceSlotCount,uint256 checkpointX,uint256 checkpointY,uint256 batchDigestField,uint256 feeQuoteDigestField,uint8 legIndex,uint8 feeLegIndex,uint8 legCount,uint128 protocolFeeCap,uint128 partnerFeeCap,uint256 saltedAmountHash,uint256[${w}] nullifiers,uint256[5] outputs) action,${GATE0} gate0,${GATE1} gate1,${LINK} link,${VK} aggregateVk,(${G1} a,${G2} b,${G1} c) aggregateProof,uint256[11] aggregateInputs)`;
 export const familyExitAbi=new Interface([
  ...[8,32].map(w=>`function settleNoAppendExit${w}(${FAMILY_EXIT_QUOTE},${proofType(w)},bytes)`),
  `function exitQuoteDigest(${FAMILY_EXIT_QUOTE}) view returns(bytes32)`,
@@ -52,9 +48,6 @@ export function encodeFamilyExit({domain,q,preview,bundle,aggregate,source}){
   sourceSlotCount:source.rows,checkpointX:source.x,checkpointY:source.y,batchDigestField:batch,feeQuoteDigestField:quoteField,
   legIndex:0,feeLegIndex:0,legCount:1,protocolFeeCap:q.protocolFeeCap,partnerFeeCap:q.partnerFeeCap,saltedAmountHash:q.saltedAmountHash,
   nullifiers:preview.nullifiers,outputs:preview.output_commitments},
-  gate0:{vk:{alpha:g0.vk.alpha_g1,beta:g0.vk.beta_g2,gamma:g0.vk.gamma_g2,delta:g0.vk.delta_g2,ic:g0.vk.gamma_abc_g1},proof:{a:g0.a,b:g0.b,c:g0.c,d:g0.d},publicInputs:signals},
-  gate1:{table:{n:g1.table.n,commitment:g1.table.commitment,zH:g1.table.z_h_g1,query:g1.query},srs:{g1:g1.srs.g1[0],g20:g1.srs.g2[0],g21:g1.srs.g2[1]},
-   proof:{zI:g1.proof.z_i,cI:g1.proof.c_i,u:g1.proof.u,w:g1.proof.w,h:g1.proof.h,v1:g1.proof.v1,v2:g1.proof.v2,pi1:g1.proof.pi1,pi2:g1.proof.pi2,pi3:g1.proof.pi3},context:g1.transcript_context_hex},
-  link:{pi:link.pi,a2:link.a2,c1:link.c1,c2:link.c2},aggregateVk:aggregate.vk,aggregateProof:{a,b,c},aggregateInputs:expected.slice(0,11)};
+  ...encodeProofGates(g0, g1, link, signals),aggregateVk:aggregate.vk,aggregateProof:{a,b,c},aggregateInputs:expected.slice(0,11)};
  return familyExitAbi.encodeFunctionData('settleNoAppendExit'+q.width,[q,proof,'0x']);
 }

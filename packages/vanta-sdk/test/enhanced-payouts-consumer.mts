@@ -1,6 +1,6 @@
 import { createEnhancedPayoutSchedule, projectVerifiedEnhancedPayoutStatus,
   type EnhancedPayoutContext, type VerifiedEnhancedClaimReceipt }
-  from "@stealthos/vanta-sdk/enhanced-payouts";
+  from "../fresh/enhanced-payouts.mjs";
 
 const schedule = createEnhancedPayoutSchedule({ netPayoutAtomic: "123456789" },
   { maximumWindowEpochs: 360 });

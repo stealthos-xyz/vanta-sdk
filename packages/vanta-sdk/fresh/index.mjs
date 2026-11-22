@@ -1,6 +1,4 @@
 export * from "./wallet-runtime.mjs";
-export * from "../dist/vanta/token-allowlist.js";
-export * from "../dist/vanta/token-policy.js";
 export * from "./host-wallet.mjs";
 export * from "./host-storage.mjs";
 export * from "./host-worker.mjs";

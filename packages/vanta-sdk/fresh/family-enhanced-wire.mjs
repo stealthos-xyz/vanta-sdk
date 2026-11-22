@@ -1,3 +1,4 @@
+import {encodeProofGates, G1, G2, VK, GATE0, GATE1, LINK, ROW} from './proof-gates.mjs';
 /** Exact private funding wire shared by the wallet runtime and its local
  * qualification. No amount salt, wallet key or local request ID is encoded. */
 import { AbiCoder, Interface, TypedDataEncoder, getAddress, keccak256, toUtf8Bytes } from "ethers";
@@ -35,12 +36,6 @@ export const enhancedHashEnvelopes = envelopes => keccak256(enhancedCoder.encode
 export const enhancedHashNullifiers = (nullifiers, width) => keccak256(enhancedCoder.encode([`uint256[${width}]`], [nullifiers]));
 
 export const ENHANCED_HEADER = "(uint8 width,uint64 sourceEpoch,uint256 sourceCheckpoint,uint64 targetEpoch,uint256 targetCheckpoint,uint256 reservationCommitment,uint256 authorizationDigest,uint256 amountHash,uint256 scopeDigest,uint256 feeTermsHash,uint256 partnerRegistryRoot,uint64 authorizationEpoch,bytes32 nonce,uint64 deadline,address relayer,bytes32 nullifiersHash,bytes32 outputsHash,bytes32 envelopesHash,uint8[3] feeSlots)";
-const G1 = "(uint256 x,uint256 y)", G2 = "(uint256 xIm,uint256 xRe,uint256 yIm,uint256 yRe)";
-const VK = `(${G1} alpha,${G2} beta,${G2} gamma,${G2} delta,${G1}[] ic)`;
-const GATE0 = `(${VK} vk,(${G1} a,${G2} b,${G1} c,${G1} d) proof,uint256[6] publicInputs)`;
-const GATE1 = `((uint256 n,${G1} commitment,${G1} zH,${G1} query) table,(${G1} g1,${G2} g20,${G2} g21) srs,(${G1} zI,${G1} cI,${G1} u,${G2} w,${G1} h,uint256 v1,uint256 v2,${G1} pi1,${G1} pi2,${G1} pi3) proof,bytes context)`;
-const LINK = `(${G1} pi,${G2} a2,${G2} c1,${G2} c2)`;
-const ROW = `(${G1} a,${G1} u,bytes32 aCompressed,bytes32 uCompressed,bytes32[16] siblings)`;
 export function enhancedFundingProofType(width) {
   if (![8, 32].includes(width)) enhancedFail();
   const action = `(address pool,address token,address recipient,address protocolFeeRecipient,address partnerFeeRecipient,uint64 sourceSlotCount,uint256 checkpointX,uint256 checkpointY,uint256 batchDigestField,uint256 feeQuoteDigestField,uint8 legIndex,uint8 feeLegIndex,uint8 legCount,uint128 protocolFeeCap,uint128 partnerFeeCap,uint256 saltedAmountHash,uint256[${width}] nullifiers,uint256[5] outputs)`;
@@ -128,14 +123,7 @@ export function encodeEnhancedFundingProof({ domain, header, preview, bundle, ro
       batchDigestField: header.authorizationDigest, feeQuoteDigestField: BigInt(enhancedWord(signedDigest)) % ENHANCED_FIELD,
       legIndex: 0, feeLegIndex: 0, legCount: 1, protocolFeeCap: 0, partnerFeeCap: 0,
       saltedAmountHash: header.amountHash, nullifiers: preview.nullifiers, outputs: preview.output_commitments },
-    gate0: { vk: { alpha: g0.vk.alpha_g1, beta: g0.vk.beta_g2, gamma: g0.vk.gamma_g2,
-      delta: g0.vk.delta_g2, ic: g0.vk.gamma_abc_g1 }, proof: { a: g0.a, b: g0.b, c: g0.c, d: g0.d }, publicInputs },
-    gate1: { table: { n: g1.table.n, commitment: g1.table.commitment, zH: g1.table.z_h_g1, query: g1.query },
-      srs: { g1: g1.srs.g1[0], g20: g1.srs.g2[0], g21: g1.srs.g2[1] },
-      proof: { zI: g1.proof.z_i, cI: g1.proof.c_i, u: g1.proof.u, w: g1.proof.w, h: g1.proof.h,
-        v1: g1.proof.v1, v2: g1.proof.v2, pi1: g1.proof.pi1, pi2: g1.proof.pi2, pi3: g1.proof.pi3 },
-      context: g1.transcript_context_hex },
-    link: { pi: link.pi, a2: link.a2, c1: link.c1, c2: link.c2 }, rowKeys, encryptedOutputs: envelopes,
+    ...encodeProofGates(g0, g1, link, publicInputs), rowKeys, encryptedOutputs: envelopes,
     feeProof: enhancedKzgFeeBytes(fee, feeSignals),
     authorizationProof: BigInt(header.reservationCommitment) === 0n
       ? encodeEnhancedPublicTotal({ aggregate, header, domain, totalAtomic: publicPayoutAtomic })

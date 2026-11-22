@@ -1,11 +1,11 @@
+import {canonicalJson as canonical} from './canonical-json.mjs';
 /** Credential-only bootstrap context. It cannot activate funded SDK APIs.
  * Bootstrap must be able to prove ownership before a finalized deployment and
  * its public SDK exist. Final keys are authenticated by the signed setup. */
 import {getAddress,getBytes,keccak256,sha256,toUtf8Bytes,verifyMessage} from 'ethers';
 import {assertFamilyRoleInventory,FAMILY_PROFILE_V2} from './family-role-contract.mjs';
 const scopes=new WeakMap(),SHA=/^[0-9a-f]{64}$/u,WORD=/^0x[0-9a-f]{64}$/u;
-const canonical=v=>Array.isArray(v)?'['+v.map(canonical).join(',')+']':
- v&&typeof v==='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}':JSON.stringify(v);
+
 const hash=v=>sha256(toUtf8Bytes(canonical(v))).slice(2);
 const check=(ok,m)=>{if(!ok)throw Error('Bootstrap credentials: '+m);};
 const freeze=v=>{if(v&&typeof v==='object'){Object.values(v).forEach(freeze);Object.freeze(v);}return v;};

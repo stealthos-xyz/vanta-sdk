@@ -36,7 +36,7 @@ const provenance={
   bundles:[],sources:{},
 };
 const upstreamPackages=new Map();
-for(const platform of ["node","browser"]){
+const platform="browser";
   for(const [name,contents] of Object.entries(entries)){
     const filename=name+"."+platform+".js";
     const result=await build({
@@ -69,7 +69,6 @@ for(const platform of ["node","browser"]){
     const bytes=await readFile(join(output,filename));
     provenance.bundles.push({file:filename,bytes:bytes.length,sha256:hash(bytes),forbiddenActiveModules:0});
   }
-}
 const licenses=join(output,"licenses");
 await mkdir(licenses,{recursive:true});
 provenance.packages=[];
@@ -89,4 +88,4 @@ await writeFile(join(output,"THIRD_PARTY_NOTICES.txt"),
   "circomlibjs 0.1.7: https://github.com/iden3/circomlibjs\n"+
   "Fresh credential proofs import the separately installed snarkjs 0.7.6 dependency.\n"+
   "See licenses/ and the bundled source notices. Source hashes and execution-only build restrictions are in runtime-provenance.json.\n");
-console.log("Vanta selected wallet crypto built: 2 bundles; no generic proving entry point");
+console.log("Vanta selected wallet crypto built: browser-compatible bundle; no generic proving entry point");

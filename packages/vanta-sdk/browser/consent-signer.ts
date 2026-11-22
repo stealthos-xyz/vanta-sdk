@@ -1,10 +1,10 @@
 /** Restricted EOA signer for one already-reviewed family funding intent.
  * The worker never supplies an arbitrary message, signer, RPC, or release. */
 import {getAddress, hexlify, toUtf8Bytes, verifyMessage} from "ethers";
-import {getCompiledFamilyEvmRelease} from "@stealthos/vanta-sdk/family-network";
-import {buildEnhancedConsentMessage} from "./consent-message";
-import type {EnhancedConsentContext, EnhancedConsentRequest} from "./consent-message";
-import type {SelectedFamilyWalletProvider} from "./app-wallet";
+import {getCompiledFamilyEvmRelease} from "../fresh/family-network.mjs";
+import {buildEnhancedConsentMessage} from "./consent-message.js";
+import type {EnhancedConsentContext, EnhancedConsentRequest} from "./consent-message.js";
+import type {SelectedFamilyWalletProvider} from "./app-wallet.js";
 
 const SIGNATURE = /^0x[0-9a-f]{130}$/u;
 const fail = (): never => {throw Error("Wallet authorization is unavailable for this reviewed intent.");};

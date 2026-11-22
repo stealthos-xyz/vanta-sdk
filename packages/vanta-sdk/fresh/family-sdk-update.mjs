@@ -1,3 +1,4 @@
+import {canonicalJson as canonical} from './canonical-json.mjs';
 /** Inspect an update proposal without fetching/importing/executing it. Partner
  * approval and an exact archive digest remain separate from release signing. */
 import {getAddress,getBytes,keccak256,sha256,toUtf8Bytes,verifyMessage} from 'ethers';
@@ -5,8 +6,7 @@ import {getCompiledFamilyEvmRelease,assertPinnedFamilyEvmManifest} from './famil
 import {validateVantaFamilyProofConfiguration} from './family-proof-resources.mjs';
 import {STEALTHOS_SDK_VERSION} from './sdk-version.mjs';
 import {familyPublicationAuthority} from './family-publication-authority.mjs';
-const canonical=v=>Array.isArray(v)?'['+v.map(canonical).join(',')+']':v&&typeof v==='object'?
- '{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}':JSON.stringify(v);
+
 const fail=()=>{throw Error('SDK update does not match the independently pinned archive and signed KZG release.');};
 export function inspectVantaFamilySdkUpdate({publication,signature,approvedArchiveSha256,archiveBytes}={}){
  const current=getCompiledFamilyEvmRelease();

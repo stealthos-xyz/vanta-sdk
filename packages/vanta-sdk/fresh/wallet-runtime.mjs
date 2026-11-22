@@ -216,13 +216,13 @@ import {
   toUtf8Bytes as toUtf8Bytes7
 } from "ethers";
 
-// ../../../../../../ceremony-kzg/packages/sdk/src/crypto/keys.ts
+// ../sdk/src/crypto/keys.ts
 import { hkdf } from "@noble/hashes/hkdf";
 import { sha256 as sha2562 } from "@noble/hashes/sha256";
 import { x25519 } from "@noble/curves/ed25519";
 import { randomBytes as randomBytes2 } from "@noble/hashes/utils";
 
-// ../../../../../../ceremony-kzg/packages/sdk/src/crypto/bytes.ts
+// ../sdk/src/crypto/bytes.ts
 import { ethers } from "ethers";
 var ByteUtils = class _ByteUtils {
   /**
@@ -347,7 +347,7 @@ var ByteUtils = class _ByteUtils {
   }
 };
 
-// ../../../../../../ceremony-kzg/packages/sdk/src/crypto/poseidon.ts
+// ../sdk/src/crypto/poseidon.ts
 var poseidonInstance = null;
 var poseidonPromise = null;
 var externalPoseidonBuilder = null;
@@ -415,7 +415,7 @@ async function poseidonAsync(args) {
   return poseidon.F.toObject(hash4);
 }
 
-// ../../../../../../ceremony-kzg/packages/sdk/src/crypto/field.ts
+// ../sdk/src/crypto/field.ts
 import { randomBytes } from "@noble/hashes/utils";
 var BN254_FR_MODULUS = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
 var BABYJUBJUB_SUBORDER = 2736030358979909402780800718157159386076813972158567259200215660948447373041n;
@@ -437,7 +437,7 @@ function reduceToNonzeroResidue(wide, modulus, label) {
   return reduced;
 }
 
-// ../../../../../../ceremony-kzg/packages/sdk/src/crypto/babyjubjub.ts
+// ../sdk/src/crypto/babyjubjub.ts
 var babyJubInstance = null;
 var babyJubPromise = null;
 async function getBabyJub() {
@@ -473,7 +473,7 @@ async function scalarMultBase8(scalar) {
   return [babyJub.F.toObject(point[0]), babyJub.F.toObject(point[1])];
 }
 
-// ../../../../../../ceremony-kzg/packages/sdk/src/crypto/keys.ts
+// ../sdk/src/crypto/keys.ts
 import { bech32m } from "@scure/base";
 var DOMAIN_SPENDING = "stealthos-spending-key-v1";
 var DOMAIN_SPEND_SCALAR = "stealthos-spend-scalar-v1";
@@ -657,8 +657,8 @@ function validateVantaFamilyFundingResources(raw, release) {
 function selectVantaFamilyFundingResources(release, inventory, asset = "native") {
   required(isFamilyAssetSelection(asset), "unsupported pool asset selection");
   const funding = validateVantaFamilyFundingResources(inventory.funding, release);
-  const canonical4 = release.lock.contracts.find((c) => c.name === "canonical-token")?.address?.toLowerCase();
-  const matches = funding.pools.filter((p) => asset === "native" ? BigInt(p.asset) === 0n : asset === "token" ? canonical4 ? p.asset === canonical4 : BigInt(p.asset) !== 0n : p.asset === asset);
+  const canonical3 = release.lock.contracts.find((c) => c.name === "canonical-token")?.address?.toLowerCase();
+  const matches = funding.pools.filter((p) => asset === "native" ? BigInt(p.asset) === 0n : asset === "token" ? canonical3 ? p.asset === canonical3 : BigInt(p.asset) !== 0n : p.asset === asset);
   required(matches.length === 1, "pool selection is ambiguous");
   const deployment = matches[0];
   return Object.freeze({
@@ -1028,6 +1028,16 @@ function createVantaFamilyProofArtifactReader({ artifactBaseUrl, fetcher = fetch
   });
 }
 
+// fresh/canonical-json.mjs
+function canonicalJson(value2) {
+  if (Array.isArray(value2)) return "[" + value2.map(canonicalJson).join(",") + "]";
+  if (value2 && typeof value2 === "object") {
+    const fields = Object.keys(value2).sort().map((key) => JSON.stringify(key) + ":" + canonicalJson(value2[key]));
+    return "{" + fields.join(",") + "}";
+  }
+  return JSON.stringify(value2);
+}
+
 // fresh/family-catalog-core.mjs
 import { getAddress as getAddress2, sha256 as sha2565, toUtf8Bytes as toUtf8Bytes2, keccak256 as keccak2562, verifyMessage, getBytes } from "ethers";
 var freezeFamilyCatalogValue = (v) => {
@@ -1276,8 +1286,7 @@ import { getAddress as getAddress4, getBytes as getBytes3, keccak256 as keccak25
 var scopes = /* @__PURE__ */ new WeakMap();
 var SHA4 = /^[0-9a-f]{64}$/u;
 var WORD5 = /^0x[0-9a-f]{64}$/u;
-var canonical3 = (v) => Array.isArray(v) ? "[" + v.map(canonical3).join(",") + "]" : v && typeof v === "object" ? "{" + Object.keys(v).sort().map((k) => JSON.stringify(k) + ":" + canonical3(v[k])).join(",") + "}" : JSON.stringify(v);
-var hash2 = (v) => sha2567(toUtf8Bytes4(canonical3(v))).slice(2);
+var hash2 = (v) => sha2567(toUtf8Bytes4(canonicalJson(v))).slice(2);
 var check3 = (ok, m) => {
   if (!ok) throw Error("Bootstrap credentials: " + m);
 };
@@ -1296,25 +1305,25 @@ function createFamilyBootstrapCredentialScope(descriptor, expected) {
     "The selected setup or authority differs."
   );
   const { setupId, ...setupBody } = setup;
-  check3(keccak2564(toUtf8Bytes4(canonical3(setupBody))) === setupId, "The setup identity is altered.");
+  check3(keccak2564(toUtf8Bytes4(canonicalJson(setupBody))) === setupId, "The setup identity is altered.");
   const familyTag2 = "0x" + (BigInt(keccak2564(toUtf8Bytes4("STEALTHOS_VANTA_CEREMONY_FAMILY_V1:eip155:dogeos"))) % 21888242871839275222246405745257275088548364400416034343698204186575808495617n).toString(16).padStart(64, "0");
   check3(setup.family.namespace === "eip155" && setup.family.tag === familyTag2, "The setup family domain differs.");
   const { signature, ...activationBody } = activation ?? {}, { generationId, ...unsignedActivation } = activationBody;
   check3(
-    activation.schema === "stealthos-family-network-activation-v1" && activation.setupId === setupId && activation.familyId === setup.family.id && activation.familyTag === setup.family.tag && activation.generationId === expected.generationId && keccak2564(toUtf8Bytes4(canonical3(unsignedActivation))) === generationId && /^eip155:[1-9][0-9]*$/u.test(activation.network?.id) && activation.network.id === expected.networkId && activation.network.genesisHash === expected.genesisHash && WORD5.test(expected.genesisHash) && BigInt(expected.genesisHash) > 0n && ["testnet", "mainnet"].includes(activation.network.role) && Number.isSafeInteger(activation.revision) && activation.revision >= 0 && activation.revision < 2 ** 32,
+    activation.schema === "stealthos-family-network-activation-v1" && activation.setupId === setupId && activation.familyId === setup.family.id && activation.familyTag === setup.family.tag && activation.generationId === expected.generationId && keccak2564(toUtf8Bytes4(canonicalJson(unsignedActivation))) === generationId && /^eip155:[1-9][0-9]*$/u.test(activation.network?.id) && activation.network.id === expected.networkId && activation.network.genesisHash === expected.genesisHash && WORD5.test(expected.genesisHash) && BigInt(expected.genesisHash) > 0n && ["testnet", "mainnet"].includes(activation.network.role) && Number.isSafeInteger(activation.revision) && activation.revision >= 0 && activation.revision < 2 ** 32,
     "The selected activation or network differs."
   );
-  const digest2 = keccak2564(toUtf8Bytes4("STEALTHOS_VANTA_FAMILY_ACTIVATION_V1:" + canonical3(activationBody)));
+  const digest2 = keccak2564(toUtf8Bytes4("STEALTHOS_VANTA_FAMILY_ACTIVATION_V1:" + canonicalJson(activationBody)));
   check3(
     verifyMessage3(getBytes3(digest2), signature) === getAddress4(expected.activationAuthority),
     "The network activation is not signed by the selected authority."
   );
   check3(
-    networkPolicy?.schema === "stealthos-reviewed-family-networks-v1" && networkPolicy.familyId === setup.family.id && networkPolicy.sourceNetworkId === "eip155:" + setup.sourceNetwork.chainId && SHA4.test(expected.networkPolicySha256) && hash2(networkPolicy) === expected.networkPolicySha256 && Array.isArray(networkPolicy.networks) && networkPolicy.networks.length <= 8 && networkPolicy.networks.some((row) => canonical3(row) === canonical3(activation.network)),
+    networkPolicy?.schema === "stealthos-reviewed-family-networks-v1" && networkPolicy.familyId === setup.family.id && networkPolicy.sourceNetworkId === "eip155:" + setup.sourceNetwork.chainId && SHA4.test(expected.networkPolicySha256) && hash2(networkPolicy) === expected.networkPolicySha256 && Array.isArray(networkPolicy.networks) && networkPolicy.networks.length <= 8 && networkPolicy.networks.some((row) => canonicalJson(row) === canonicalJson(activation.network)),
     "The network is outside the pinned DogeOS family policy."
   );
   check3(
-    familyRelease?.schema === "stealthos-family-ceremony-release-v2" && familyRelease.constructionProfile === FAMILY_PROFILE_V2 && familyRelease.beaconFinalized === true && canonical3(familyRelease.family) === canonical3(setup.family) && familyRelease.ceremony?.id === setup.ceremonyId && familyRelease.releaseHash === setup.ceremonyReleaseHash && familyRelease.verifierKeysSha256 === setup.verifierKeysSha256 && Array.isArray(familyRelease.artifacts),
+    familyRelease?.schema === "stealthos-family-ceremony-release-v2" && familyRelease.constructionProfile === FAMILY_PROFILE_V2 && familyRelease.beaconFinalized === true && canonicalJson(familyRelease.family) === canonicalJson(setup.family) && familyRelease.ceremony?.id === setup.ceremonyId && familyRelease.releaseHash === setup.ceremonyReleaseHash && familyRelease.verifierKeysSha256 === setup.verifierKeysSha256 && Array.isArray(familyRelease.artifacts),
     "A matching finalized eleven-role KZG ceremony release is required."
   );
   const { releaseHash, ...releaseBody } = familyRelease;
@@ -1334,7 +1343,7 @@ function createFamilyBootstrapCredentialScope(descriptor, expected) {
     "The final key or artifact inventory differs from the activated setup."
   );
   check3(
-    SHA4.test(planSha256) && planSha256 === expected.planSha256 && getAddress4(handleRegistry) === getAddress4(expected.handleRegistry) && getAddress4(registrar) === getAddress4(expected.registrar) && Array.isArray(pools) && pools.length >= 2 && pools.length <= 8 && canonical3(pools) === canonical3(expected.pools) && new Set([handleRegistry, registrar, ...pools].map((a) => getAddress4(a).toLowerCase())).size === pools.length + 2,
+    SHA4.test(planSha256) && planSha256 === expected.planSha256 && getAddress4(handleRegistry) === getAddress4(expected.handleRegistry) && getAddress4(registrar) === getAddress4(expected.registrar) && Array.isArray(pools) && pools.length >= 2 && pools.length <= 8 && canonicalJson(pools) === canonicalJson(expected.pools) && new Set([handleRegistry, registrar, ...pools].map((a) => getAddress4(a).toLowerCase())).size === pools.length + 2,
     "The namespace or pools differ from the selected deployment plan."
   );
   for (const address of [handleRegistry, registrar, ...pools]) check3(BigInt(getAddress4(address)) > 0n, "Zero bootstrap contract.");
