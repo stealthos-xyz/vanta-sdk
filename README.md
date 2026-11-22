@@ -1,21 +1,21 @@
 # Vanta SDK
 
-Integrate a private StealthOS wallet into a browser app on DogeOS Chikyu. This is the standalone source repository for `@stealthos/vanta-sdk`. The current partner release is **0.4.57**.
+Integrate a private StealthOS wallet into a browser app on DogeOS Chikyu. This is the standalone source repository for `@stealthos/vanta-sdk`. The current partner release is **0.4.58**.
 
 ## Install the signed SDK
 
 The release directory contains the same npm archive used by the StealthOS wallet. Install it in your app and commit the resulting lockfile.
 
 ```sh
-npm install --save-exact https://raw.githubusercontent.com/stealthos-xyz/vanta-sdk/fa847262abe31691f25fba98183ac21a9cc06b5f/releases/0.4.57/stealthos-vanta-sdk-0.4.57.tgz
+npm install --save-exact https://raw.githubusercontent.com/stealthos-xyz/vanta-sdk/d7c5275b34f1b4ed9309e0fb01eb8ea94475df49/releases/0.4.58/stealthos-vanta-sdk-0.4.58.tgz
 ```
 
-Archive SHA-256 is `ebd277014ddf18a8d25e9c9166162900070918df6f4d9b855c53f3c86443b9e0`. The signed publication records the archive hash, byte count, network, deployment generation and proof resources. [Signed publication](releases/0.4.57/publication.json) Â· [Live publication](https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/current).
+Archive SHA-256 is `f042d2b5adf552fe3077f937883c77e981de7fd7ffb06d3d759e9c72f5bd9f7e`. The signed publication records the archive hash, byte count, network, deployment generation and proof resources. [Signed publication](releases/0.4.58/publication.json) · [Live publication](https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/current).
 
 ## Connect your application
 
-1. Register your partner handle, supported assets, fees and exact HTTPS app origin in the [partner portal](https://partners.stealthos.xyz). Download your application's public configuration for SDK 0.4.57.
-2. Serve the configuration on your app origin. Copy the worker build example into your project as `build-workers.mjs`, then run these commands to write the wallet and proof workers to `public/stealthos/`. [0.4.57 worker build example](https://github.com/stealthos-xyz/vanta-sdk/blob/90841953421d10397175ade996b609835ba0e53a/examples/build-workers.mjs).
+1. Register your partner handle, supported assets, fees and exact HTTPS app origin in the [partner portal](https://partners.stealthos.xyz). Download your application's public configuration for SDK 0.4.58.
+2. Serve the configuration on your app origin. Copy the worker build example into your project as `build-workers.mjs`, then run these commands to write the wallet and proof workers to `public/stealthos/`. [0.4.58 worker build example](examples/build-workers.mjs).
 
    ```sh
    npm install --save-dev esbuild
@@ -27,7 +27,7 @@ Archive SHA-256 is `ebd277014ddf18a8d25e9c9166162900070918df6f4d9b855c53f3c86443
 3. Pass the EIP-1193 provider selected by your wallet connector. The SDK checks the registered origin and signed deployment. The customer's wallet signs its service session on demand.
 
    ```js
-   import {openStealthOSPartnerApp} from '@stealthos/vanta-sdk/partner-app';
+   import {openStealthOSPartnerApp} from '@stealthos/vanta-sdk';
 
    export async function openWallet(provider) {
      const response = await fetch('/stealthos-partner-config.json');
@@ -40,11 +40,11 @@ Archive SHA-256 is `ebd277014ddf18a8d25e9c9166162900070918df6f4d9b855c53f3c86443
    }
    ```
 
-The returned client supports wallet creation and restoration, fee review, transaction preparation, submission and reconciliation. Your application presents the customer's approval for each funded action. Partners share the existing Chikyu ceremony, contracts and pools. [0.4.57 integration guide](https://github.com/stealthos-xyz/vanta-sdk/blob/90841953421d10397175ade996b609835ba0e53a/packages/vanta-sdk/PARTNER_INTEGRATION.md) Â· [Partner client types](packages/vanta-sdk/browser/partner-app.d.mts).
+The returned client supports wallet creation and restoration, fee review, transaction preparation, submission and reconciliation. Your application presents the customer's approval for each funded action. Partners share the existing Chikyu ceremony, contracts and pools. [0.4.58 integration guide](packages/vanta-sdk/PARTNER_INTEGRATION.md) · [Partner client types](packages/vanta-sdk/api/wallet.d.mts).
 
-## 0.4.58 migration
+## Migrating from 0.4.57
 
-For the next testnet release, import the wallet and payment clients from the package root. Use `/worker` and `/proof-worker` when building your app. Optional deployment, enrollment and recovery APIs live under `/network`, `/setup` and `/recovery`. [Candidate API](packages/vanta-sdk/README.md) · [Candidate worker build example](examples/build-workers.mjs)
+Replace `@stealthos/vanta-sdk/partner-app` with `@stealthos/vanta-sdk` for wallet and public-payment clients. Point the build at `/worker` and `/proof-worker`. Apps that read network metadata, enroll partners, or provide independent wallet recovery can opt into `/network`, `/setup`, or `/recovery`. [Public entry points](packages/vanta-sdk/README.md)
 
 ## Develop the SDK
 
