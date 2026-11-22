@@ -7,7 +7,7 @@ Integrate a private StealthOS wallet into a browser app on DogeOS Chikyu. This i
 The release directory contains the same npm archive used by the StealthOS wallet. Install it in your app and commit the resulting lockfile.
 
 ```sh
-npm install --save-exact https://raw.githubusercontent.com/stealthos-xyz/vanta-sdk/main/releases/0.4.57/stealthos-vanta-sdk-0.4.57.tgz
+npm install --save-exact https://raw.githubusercontent.com/stealthos-xyz/vanta-sdk/fa847262abe31691f25fba98183ac21a9cc06b5f/releases/0.4.57/stealthos-vanta-sdk-0.4.57.tgz
 ```
 
 Archive SHA-256 is `ebd277014ddf18a8d25e9c9166162900070918df6f4d9b855c53f3c86443b9e0`. The signed publication records the archive hash, byte count, network, deployment generation and proof resources. [Signed publication](releases/0.4.57/publication.json) · [Live publication](https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/current).
@@ -55,4 +55,4 @@ npm run build
 
 The SDK lives in `packages/vanta-sdk`. Its shared TypeScript build inputs live in `packages/sdk/src`. Both are included in this repository. The build compiles the wallet, proof drivers, workers and token policy using the signed public Chikyu deployment inputs. A developer build is a candidate for a future release.
 
-`verify:release` verifies the operator signature and reproduces the tagged npm archive byte for byte from the checked-in release files. Partners should pin a signed archive and its matching configuration for each upgrade. The StealthOS release process publishes and activates changes to executable SDK bytes. Partners can use this release to integrate their applications with StealthOS. Bundled dependencies retain their [third-party notices](packages/vanta-sdk/dist/vendor/THIRD_PARTY_NOTICES.txt).
+`verify:release` verifies the operator signature and reproduces the published npm archive byte for byte from the checked-in release files. Partners should pin a signed archive and its matching configuration for each upgrade. The StealthOS release process publishes and activates changes to executable SDK bytes. Partners can use this release to integrate their applications with StealthOS. Bundled dependencies retain their [third-party notices](packages/vanta-sdk/dist/vendor/THIRD_PARTY_NOTICES.txt).
