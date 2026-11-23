@@ -217,5 +217,5 @@
   },
   "type": "module",
   "types": "./api/wallet.d.mts",
-  "version": "0.4.58"
+  "version": "0.4.59"
 }
