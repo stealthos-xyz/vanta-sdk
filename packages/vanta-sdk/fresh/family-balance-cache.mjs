@@ -25,6 +25,7 @@ export function createFamilyBalanceCache({store, identity, generationId, pools})
       return rows.length === 1 && validSnapshot(rows[0]) ? rows[0] : null;
     },
     async saveSnapshot(summary) {
+      if(summary.complete===false)return;
       const {generationId,blockNumber,blockHash} = summary;
       const pools = summary.pools.map(row=>{
         const pin = assets.get(row.pool);
