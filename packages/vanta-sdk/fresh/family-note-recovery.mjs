@@ -39,6 +39,27 @@ const frozen = value => {
 const logIdentity = log => JSON.stringify([integer(log.blockNumber), hash(log.blockHash), hash(log.transactionHash),
   integer(log.index ?? log.logIndex), address(log.address), log.topics.map(hash), log.data.toLowerCase(), log.removed === true]);
 
+// Retry only explicit provider range limits; compare both sources for the
+// same reduced window before advancing the canonical scan cursor.
+function isLogRangeLimit(error) {
+  return [error, error?.error, error?.info?.error, error?.cause, error?.cause?.info?.error].some(value =>
+    value?.code === -32062 || /block range (?:is )?too large|(?:maximum|max) (?:allowed )?block range|(?:block range|range of blocks) (?:limit|exceeds)/iu.test(value?.message ?? ''));
+}
+async function readCanonicalLogWindow(provider, verificationProvider, address, topics, fromBlock, anchorBlock, chunkBlocks) {
+  for (;;) {
+    const toBlock = Math.min(anchorBlock, fromBlock + chunkBlocks - 1);
+    try {
+      const filter = { address, fromBlock, toBlock, topics };
+      const logs = await provider.getLogs(filter);
+      const other = verificationProvider ? await verificationProvider.getLogs(filter) : undefined;
+      return { toBlock, chunkBlocks, logs, other };
+    } catch (error) {
+      if (toBlock === fromBlock || !isLogRangeLimit(error)) throw error;
+      chunkBlocks = Math.floor((toBlock - fromBlock + 1) / 2);
+    }
+  }
+}
+
 const WORD = /^0x[0-9a-f]{64}$/u;
 function readDisplayCheckpoint(record, scope, deploymentBlock, verificationProvider) {
   if (record?.scope !== scope || !Number.isSafeInteger(record.anchor?.number) ||
@@ -83,7 +104,7 @@ export function summarizeFamilyReceivedTransactions(notes) {
   return frozen([...received.values()]);
 }
 
-export async function recoverFamilyCanonicalNotes({ provider, verificationProvider, delivery, wallet, deploymentBlock, chunkBlocks = 1024, confirmedAnchor, displayCache }) {
+export async function recoverFamilyCanonicalNotes({ provider, verificationProvider, delivery, wallet, deploymentBlock, chunkBlocks = 1000, confirmedAnchor, displayCache }) {
   if (!provider || !delivery || typeof delivery.decrypt !== "function" || typeof delivery.walletRecipient !== "function") fail();
   const context = validateFamilyNoteDomain(delivery.context);
   // Reject a locked or internally inconsistent wallet before distinguishing
@@ -144,14 +165,11 @@ export async function recoverFamilyCanonicalNotes({ provider, verificationProvid
   const nextRows = epochs.map((_,i) => previous?.nextRows[i] ?? RESERVED_ROWS), encryptedRows = previous ? previous.encryptedRows.slice() : [],
     spentNullifiers = new Set(previous?.spentNullifiers), spentTransactions = new Map(previous?.spentTransactions);
   let pending, previousBlock = -1, previousIndex = -1;
-  for (let fromBlock = previous ? previous.anchor.number + 1 : deploymentBlock; fromBlock <= anchor.number; fromBlock += chunkBlocks) {
-    const toBlock = Math.min(anchor.number, fromBlock + chunkBlocks - 1);
-    const filter = { address: context.pool, fromBlock, toBlock, topics: [TOPICS] };
-    const logs = await provider.getLogs(filter);
-    if (verificationProvider) {
-      const other = await verificationProvider.getLogs(filter);
-      if (other.length !== logs.length || logs.some((log, index) => logIdentity(log) !== logIdentity(other[index]))) fail();
-    }
+  for (let fromBlock = previous ? previous.anchor.number + 1 : deploymentBlock; fromBlock <= anchor.number;) {
+    const window = await readCanonicalLogWindow(provider, verificationProvider, context.pool, [TOPICS], fromBlock, anchor.number, chunkBlocks);
+    const { toBlock, logs, other } = window;
+    chunkBlocks = window.chunkBlocks;
+    if (verificationProvider && (other.length !== logs.length || logs.some((log, index) => logIdentity(log) !== logIdentity(other[index])))) fail();
     const numbers = [...new Set(logs.map(log => integer(log.blockNumber)))];
     const blocks = new Map(await Promise.all(numbers.map(async number => [number, block(await provider.getBlock(number))])));
     for (const log of logs) {
@@ -182,6 +200,7 @@ export async function recoverFamilyCanonicalNotes({ provider, verificationProvid
       }
     }
     if (pending) fail();
+    fromBlock = toBlock + 1;
   }
   if (nextRows.some((count, epoch) => count !== epochs[epoch].rows)) fail();
   const notes = [], seenNullifiers = new Set(), quarantined = [];

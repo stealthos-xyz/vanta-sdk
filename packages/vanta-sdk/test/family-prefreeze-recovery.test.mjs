@@ -11,15 +11,15 @@ const word=n=>'0x'+BigInt(n).toString(16).padStart(64,'0');
 const addr=n=>'0x'+BigInt(n).toString(16).padStart(40,'0');
 const domain={schema:'vanta-family-note-domain-v1',safeForFunds:false,chainId:6281971,familyTag:'0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445',genesisHash:word(100),generationId:word(2),setupId:word(3),pool:addr(101),asset:addr(0),poolCodehash:keccak256('0x6000'),nativeGlueSha256:'11'.repeat(32),nativeWasmSha256:'22'.repeat(32)};
 const abi=new Interface(['function releaseSetupId() view returns(bytes32)','function releaseGenerationId() view returns(bytes32)','function releaseFamilyTag() view returns(bytes32)','function releaseChainId() view returns(uint256)','function releaseGenesisHash() view returns(bytes32)','function asset() view returns(address)','function activeGeneration() view returns(uint64,uint64,uint256)','function sourceSnapshot(uint64) view returns(uint64,uint256,uint256,uint256,bool)','event CanonicalKzgRow(uint64 indexed epoch,uint64 indexed row,uint256 indexed commitment)','event CanonicalEncryptedNote(uint64 indexed epoch,uint64 indexed row,uint256 indexed commitment,bytes32 envelopeHash,bytes encryptedEnvelope)']);
-function fixture(){
+function fixture({head=11,eventBlock=4}={}){
  const envelope='0x01'+'00'.repeat(63),logs=[];
  for(const [name,args] of [['CanonicalKzgRow',[0,32,5]],['CanonicalEncryptedNote',[0,32,5,keccak256(envelope),envelope]]]){
-  logs.push({...abi.encodeEventLog(abi.getEvent(name),args),address:domain.pool,blockNumber:4,blockHash:word(104),transactionHash:word(55),index:logs.length});
+  logs.push({...abi.encodeEventLog(abi.getEvent(name),args),address:domain.pool,blockNumber:eventBlock,blockHash:word(eventBlock+100),transactionHash:word(55),index:logs.length});
  }
  const values={releaseSetupId:[domain.setupId],releaseGenerationId:[domain.generationId],releaseFamilyTag:[domain.familyTag],releaseChainId:[domain.chainId],releaseGenesisHash:[domain.genesisHash],asset:[domain.asset],activeGeneration:[0,33,19],sourceSnapshot:[33,12,13,19,false]};
- const make=()=>({getNetwork:async()=>({chainId:6281971n}),getCode:async()=>'0x6000',getBlock:async n=>{let h=n==='latest'?11:n;return {number:h,hash:word(h+100),parentHash:word(h+99)};},call:async r=>{const n=abi.parseTransaction(r).name;return abi.encodeFunctionResult(n,values[n]);},getLogs:async f=>{assert.deepEqual(Object.keys(f).sort(),['address','fromBlock','toBlock','topics']);assert.equal(f.topics.length,1);return structuredClone(logs.filter(l=>l.blockNumber>=f.fromBlock&&l.blockNumber<=f.toBlock));}});
+ const make=()=>({getNetwork:async()=>({chainId:6281971n}),getCode:async()=>'0x6000',getBlock:async n=>{let h=n==='latest'?head:n;return {number:h,hash:word(h+100),parentHash:word(h+99)};},call:async r=>{const n=abi.parseTransaction(r).name;return abi.encodeFunctionResult(n,values[n]);},getLogs:async f=>{assert.deepEqual(Object.keys(f).sort(),['address','fromBlock','toBlock','topics']);assert.equal(f.topics.length,1);return structuredClone(logs.filter(l=>l.blockNumber>=f.fromBlock&&l.blockNumber<=f.toBlock));}});
  const primary=make(),secondary=make(),wallet={},delivery={context:domain,walletRecipient:async()=>({}),decrypt:async({commitment})=>({note:{commitment,amount_units:'17'},verification:{commitment,nullifier:word(7),nonspendable:false}})};
- const run=verificationProvider=>recoverFamilyCanonicalNotes({provider:primary,verificationProvider,delivery,wallet,deploymentBlock:0});
+ const run=(verificationProvider,options={})=>recoverFamilyCanonicalNotes({provider:primary,verificationProvider,delivery,wallet,deploymentBlock:0,...options});
  return {primary,secondary,run};
 }
 for(const [name,mutate] of [
@@ -66,4 +66,53 @@ test('enhanced consent is bound to exact calldata, pool, asset and approved inte
  const m=buildVantaFamilyEnhancedConsentMessage(release,context,request,request.intentId);
  assert.notEqual(buildVantaFamilyEnhancedConsentMessage(release,context,{...request,calldata:'0x1235'},request.intentId),m);
  for(const change of [{intentId:'different-intent'},{asset:addr(9)},{pool:addr(8)}])assert.throws(()=>buildVantaFamilyEnhancedConsentMessage(release,context,{...request,...change},request.intentId));
+});
+
+test('canonical recovery uses an inclusive 1000-block default on both RPCs',async()=>{
+ const {primary,secondary,run}=fixture({head:2001,eventBlock:999}),calls=[[],[]];
+ for(const [index,source] of [primary,secondary].entries()){
+  const original=source.getLogs;
+  source.getLogs=async filter=>{calls[index].push([filter.fromBlock,filter.toBlock]);assert.ok(filter.toBlock-filter.fromBlock+1<=1000);return original(filter);};
+ }
+ const result=await run(secondary);
+ assert.deepEqual(calls[0],[[0,999],[1000,1999],[2000,2000]]);
+ assert.deepEqual(calls[1],calls[0]);assert.equal(result.balanceAtomicAtAnchor,'17');
+});
+for(const limited of ['primary','secondary']){
+ test(limited+' range rejection retries both sources without skipping blocks',async()=>{
+  const f=fixture({head:1201,eventBlock:500}),accepted=[[],[]],attempted=[];
+  for(const [index,source] of [f.primary,f.secondary].entries()){
+   const original=source.getLogs;
+   source.getLogs=async filter=>{
+    const range=[filter.fromBlock,filter.toBlock];
+    if(source===f[limited]&&range[1]-range[0]+1>500){
+     attempted.push(range);throw Object.assign(Error('could not coalesce error'),{code:'UNKNOWN_ERROR',info:{error:{code:-32062,message:'Block range is too large'}}});
+    }
+    accepted[index].push(range);return original(filter);
+   };
+  }
+  const result=await f.run(f.secondary);
+  const expected=[[0,499],[500,999],[1000,1200]];
+  assert.deepEqual(attempted,[[0,999]]);
+  assert.deepEqual(accepted[0],limited==='secondary'?[[0,999],...expected]:expected);
+  assert.deepEqual(accepted[1],expected);
+  assert.equal(result.balanceAtomicAtAnchor,'17');assert.equal(result.publicRows,1);
+  assert.deepEqual(result.receivedTransactions,[{transactionHash:word(55),blockNumber:500,amountAtomic:'17'}]);
+ });
+}
+test('range adaptation never suppresses a canonical disagreement',async()=>{
+ const {secondary,run}=fixture({head:1201,eventBlock:500}),original=secondary.getLogs;
+ secondary.getLogs=async filter=>{
+  if(filter.toBlock-filter.fromBlock+1>500)throw Object.assign(Error('Block range is too large'),{code:-32062});
+  return (await original(filter)).slice(0,0);
+ };
+ await assert.rejects(()=>run(secondary));
+});
+test('a non-range RPC error and a rejected single-block window fail closed',async()=>{
+ for(const [error,chunkBlocks] of [[Error('RPC unavailable'),1000],[Object.assign(Error('Block range is too large'),{code:-32062}),1]]){
+  const {secondary,run}=fixture();let calls=0;
+  secondary.getLogs=async()=>{calls++;throw error;};
+  await assert.rejects(()=>run(secondary,{chunkBlocks}),err=>err===error);
+  assert.equal(calls,1);
+ }
 });
