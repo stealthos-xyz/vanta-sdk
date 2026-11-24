@@ -306,9 +306,8 @@ async function createNormalHost({walletController,store,provider,verificationPro
   },
   async monitorDelivery({preparedId}){live();let row=await read(preparedId);
    if(operation!==5||row.phase!=='finalized'||!row.messageId)fail('Finalize the bridge source transaction before checking destination delivery.');
-   if(row.delivery?.phase==='delivered-finalized')return review(row);
    const delivery=await bridgeMonitor().monitor({messageId:row.messageId,receiver:row.route.receiver,amountAtomic:row.route.amount,
-    start:row.destinationAnchor,scanBlock:row.delivery?.scanBlock});live();row=await set(preparedId,r=>({...r,delivery}));return review(row);},
+    start:row.destinationAnchor,scanBlock:row.delivery?.scanBlock,scanAnchor:row.delivery?.scanAnchor});live();row=await set(preparedId,r=>({...r,delivery}));return review(row);},
   async cancel({preparedId}){live();const row=await read(preparedId);if(!['prepared','failed'].includes(row.phase))fail('A submitted transfer cannot be cancelled.');
    await fences.releaseUnsigned(preparedId);return review(await set(preparedId,r=>({...r,phase:'cancelled'})));},
   async list(){live();return Object.freeze((await rows()).map(review));},
