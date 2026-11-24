@@ -15,7 +15,7 @@ for(const operation of [0,1])for(const width of [8,32])test('read-only quote ove
  const cache={},pending=Promise.withResolvers(),policy=Promise.withResolvers(),widths=[],scans=[],events=[],quotes=new Map();
  const d={pool:address(1),asset:address(0),deploymentBlock:1},r={generationId:id(7)},available={complete:true,publicCommitments:[],epochs:[{epoch:0}],notes:Array.from({length:width===8?1:9},(_,i)=>({epoch:0,row:32+i,status:'spendable',nullifier:id(i+1),opening:{amount_units:width===8?'10000':'1100'}}))};
  const provider={},verificationProvider={},delivery={},wallet={};
- const env={provider,verificationProvider,delivery,wallet,d,r,releaseContext:undefined,operation,routed:false,privateScope:false,asset:'native',quotes,
+ const env={provider,verificationProvider,delivery,wallet,d,r,releaseContext:undefined,operation,routed:false,privateScope:false,asset:'native',quotes,events,
   getReviewDisplayCache:()=>cache,
   recoverFamilyCanonicalNotes:async options=>{scans.push(options.displayCache);if(options.displayCache){await pending.promise;}return available;},
   fences:{blocked:async()=>new Set()},selectFamilyPrivateSendNotes,hexlify,randomBytes,
