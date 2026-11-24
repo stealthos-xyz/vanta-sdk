@@ -2,7 +2,7 @@
 import {AbiCoder,Interface,getAddress,verifyTypedData} from 'ethers';
 export const NATIVE_CLEARANCE_TYPES=Object.freeze({NativeWalletClearance:[['wallet','address'],['validAfter','uint64'],['validUntil','uint64'],['walletRevision','uint64'],['policyRevision','uint64'],['policyHash','bytes32']].map(([name,type])=>({name,type}))});
 export const NATIVE_CLEARANCE_ABI=new Interface(['function signer() view returns(address)','function policyHash() view returns(bytes32)',
- 'function walletRevision(address) view returns(uint64)','function policyRevision() view returns(uint64)','function requireClearance(address,bytes) view']);
+ 'function walletRevision(address) view returns(uint64)','function policyRevision() view returns(uint64)','function requireClearance(address,bytes) view','function internalSwapIngressUsesProvenanceOnly() view returns(bool)']);
 const coder=AbiCoder.defaultAbiCoder(),cache=new Map(),inflight=new Map(),same=(a,b)=>String(a).toLowerCase()===String(b).toLowerCase();
 export function verifyNativeWalletClearance({response:r,chainId,generationId,verifier,payer,signer,policyHash,walletRevision,policyRevision,timestamp}){
  const fields=['wallet','validAfter','validUntil','walletRevision','policyRevision'],c=r?.clearance;
