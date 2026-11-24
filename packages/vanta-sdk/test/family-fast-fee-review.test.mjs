@@ -13,7 +13,7 @@ const address=n=>'0x'+BigInt(n).toString(16).padStart(40,'0');
 const rules={protocolBps:15,protocolMinimum:'0',partnerBps:20,partnerMinimum:'0',partnerMaximum:((1n<<120n)-1n).toString()};
 for(const operation of [0,1])for(const width of [8,32])test('read-only quote overlaps live policy and gas, uses display cursor and retains exact width '+operation+'/'+width,async()=>{
  const cache={},pending=Promise.withResolvers(),policy=Promise.withResolvers(),widths=[],scans=[],events=[],quotes=new Map();
- const d={pool:address(1),asset:address(0),deploymentBlock:1},r={generationId:id(7)},available={complete:true,publicCommitments:[],epochs:[{epoch:0}],notes:Array.from({length:width===8?1:9},(_,i)=>({epoch:0,row:32+i,status:'spendable',nullifier:id(i+1),opening:{amount_units:width===8?'10000':'1200'}}))};
+ const d={pool:address(1),asset:address(0),deploymentBlock:1},r={generationId:id(7)},available={complete:true,publicCommitments:[],epochs:[{epoch:0}],notes:Array.from({length:width===8?1:9},(_,i)=>({epoch:0,row:32+i,status:'spendable',nullifier:id(i+1),opening:{amount_units:width===8?'10000':'1100'}}))};
  const provider={},verificationProvider={},delivery={},wallet={};
  const env={provider,verificationProvider,delivery,wallet,d,r,releaseContext:undefined,operation,routed:false,privateScope:false,asset:'native',quotes,
   getReviewDisplayCache:()=>cache,
