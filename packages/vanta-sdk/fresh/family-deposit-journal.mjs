@@ -13,6 +13,15 @@ export function createFamilyDepositJournal({store,networkId,generationId,pool}){
  const mutate=work=>store.transact(namespace,rows=>work(check(rows)));
  const read=async preparedId=>{const r=check(await store.read(namespace)).find(r=>r.preparedId===id(preparedId));
   if(!r)throw Error("Deposit preparation is absent.");return r;};
+ const recordRejection=async(preparedId,code)=>{
+  if(!['INSUFFICIENT_FUNDS','USER_REJECTED','WALLET_SUBMISSION_REJECTED'].includes(code))throw Error('Definitive wallet rejection required.');
+  const failure=({'INSUFFICIENT_FUNDS':'insufficient-funds','USER_REJECTED':'user-rejected','WALLET_SUBMISSION_REJECTED':'submission-rejected'})[code];
+  return mutate(rows=>{
+   const row=rows.find(item=>item.preparedId===id(preparedId));
+   if(row?.phase!=='broadcast-uncertain'||row.transactionHash)return {next:rows,result:undefined};
+   return {next:rows.map(item=>item===row?{...item,phase:'failed',failure}:item),result:undefined};
+  });
+ };
  return Object.freeze({
   read,
   list:async()=>check(await store.read(namespace)),
@@ -29,12 +38,8 @@ export function createFamilyDepositJournal({store,networkId,generationId,pool}){
     ["broadcast-uncertain","finalized"].includes(row.phase)).reduce((n,row)=>n+BigInt(row.amountAtomic),0n);
    if(spent+BigInt(r.amountAtomic)>BigInt(session.maximumSessionDebitAtomic))throw Error("Deposit session budget exceeded.");
    const next=rows.map(row=>row===r?{...r,phase:"broadcast-uncertain"}:row);return {next,result:undefined};});},
-  async recordInsufficientFunds(preparedId){return mutate(rows=>{
-   const row=rows.find(item=>item.preparedId===id(preparedId));
-   // A concurrent observer may already have reconciled this submission.
-   if(row?.phase!=="broadcast-uncertain"||row.transactionHash)return {next:rows,result:undefined};
-   const next=rows.map(item=>item===row?{...item,phase:"failed",failure:"insufficient-funds"}:item);
-   return {next,result:undefined};});},
+  async recordInsufficientFunds(preparedId){return recordRejection(preparedId,'INSUFFICIENT_FUNDS');},
+  recordRejection,
   async mark(preparedId,phase,transactionHash){if(!["finalized","expired-unused","failed","broadcast-uncertain"].includes(phase))throw Error("Invalid deposit result phase.");
    if(transactionHash!==undefined)id(transactionHash);
    return mutate(rows=>{const r=rows.find(row=>row.preparedId===id(preparedId));if(!r||r.phase==="finalized"&&phase!=="finalized")throw Error("Deposit result would undo finality.");

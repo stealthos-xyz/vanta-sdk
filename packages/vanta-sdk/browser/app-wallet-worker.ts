@@ -1,7 +1,7 @@
 import {quoteFamilyNetRoute} from '../fresh/family-route-review.mjs';
 import {createFamilyBalanceCache} from '../fresh/family-balance-cache.mjs';
 import {createFamilyPublicArtifactCache,walletWarmupPins,depositWarmupPins,enhancedWarmupPins} from '../fresh/family-public-artifact-cache.mjs';
-import {DEPOSIT_INSUFFICIENT_FUNDS,depositFailure,publicDepositFailure,readDepositFailure} from '../fresh/family-deposit-errors.mjs';
+import {DEPOSIT_INSUFFICIENT_FUNDS,DEPOSIT_SUBMISSION_REJECTED,depositFailure,publicDepositFailure,readDepositFailure} from '../fresh/family-deposit-errors.mjs';
 /// <reference lib="webworker" />
 /** Trusted local SDK bootstrap. Only reviews, public identity and status leave
  * this worker; the separate UI port handles local unlock and encrypted HTTP. */
@@ -125,7 +125,7 @@ async function initialize(value: FamilyBootstrap, secretPort: MessagePort) {
     const pending = uiPending.get(data?.id); if (!pending) return; uiPending.delete(data.id);
     if (data.ok === true) pending.accept(data.value);
     else {
-      const code=data.code==='USER_REJECTED'||data.code===DEPOSIT_INSUFFICIENT_FUNDS?data.code:undefined;
+      const code=data.code==='USER_REJECTED'||data.code===DEPOSIT_INSUFFICIENT_FUNDS||data.code===DEPOSIT_SUBMISSION_REJECTED?data.code:undefined;
       pending.reject(readDepositFailure(data.depositFailure)??Object.assign(Error("Trusted wallet action was unavailable."),{code}));
     }
   };
