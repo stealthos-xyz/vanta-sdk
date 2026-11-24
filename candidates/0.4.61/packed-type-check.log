@@ -1,0 +1,4 @@
+
+> @stealthos/vanta-sdk@0.4.61 test:types
+> tsc --noEmit --strict --skipLibCheck --target ES2022 --module NodeNext --moduleResolution NodeNext test/family-current-consumer.mts test/host-consumer.mts test/host-worker-browser-consumer.mts test/family-proof-consumer.mts test/fresh-payouts-consumer.mts test/enhanced-payouts-consumer.mts test/enhanced-host-consumer.mts test/family-note-delivery-consumer.mts test/family-upgrade-consumer.mts test/partner-public-consumer.mts
+

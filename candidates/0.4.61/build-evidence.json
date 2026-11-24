@@ -1,0 +1,47 @@
+{
+  "schema": "vanta-unsigned-sdk-build-candidate-v1",
+  "version": "0.4.61",
+  "sourceCommit": "1f9a915f0bbcfd067d48d28489e9b413d9e29871",
+  "signed": false,
+  "publicationAuthorized": false,
+  "safeForFunds": false,
+  "archive": {
+    "name": "stealthos-vanta-sdk-0.4.61.tgz",
+    "gitBlob": "4ddd51f155cb9108f42e68db2fc59f7b91910e6c",
+    "bytes": 1331369,
+    "sha256": "f248e331c54b29742f0e39408e326c442aa45eedfa9901528a1df544156b8c7b"
+  },
+  "deterministicBuilds": 2,
+  "tests": {
+    "passed": 100,
+    "failed": 0,
+    "typeConsumerChecks": "passed"
+  },
+  "worker": {
+    "schema": "vanta-packed-proof-worker-lifecycle-v1",
+    "safeForFunds": false,
+    "syntheticOnly": true,
+    "actualChromium": true,
+    "actualWasm": true,
+    "workerSha256": "87040b79a3175d2d9905f57a8cf2537a450dc8277dd2ad96f0fd520c1f231cd6",
+    "glueSha256": "591867f0acd91e884ffa9e1f31f5e33536222c1910f028ab76fcdec8210e2187",
+    "wasmSha256": "a3f5768303a533173b78b3a9ed15d2772dbc0bc3a243ef10f29272c5ad624dba",
+    "checks": [
+      "exact packed worker initializes pinned real WASM",
+      "runtime buffers transferred rather than duplicated",
+      "worker accepts expected width",
+      "real native MSM shard allocated",
+      "synthetic witness chunks transferred",
+      "malformed witness produces generic error only",
+      "both private digit and query buffers wiped after native rejection",
+      "failed session was released",
+      "new shard works after failed session",
+      "termination prevents further worker responses",
+      "no synthetic secret echo in worker messages",
+      "worker test creates no durable browser storage"
+    ],
+    "externalRequests": 0,
+    "passed": true
+  },
+  "limitation": "Candidate archive only. Not a signed publication or deployed replacement for 0.4.60."
+}
