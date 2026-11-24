@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Interface,keccak256} from 'ethers';
-import {verifyPublicPaymentReceipt} from '../fresh/family-public-payment-receipt.mjs';
+import {verifyPublicPaymentReceipt,reconcileFamilyDepositReceipt} from '../fresh/family-public-payment-receipt.mjs';
 const hash=n=>'0x'+n.toString(16).padStart(64,'0'),address=n=>'0x'+n.toString(16).padStart(40,'0');
 const abi=new Interface(['event CanonicalKzgRow(uint64 indexed epoch,uint64 indexed row,uint256 indexed commitment)','event CanonicalEncryptedNote(uint64 indexed epoch,uint64 indexed row,uint256 indexed commitment,bytes32 envelopeHash,bytes encryptedEnvelope)']);
 function fixture(){
@@ -41,4 +41,37 @@ test('unconfirmed, missing, failed, disagreeing or reorganized receipts stay saf
  f=fixture();f.receipt.status=0;assert.equal((await verifyPublicPaymentReceipt({...f,verificationProvider:{...f.provider},transactionHash:hash(8)})).phase,'failed');
  f=fixture();await assert.rejects(verifyPublicPaymentReceipt({...f,verificationProvider:{...f.provider,getTransactionReceipt:async()=>({...f.receipt,status:0})},transactionHash:hash(8)}));
  f=fixture();f.receipt.blockHash=hash(99);await assert.rejects(verifyPublicPaymentReceipt({...f,verificationProvider:{...f.provider},transactionHash:hash(8)}));
+});
+
+test('unused deposit authorizations expire without historical log reads',async()=>{
+ for(const [deadline,phase]of [[999,'expired-unused'],[1000,'pending'],[1001,'pending']]){
+  const f=fixture();f.record.deadline=deadline;
+  let reads=0,checks=0;
+  const provider={...f.provider,getLogs:async()=>{throw Error('historical scan is forbidden');},getTransaction:async()=>{throw Error('hashless transaction lookup is forbidden');}};
+  const result=await reconcileFamilyDepositReceipt({...f,provider,verificationProvider:{...provider},validateAnchor:async()=>{checks++;},readUsedNonce:async anchor=>{reads++;assert.equal(anchor.number,11);return false;}});
+  assert.equal(result.phase,phase);assert.equal(reads,1);assert.equal(checks,2);
+ }
+});
+test('consumed deposit authorization recovers only its exact prepared transaction from both RPCs',async()=>{
+ const f=fixture();f.record.deadline=999;let ranges=[];
+ const provider={...f.provider,getLogs:async filter=>{ranges.push(filter);return f.provider.getLogs(filter);}};
+ const result=await reconcileFamilyDepositReceipt({...f,provider,verificationProvider:{...provider},validateAnchor:async()=>{},readUsedNonce:async()=>true});
+ assert.equal(result.phase,'finalized');assert.equal(result.transactionHash,hash(8));
+ assert.equal(ranges.length,2);assert.ok(ranges.every(r=>r.fromBlock===10&&r.toBlock===11&&r.topics.length===1));
+});
+test('consumed nonce with absent or inconsistent exact receipts cannot expire or confirm',async()=>{
+ const f=fixture();f.record.deadline=999;
+ const base={...f,validateAnchor:async()=>{},readUsedNonce:async()=>true};
+ await assert.rejects(reconcileFamilyDepositReceipt({...base,verificationProvider:{...f.provider,getLogs:async()=>[]}}));
+ const provider={...f.provider,getLogs:async()=>[]};
+ await assert.rejects(reconcileFamilyDepositReceipt({...base,provider,verificationProvider:{...provider}}));
+ await assert.rejects(reconcileFamilyDepositReceipt({...base,verificationProvider:{...f.provider},readUsedNonce:async()=>{throw Error('independent nonce disagreement');}}),/independent nonce disagreement/);
+});
+test('a known reverted receipt is terminal without discovery; missing receipt stays pending until expiry',async()=>{
+ const f=fixture();f.record.deadline=1001;f.record.transactionHash=hash(8);f.receipt.status=0;
+ const provider={...f.provider,getLogs:async()=>{throw Error('unexpected log scan');}};
+ const base={...f,provider,verificationProvider:{...provider},validateAnchor:async()=>{},readUsedNonce:async()=>false};
+ assert.equal((await reconcileFamilyDepositReceipt(base)).phase,'failed');
+ const missing={...provider,getTransactionReceipt:async()=>null};
+ assert.equal((await reconcileFamilyDepositReceipt({...base,provider:missing,verificationProvider:{...missing}})).phase,'pending');
 });

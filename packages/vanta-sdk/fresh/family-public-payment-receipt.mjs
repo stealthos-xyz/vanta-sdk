@@ -10,22 +10,30 @@ const address=value=>getAddress(value).toLowerCase();
 const fail=()=>{throw Error('Public payment: canonical transaction or recipient outputs differ.');};
 /** Verify the exact public payment and all recipient/fee envelopes. The payer
  * never needs the recipient's recovery phrase or note-decryption keys. */
-export async function verifyPublicPaymentReceipt({provider,verificationProvider,record,transactionHash}){
- const anchor=await getSharedConfirmedBlock(provider,verificationProvider),tx=record.transaction;
+export async function verifyPublicPaymentReceipt({provider,verificationProvider,record,transactionHash,confirmedAnchor,discover=true}){
+ const anchor=confirmedAnchor??await getSharedConfirmedBlock(provider,verificationProvider),tx=record.transaction;
  let found=transactionHash||record.transactionHash;
  if(found&&!hash(found))fail();
- if(!found){
+ if(!found&&discover){
   const from=record.preparedAtBlock;
   if(!Number.isSafeInteger(from)||from<0||from>anchor.number)return {phase:'pending',anchor};
-  for(let start=from;start<=anchor.number&&!found;start+=1024){
-   const logs=await provider.getLogs({address:tx.to,fromBlock:start,toBlock:Math.min(start+1023,anchor.number),topics:[events.getEvent('CanonicalEncryptedNote').topicHash]});
+  const matches=logs=>{
+   const matched=[];
    for(const log of logs){
-    if(log.removed||address(log.address)!==address(tx.to))continue;
+    if(log.removed||address(log.address)!==address(tx.to))fail();
     const parsed=events.parseLog(log);
     if(parsed&&parsed.args.commitment===BigInt(record.plan.outputs[0])&&same(parsed.args.encryptedEnvelope,record.plan.encryptedOutputs[0])){
-     if(!hash(log.transactionHash))fail();found=log.transactionHash;break;
+     if(!hash(log.transactionHash))fail();matched.push(log.transactionHash.toLowerCase());
     }
    }
+   return matched;
+  };
+  for(let start=from;start<=anchor.number&&!found;start+=1000){
+   const filter={address:tx.to,fromBlock:start,toBlock:Math.min(start+999,anchor.number),topics:[events.getEvent('CanonicalEncryptedNote').topicHash]};
+   const [a,b]=await Promise.all([provider.getLogs(filter),verificationProvider.getLogs(filter)]);
+   const first=matches(a),second=matches(b);
+   if(first.length>1||JSON.stringify(first)!==JSON.stringify(second))fail();
+   found=first[0];
   }
  }
  if(!found)return {phase:'pending',anchor};
@@ -50,4 +58,26 @@ export async function verifyPublicPaymentReceipt({provider,verificationProvider,
   if(encrypted.length!==1||!same(encrypted[0].args.encryptedEnvelope,record.plan.encryptedOutputs[i])||!same(encrypted[0].args.envelopeHash,keccak256(record.plan.encryptedOutputs[i])))fail();
  }
  return {phase:'finalized',transactionHash:found.toLowerCase(),anchor};
+}
+
+/** An unused nonce at the canonical expiry needs no event scan. An occupied
+ * nonce requires the exact independently confirmed transaction and outputs. */
+export async function reconcileFamilyDepositReceipt({provider,verificationProvider,record,transactionHash,validateAnchor,readUsedNonce}){
+ const anchor=await getSharedConfirmedBlock(provider,verificationProvider);
+ if(!Number.isSafeInteger(record.deadline)||!Number.isSafeInteger(anchor.timestamp))fail();
+ const other=await verificationProvider.getBlock(anchor.number);
+ if(other?.timestamp!==anchor.timestamp||!same(other?.hash,anchor.hash))fail();
+ await validateAnchor(anchor);
+ const finish=async result=>{await validateAnchor(anchor);return result;};
+ const known=transactionHash||record.transactionHash;
+ if(known){
+  const result=await verifyPublicPaymentReceipt({provider,verificationProvider,record,transactionHash:known,confirmedAnchor:anchor,discover:false});
+  if(result.phase!=='pending')return finish(result);
+ }
+ const used=await readUsedNonce(anchor);
+ if(typeof used!=='boolean')fail();
+ if(!used)return finish({phase:anchor.timestamp>record.deadline?'expired-unused':'pending',anchor});
+ const result=await verifyPublicPaymentReceipt({provider,verificationProvider,record:{...record,transactionHash:null},confirmedAnchor:anchor});
+ if(result.phase!=='finalized')fail();
+ return finish(result);
 }
