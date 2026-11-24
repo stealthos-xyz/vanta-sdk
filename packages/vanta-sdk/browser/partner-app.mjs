@@ -2,6 +2,7 @@ import {hexlify,toUtf8Bytes,verifyMessage} from 'ethers';
 import {createStealthOSAppWallet} from './app-wallet.mjs';
 import {getCompiledFamilyEvmRelease} from '../fresh/family-network.mjs';
 import {normalizePartnerApplication,partnerApplicationHash} from '../fresh/partner-application.mjs';
+import {resolvePartnerRpcEndpoints} from '../fresh/family-rpc.mjs';
 import {STEALTHOS_SDK_VERSION} from '../fresh/sdk-version.mjs';
 export {STEALTHOS_SDK_VERSION};
 export async function openStealthOSPartnerApp({configuration:c,provider,asset='native',workerUrl,onLocked,paymentRecipient}){
@@ -10,6 +11,7 @@ export async function openStealthOSPartnerApp({configuration:c,provider,asset='n
   c.generationId!==release.pins.generationId||!/^0x[0-9a-f]{64}$/u.test(c.handleId??'')||!provider?.request)throw Error('Load the public configuration for this signed SDK release.');
  for(const key of ['serviceUrl','artifactBaseUrl','assetConfigurationUrl','rpcUrl']){const u=new URL(c[key]);if(u.protocol!=='https:'||u.username||u.password||u.hash)throw Error('HTTPS app service configuration required.');}
  if(new URL(c.assetConfigurationUrl).origin!==new URL(c.serviceUrl).origin)throw Error('App configuration service differs.');
+ const rpc=resolvePartnerRpcEndpoints(c.rpcUrl,c.verificationRpcUrl);
  const application=normalizePartnerApplication(c.application);
  if(!application.origins.includes(origin))throw Error('This app origin is not registered by the partner.');
  // Presentation/login reads public settings, not the entire deployment. The
@@ -40,7 +42,7 @@ export async function openStealthOSPartnerApp({configuration:c,provider,asset='n
   token=session.token;expires=session.expiresAt;wallet=selected;return token;
  };
  const bridge=await createStealthOSAppWallet({provider,asset,workerUrl,getSessionToken,serviceUrl:c.serviceUrl,...(paymentRecipient?{paymentRecipient}:{}),
-  rpcUrl:c.rpcUrl,verificationRpcUrl:c.rpcUrl,artifactBaseUrl:c.artifactBaseUrl,assetConfiguration:{url:c.assetConfigurationUrl,handleId:c.handleId},
+  rpcUrl:rpc.primary,verificationRpcUrl:rpc.verification,artifactBaseUrl:c.artifactBaseUrl,assetConfiguration:{url:c.assetConfigurationUrl,handleId:c.handleId},
   onLocked});
  let previewPending;
  async function fetchNetworkGas(){
