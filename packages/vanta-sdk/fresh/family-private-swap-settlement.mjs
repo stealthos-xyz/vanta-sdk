@@ -6,7 +6,7 @@ import {getCompiledFamilyEvmRelease,verifyCompiledFamilyOperationRuntime} from '
 import {getCompiledVantaFamilyProofResources} from './family-proof-resources.mjs';
 import {createFamilyNoteDelivery} from './family-note-delivery.mjs';
 import {depositPoolAbi as poolAbi} from './family-deposit-wire.mjs';
-import {requireNativeWalletClearance} from './family-native-clearance.mjs';
+import {NATIVE_CLEARANCE_ABI,requireNativeWalletClearance} from './family-native-clearance.mjs';
 import {canonicalFamilyProvider} from './family-rpc.mjs';
 import {getConfirmedBlock} from './transaction-confirmations.mjs';
 import {privateSwapOutputScope,privateSwapOutputEscrow,privateSwapOutputDomain,privateSwapOutputClaimTypes,
@@ -85,7 +85,12 @@ export async function createPrivateSwapHost({source,walletController,store,provi
    await verifyCompiledFamilyOperationRuntime(provider,output.pool,releaseContext,['private-swap-gateway','native-screening-clearance']);
    const payer=privateSwapOutputEscrow(scope,credit),verifier=release.lock.contracts.find(p=>p.name==='native-screening-clearance')?.address;
    if(!verifier)fail('Native screening is outside the signed release.');
-   const clearance=await requireNativeWalletClearance({release,payer,verifier,timestamp:block.timestamp,serviceUrl:relayerUrl,fetcher,signal,privateSwapCreditId:creditId,
+   // The release-pinned gate advertises the new internal-only policy. Legacy
+   // immutable deployments still require their original clearance packet.
+   let provenanceOnly=false;
+   try{[provenanceOnly]=await read(verifier,NATIVE_CLEARANCE_ABI,'internalSwapIngressUsesProvenanceOnly',[],block);}
+   catch(error){if(!['CALL_EXCEPTION','BAD_DATA'].includes(error?.code))throw error;}
+   const clearance=provenanceOnly===true?{encoded:'0x'}:await requireNativeWalletClearance({release,payer,verifier,timestamp:block.timestamp,serviceUrl:relayerUrl,fetcher,signal,privateSwapCreditId:creditId,
     read:(to,iface,name,args)=>read(to,iface,name,args,block),refreshReadContext:async()=>{
      block=await anchor();return{timestamp:block.timestamp,read:(to,iface,name,args)=>read(to,iface,name,args,block)};
     }}),
