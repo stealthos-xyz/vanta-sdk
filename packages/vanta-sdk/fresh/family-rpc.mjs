@@ -5,8 +5,10 @@ const aliases=new WeakMap();
 export const canonicalFamilyProvider=provider=>aliases.get(provider)||provider;
 export function createFamilyRpcProviders(primaryUrl,verificationUrl,chainId){
  const parse=value=>{const u=new URL(value);if(u.protocol!=='https:'||u.username||u.password||u.hash)throw Error('An HTTPS family RPC is required.');return u.href;};
- const primary=parse(primaryUrl),secondary=parse(verificationUrl),provider=new JsonRpcProvider(primary,chainId);
- if(primary!==secondary)return {provider,verificationProvider:new JsonRpcProvider(secondary,chainId),mode:'independent'};
+ // Providers can cap the sum of log ranges in an HTTP batch. Use individual
+ // JSON-RPC requests even when the browser verifies several pools concurrently.
+ const primary=parse(primaryUrl),secondary=parse(verificationUrl),options={batchMaxCount:1},provider=new JsonRpcProvider(primary,chainId,options);
+ if(primary!==secondary)return {provider,verificationProvider:new JsonRpcProvider(secondary,chainId,options),mode:'independent'};
  const verificationProvider=new Proxy(provider,{get(target,key){if(key==='destroy')return ()=>{};const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;}});
  aliases.set(verificationProvider,provider);return {provider,verificationProvider,mode:'single-endpoint'};
 }

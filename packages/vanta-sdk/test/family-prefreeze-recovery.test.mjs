@@ -24,7 +24,6 @@ function fixture({head=11,eventBlock=4}={}){
 }
 for(const [name,mutate] of [
  ['secondary unavailable',s=>s.getNetwork=async()=>{throw Error('unavailable');}],
- ['secondary stale',s=>s.getBlock=async n=>{let h=n==='latest'?8:n;return {number:h,hash:word(h+100),parentHash:word(h+99)};}],
  ['contradictory block',s=>s.getBlock=async n=>{let h=n==='latest'?11:n;return {number:h,hash:word(h===10?999:h+100)};}],
  ['wrong genesis',s=>s.getBlock=async n=>{let h=n==='latest'?11:n;return {number:h,hash:word(h===0?999:h+100)};}],
  ['different runtime code',s=>s.getCode=async()=>'0x6001'],
@@ -38,6 +37,11 @@ for(const [name,mutate] of [
   assert.deepEqual(actual.receivedTransactions,[{transactionHash:word(55),blockNumber:4,amountAtomic:'17'}]);
  });
 }
+test('a lagging but consistent independent provider selects the shared confirmed anchor',async()=>{
+ const {secondary,run}=fixture();
+ secondary.getBlock=async n=>{const h=n==='latest'?8:n;return {number:h,hash:word(h+100),parentHash:word(h+99)};};
+ const result=await run(secondary);assert.equal(result.blockNumber,7);assert.equal(result.balanceAtomicAtAnchor,'17');
+});
 test('identical HTTPS endpoints are not independent SDK providers',()=>{
  const result=createFamilyRpcProviders('https://rpc.example.invalid','https://rpc.example.invalid/',6281971);
  try{assert.equal(result.mode,'single-endpoint');assert.equal(canonicalFamilyProvider(result.verificationProvider),result.provider);}
@@ -115,4 +119,36 @@ test('a non-range RPC error and a rejected single-block window fail closed',asyn
   await assert.rejects(()=>run(secondary,{chunkBlocks}),err=>err===error);
   assert.equal(calls,1);
  }
+});
+
+test('independent wallet providers disable transport batching',()=>{
+ const result=createFamilyRpcProviders('https://rpc.example.invalid','https://verify.example.invalid',6281971);
+ try{
+  assert.equal(result.provider._getOption('batchMaxCount'),1);
+  assert.equal(result.verificationProvider._getOption('batchMaxCount'),1);
+ }finally{result.verificationProvider.destroy();result.provider.destroy();}
+});
+test('interrupted verified display scan resumes from saved public windows without rescanning them',async()=>{
+ const f=fixture({head:10001,eventBlock:999});let checkpoint=null;
+ const cache={readCheckpoint:async()=>checkpoint,saveCheckpoint:async(_pool,record)=>{checkpoint=structuredClone(record);}};
+ const original=f.secondary.getLogs;
+ f.secondary.getLogs=async filter=>{if(filter.fromBlock>=8000)throw Error('RPC interrupted');return original(filter);};
+ await assert.rejects(()=>f.run(f.secondary,{displayCache:cache,useSharedHistory:false}),/RPC interrupted/);
+ assert.equal(checkpoint.anchor.number,7999);assert.equal(checkpoint.encryptedRows.length,1);
+ const resumed=[];f.secondary.getLogs=async filter=>{resumed.push(filter.fromBlock);return original(filter);};
+ const result=await f.run(f.secondary,{displayCache:cache,useSharedHistory:false});
+ assert.equal(result.resumedDisplayCheckpoint,true);assert.equal(result.balanceAtomicAtAnchor,'17');
+ assert.equal(resumed[0],8000);assert.equal(checkpoint.anchor.number,10000);
+ resumed.length=0;await f.run(f.secondary);assert.equal(resumed[0],0);
+});
+test('a replaced local fork checkpoint may move backwards but a newer unrelated checkpoint is retained',async()=>{
+ const generationId=word(2),pool=addr(201),state=new Map();
+ const store={read:async name=>state.get(name)??[],transact:async(name,update)=>{const result=update(state.get(name)??[]);state.set(name,result.next);return result.result;}};
+ const cache=createFamilyBalanceCache({store,identity:'public-checkpoint-fixture',generationId,pools:[{pool}]});
+ const stale={anchor:{number:20,hash:word(20)}},fresh={anchor:{number:18,hash:word(18)}};
+ await cache.saveCheckpoint(pool,stale);
+ await cache.saveCheckpoint(pool,fresh);assert.deepEqual(await cache.readCheckpoint(pool),stale);
+ await cache.saveCheckpoint(pool,fresh,stale.anchor);assert.deepEqual(await cache.readCheckpoint(pool),fresh);
+ await cache.saveCheckpoint(pool,{anchor:{number:16,hash:word(16)}},stale.anchor);
+ assert.deepEqual(await cache.readCheckpoint(pool),fresh);
 });

@@ -43,11 +43,13 @@ export function createFamilyBalanceCache({store, identity, generationId, pools})
       const rows = await store.read('family-balance-events-v1/'+identity+'/'+pool);
       return rows.length === 1 ? rows[0] : null;
     },
-    async saveCheckpoint(pool, checkpoint) {
+    async saveCheckpoint(pool, checkpoint, discardedAnchor) {
       if (!assets.has(pool)) return;
-      await store.transact('family-balance-events-v1/'+identity+'/'+pool,rows=>({
-        next:rows[0]?.anchor?.number>checkpoint.anchor.number?rows:[checkpoint],result:null,
-      }));
+      await store.transact('family-balance-events-v1/'+identity+'/'+pool,rows=>{
+        const old=rows[0]?.anchor;
+        const discarded=discardedAnchor && old?.number===discardedAnchor.number && old.hash===discardedAnchor.hash;
+        return {next:old?.number>checkpoint.anchor.number&&!discarded?rows:[checkpoint],result:null};
+      });
     },
   });
 }

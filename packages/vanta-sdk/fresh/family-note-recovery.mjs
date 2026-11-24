@@ -1,4 +1,5 @@
-import {getConfirmedBlock} from './transaction-confirmations.mjs';
+import {getConfirmedBlock,getSharedConfirmedBlock} from './transaction-confirmations.mjs';
+import {readSharedFamilyHistory} from './family-shared-history.mjs';
 import {canonicalFamilyProvider} from './family-rpc.mjs';
 /** Internal family recovery from the complete canonical public event stream.
  * No private commitment/nullifier filters, fee amounts, wallet keys or opening
@@ -65,7 +66,8 @@ function readDisplayCheckpoint(record, scope, deploymentBlock, verificationProvi
   if (record?.scope !== scope || !Number.isSafeInteger(record.anchor?.number) ||
       record.anchor.number < deploymentBlock || !WORD.test(record.anchor.hash) ||
       !Array.isArray(record.nextRows) || !Array.isArray(record.encryptedRows) ||
-      !Array.isArray(record.spentTransactions)) return undefined;
+      !Array.isArray(record.spentTransactions) || record.nextRows.length < 1 ||
+      record.nextRows.some(rows => !Number.isSafeInteger(rows) || rows < RESERVED_ROWS || rows > MAX_ROWS)) return undefined;
   const next = record.nextRows.map(()=>RESERVED_ROWS);
   for (const row of record.encryptedRows) {
     if (!Number.isSafeInteger(row?.epoch) || row.epoch < 0 || row.epoch >= next.length ||
@@ -73,7 +75,8 @@ function readDisplayCheckpoint(record, scope, deploymentBlock, verificationProvi
         !Number.isSafeInteger(row.blockNumber) || row.blockNumber < deploymentBlock || row.blockNumber > record.anchor.number ||
         !WORD.test(row.blockHash) || !WORD.test(row.transactionHash) || !WORD.test(row.commitment) ||
         !WORD.test(row.envelopeHash) || typeof row.envelope !== 'string' ||
-        row.envelope.length < 130 || row.envelope.length > 4098 || !/^0x01(?:[0-9a-f]{2})+$/u.test(row.envelope))
+        row.envelope.length < 130 || row.envelope.length > 4098 || !/^0x01(?:[0-9a-f]{2})+$/u.test(row.envelope) ||
+        keccak256(row.envelope) !== row.envelopeHash)
       return undefined;
   }
   if (!next.every((rows,epoch)=>rows===record.nextRows[epoch])) return undefined;
@@ -104,7 +107,7 @@ export function summarizeFamilyReceivedTransactions(notes) {
   return frozen([...received.values()]);
 }
 
-export async function recoverFamilyCanonicalNotes({ provider, verificationProvider, delivery, wallet, deploymentBlock, chunkBlocks = 1000, confirmedAnchor, displayCache }) {
+export async function recoverFamilyCanonicalNotes({ provider, verificationProvider, delivery, wallet, deploymentBlock, chunkBlocks = 1000, confirmedAnchor, displayCache, useSharedHistory = true }) {
   if (!provider || !delivery || typeof delivery.decrypt !== "function" || typeof delivery.walletRecipient !== "function") fail();
   const context = validateFamilyNoteDomain(delivery.context);
   // Reject a locked or internally inconsistent wallet before distinguishing
@@ -119,19 +122,35 @@ export async function recoverFamilyCanonicalNotes({ provider, verificationProvid
   if (!Number.isSafeInteger(chunkBlocks) || chunkBlocks < 1 || chunkBlocks > 10000) fail();
   // A portfolio may recover several pools at one already-confirmed block.
   // pin() still verifies its canonical hash and confirmation depth on each RPC.
-  const anchor = block(confirmedAnchor ?? await getConfirmedBlock(provider));
+  const anchor = block(confirmedAnchor ?? await (verificationProvider ? getSharedConfirmedBlock(provider, verificationProvider) : getConfirmedBlock(provider)));
   if (anchor.number < deploymentBlock) fail();
   let checkpoints = publicCheckpoints.get(provider);
   if (!checkpoints) { checkpoints = new Map(); publicCheckpoints.set(provider, checkpoints); }
   const scope = JSON.stringify([context, deploymentBlock, !!verificationProvider]);
-  let previous = checkpoints.get(scope);
-  if (!previous && displayCache) {
+  const sources = verificationProvider ? [provider, verificationProvider] : [provider];
+  const matchesAnchor = async target => {
+    const observed = await Promise.all(sources.map(source => source.getBlock(target.number)));
+    return observed.every(value => value?.number === target.number && value.hash?.toLowerCase() === target.hash);
+  };
+  const usable = async candidate => candidate && candidate.verificationProvider === verificationProvider &&
+    candidate.anchor.number <= anchor.number && await matchesAnchor(candidate.anchor);
+  let previous = checkpoints.get(scope), discardedAnchor;
+  if (!await usable(previous)) previous = undefined;
+  if (displayCache) {
     const saved = await displayCache.readCheckpoint(context.pool).catch(()=>null);
-    previous = readDisplayCheckpoint(saved, scope, deploymentBlock, verificationProvider);
+    const local = readDisplayCheckpoint(saved, scope, deploymentBlock, verificationProvider);
+    if (local && (!previous || local.anchor.number > previous.anchor.number)) {
+      if (await usable(local)) previous = local;
+      else discardedAnchor = local.anchor;
+    }
+    // The shared historical checkpoint is distributed inside the signed SDK
+    // and is used only for display. Spending still obtains its own complete
+    // independently verified inventory; no shared cursor enters that cache.
+    if (verificationProvider && useSharedHistory) {
+      const shared = readDisplayCheckpoint(await readSharedFamilyHistory(context, deploymentBlock, previous?.anchor.number), scope, deploymentBlock, verificationProvider);
+      if (shared && (!previous || shared.anchor.number > previous.anchor.number) && await usable(shared)) previous = shared;
+    }
   }
-  if (previous && (previous.verificationProvider !== verificationProvider || previous.anchor.number > anchor.number ||
-      (await provider.getBlock(previous.anchor.number))?.hash?.toLowerCase() !== previous.anchor.hash ||
-      verificationProvider && (await verificationProvider.getBlock(previous.anchor.number))?.hash?.toLowerCase() !== previous.anchor.hash)) previous = undefined;
   const read = async (name, args = []) => {
     const request = { to: context.pool, data: ABI.encodeFunctionData(name, args), blockTag: anchor.number };
     const data = await provider.call(request);
@@ -160,11 +179,25 @@ export async function recoverFamilyCanonicalNotes({ provider, verificationProvid
     epochs.push({ epoch, rows, checkpoint: field(snapshot[3]), x: snapshot[1].toString(), y: snapshot[2].toString(), closed: snapshot[4] });
   }
   if (epochs[activeEpoch].rows !== integer(active[1]) || epochs[activeEpoch].checkpoint !== field(active[2])) fail();
-  if (previous?.displayOnly && previous.nextRows.some((rows,epoch)=>!epochs[epoch] || rows>epochs[epoch].rows))
+  if (previous?.displayOnly && previous.nextRows.some((rows,epoch)=>!epochs[epoch] || rows>epochs[epoch].rows)) {
+    discardedAnchor = previous.anchor;
     previous = undefined;
+  }
   const nextRows = epochs.map((_,i) => previous?.nextRows[i] ?? RESERVED_ROWS), encryptedRows = previous ? previous.encryptedRows.slice() : [],
     spentNullifiers = new Set(previous?.spentNullifiers), spentTransactions = new Map(previous?.spentTransactions);
   let pending, previousBlock = -1, previousIndex = -1;
+  let persistedThrough = previous?.anchor.number ?? deploymentBlock - 1;
+  const saveDisplayProgress = async through => {
+    if (!displayCache || !verificationProvider) return;
+    const blocks = await Promise.all(sources.map(source => source.getBlock(through)));
+    const at = block(blocks[0]);
+    if (at.number !== through || blocks.some(value => value?.number !== through || value.hash?.toLowerCase() !== at.hash) ||
+        !await matchesAnchor(anchor)) fail();
+    const record = {scope, anchor: at, nextRows: nextRows.slice(), encryptedRows: encryptedRows.slice(),
+      spentTransactions: [...spentTransactions]};
+    await displayCache.saveCheckpoint(context.pool, record, discardedAnchor).catch(()=>{});
+    persistedThrough = through;
+  };
   for (let fromBlock = previous ? previous.anchor.number + 1 : deploymentBlock; fromBlock <= anchor.number;) {
     const window = await readCanonicalLogWindow(provider, verificationProvider, context.pool, [TOPICS], fromBlock, anchor.number, chunkBlocks);
     const { toBlock, logs, other } = window;
@@ -200,6 +233,10 @@ export async function recoverFamilyCanonicalNotes({ provider, verificationProvid
       }
     }
     if (pending) fail();
+    // Save only complete, ordered event windows at an independently verified
+    // canonical anchor. An interrupted sync resumes from its last safe window.
+    if (displayCache && verificationProvider && toBlock - persistedThrough >= 8000)
+      await saveDisplayProgress(toBlock);
     fromBlock = toBlock + 1;
   }
   if (nextRows.some((count, epoch) => count !== epochs[epoch].rows)) fail();
@@ -252,7 +289,7 @@ export async function recoverFamilyCanonicalNotes({ provider, verificationProvid
   if (displayCache && quarantined.length===0 && (!previous?.displayOnly || previous.anchor.hash!==anchor.hash)) {
     await displayCache.saveCheckpoint(context.pool,{
       scope,anchor,nextRows,encryptedRows,spentTransactions:[...spentTransactions],
-    }).catch(()=>{});
+    },discardedAnchor).catch(()=>{});
   }
   const verifiedSpendableAtomic = notes.filter(note => note.status === "spendable")
     .reduce((sum, note) => sum + BigInt(note.opening.amount_units), 0n).toString();

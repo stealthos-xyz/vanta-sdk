@@ -173,6 +173,7 @@
     "fresh/family-routed-wire.mjs",
     "fresh/family-rpc.d.mts",
     "fresh/family-rpc.mjs",
+    "fresh/family-shared-history.mjs",
     "fresh/family-spend-fence.mjs",
     "fresh/family-unsigned-reservations.mjs",
     "fresh/family-wallet-generations.d.mts",
@@ -180,8 +181,13 @@
     "fresh/funded-indexeddb-store.mjs",
     "fresh/generated-family-bridge-gateway.mjs",
     "fresh/generated-family-catalog.mjs",
+    "fresh/generated-family-history-checkpoint.mjs",
     "fresh/generated-family-proof-resources.mjs",
     "fresh/generated-family-release.mjs",
+    "fresh/history-ccip-bnm.json",
+    "fresh/history-doge.json",
+    "fresh/history-usd1.json",
+    "fresh/history-usdc.json",
     "fresh/host-storage.d.mts",
     "fresh/host-storage.mjs",
     "fresh/host-wallet.d.mts",
@@ -217,5 +223,5 @@
   },
   "type": "module",
   "types": "./api/wallet.d.mts",
-  "version": "0.4.62"
+  "version": "0.4.63"
 }
