@@ -8,7 +8,7 @@ import {proveVantaV8FullBound4InWallet}
   from "../../sdk/src/vanta/unified-gate0-full-bound4-browser.js";
 import {proveVantaFamilyStandardBound4InWallet, type VantaFamilyStandardBound4Input}
   from "../../sdk/src/vanta/unified-combined-fee-bound4-browser.js";
-export {initializeVantaBrowserBound4ResearchRuntime}
+export {initializeVantaBrowserBound4Runtime}
   from "../../sdk/src/vanta/unified-browser-bound4-runtime.js";
 export {createVantaBrowserBound4WorkerFactory}
   from "../../sdk/src/vanta/unified-browser-bound4-workers.js";

@@ -32,7 +32,7 @@ export function vantaHostStorageScope({accountId,address,networkId,generationId}
 
 /** Native CAS must be backed by one encrypted, durably committed database
  * transaction, shared by every process/worker using that namespace. Returning
- * true before commit/fsync is a host bug. An in-memory Map is test-only.
+ * true before commit/fsync is a host bug. An in-memory store does not meet durability requirements.
  * Callbacks must be synchronous and pure; CAS conflicts can repeat them.
  */
 export function createVantaHostAtomicStore({host,scope,maxConflicts=8}={}){

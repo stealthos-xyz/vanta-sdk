@@ -1,1 +1,1 @@
-export const STEALTHOS_SDK_VERSION = "0.4.61";
+export const STEALTHOS_SDK_VERSION = "0.4.62";

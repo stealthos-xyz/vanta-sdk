@@ -39,7 +39,7 @@ export interface VantaFamilyBound4Input {
 /** Low-level local primitive. The compiled production runtime verifies signed activation first. */
 export declare function proveVantaFamilyBound4InWallet(input:VantaFamilyBound4Input):Promise<Readonly<Record<string,unknown>>>;
 export declare function createVantaBrowserBound4WorkerFactory(release:VantaBrowserBound4Release):()=>VantaBound4Worker;
-export declare function initializeVantaBrowserBound4ResearchRuntime(input:{release:VantaBrowserBound4Release;
+export declare function initializeVantaBrowserBound4Runtime(input:{release:VantaBrowserBound4Release;
   signal?:AbortSignal;fetcher?:typeof fetch}):Promise<Readonly<{wasm:Readonly<Record<string,unknown>>;
   createShardWorker:()=>VantaBound4Worker}>>;
 

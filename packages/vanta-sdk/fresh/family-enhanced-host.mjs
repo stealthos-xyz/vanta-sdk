@@ -1,6 +1,6 @@
 /** Current KZG/ordinary-Groth16 wallet composition. Signed resources and two
  * independent RPCs are verified before the existing privacy vault is opened.
- * The pre-ceremony package embeds no activation or production proving keys. */
+ * The signed deployment context and pinned proving resources are verified before use. */
 import {Interface,getAddress} from "ethers";
 import {getSharedConfirmedBlock} from './transaction-confirmations.mjs';
 import {getCompiledFamilyEvmRelease,verifyCompiledFamilyOperationRuntime} from "./family-network.mjs";
