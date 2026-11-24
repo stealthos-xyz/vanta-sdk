@@ -66,9 +66,6 @@ export type FamilyNotesSummary = {
     generationId: string;
     blockNumber: number;
     blockHash: string;
-    complete: boolean;
-    /** Failed pools are omitted from `pools`; absence is never a zero balance. */
-    unavailablePools: readonly { pool: string; asset: string; assetSymbol: string; reason: 'history-unavailable' | 'local-history-unavailable' }[];
     receivedTransactions: readonly FamilyReceivedTransaction[];
     pools: readonly {
         asset: string;
