@@ -152,3 +152,21 @@ test('a replaced local fork checkpoint may move backwards but a newer unrelated 
  await cache.saveCheckpoint(pool,{anchor:{number:16,hash:word(16)}},stale.anchor);
  assert.deepEqual(await cache.readCheckpoint(pool),fresh);
 });
+
+test('review recovery reuses the verified display cursor; funded inventory still scans independently',async()=>{
+ const f=fixture({head:2001,eventBlock:999});
+ let checkpoint=null;
+ const cache={readCheckpoint:async()=>checkpoint,saveCheckpoint:async(_pool,record)=>{checkpoint=structuredClone(record);}};
+ // Start with a durable display cursor as if a previous process saved it.
+ // A second independent pair represents a newly opened wallet worker.
+ await f.run(f.secondary,{displayCache:cache,useSharedHistory:false});
+ const fresh=fixture({head:2001,eventBlock:999}),scans=[];
+ const original=fresh.secondary.getLogs;
+ fresh.secondary.getLogs=async filter=>{scans.push(filter.fromBlock);return original(filter);};
+ const review=await fresh.run(fresh.secondary,{displayCache:cache,useSharedHistory:false});
+ assert.equal(review.resumedDisplayCheckpoint,true);assert.equal(review.balanceAtomicAtAnchor,'17');
+ assert.deepEqual(scans,[]);
+ const funded=await fresh.run(fresh.secondary);
+ assert.equal(funded.resumedDisplayCheckpoint,undefined);assert.equal(funded.balanceAtomicAtAnchor,'17');
+ assert.deepEqual(scans,[0,1000,2000]);
+});

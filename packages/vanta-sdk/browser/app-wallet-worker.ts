@@ -177,6 +177,7 @@ function enhancedForAsset(asset: FamilyAsset) {
   return createVantaFamilyEnhancedHost({walletController: wallet!, store: store!, provider, verificationProvider: independent,
         relayerUrl: config.relayerUrl, artifactBaseUrl: config.artifactBaseUrl, asset, fetcher,
         walletAddress: config.session.wallet,
+        getReviewDisplayCache:()=>balanceCache,
         signConsent: async request => {
           const revision = epoch; live();
           const signature = await secret("walletSignConsent", request);
@@ -198,16 +199,19 @@ function depositForAsset(asset: FamilyAsset) {
 }
 function withdrawalForAsset(asset: FamilyAsset, revision = epoch) {
   return createVantaFamilyWithdrawalHost({walletController:wallet!,store:store!,provider,verificationProvider:independent,relayerUrl:config.relayerUrl,artifactBaseUrl:config.artifactBaseUrl,asset,walletAddress:config.session.wallet,fetcher,signal:controller.signal,partnerAssetConfiguration:config.partnerAssetConfiguration,
+    getReviewDisplayCache:()=>balanceCache,
     approvePrivateSend:async review=>{live(revision);if(!privateSendAction)fail();return await secret('privateSendApprove',review)===true;}});
 }
 function routeForAsset(asset: FamilyAsset, operation: 4 | 5, revision = epoch, routesRevision = routeEpoch) {
   return createVantaFamilyRoutedHost({operation,walletController:wallet!,store:store!,provider,verificationProvider:independent,
     relayerUrl:config.relayerUrl,artifactBaseUrl:config.artifactBaseUrl,asset,walletAddress:config.session.wallet,fetcher,signal:controller.signal,partnerAssetConfiguration:config.partnerAssetConfiguration,
+    getReviewDisplayCache:()=>balanceCache,
     approveRoute:async review=>{live(revision);if(!routedAction||routeEpoch!==routesRevision)fail();const approved=await secret('routedApprove',review);live(revision);return approved===true;}});
 }
 function privateSendForAsset(asset: FamilyAsset) {
   return createVantaFamilyPrivateSendHost({walletController:wallet!,store:store!,provider,verificationProvider:independent,
        relayerUrl:config.relayerUrl,artifactBaseUrl:config.artifactBaseUrl,asset,walletAddress:config.session.wallet,fetcher,signal:controller.signal,partnerAssetConfiguration:config.partnerAssetConfiguration,
+       getReviewDisplayCache:()=>balanceCache,
        approvePrivateSend:async review=>{live();if(!privateSendAction)fail();const revision=epoch;
         const approved=await secret('privateSendApprove',review);live(revision);return approved===true;}});
 }

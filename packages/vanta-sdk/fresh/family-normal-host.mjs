@@ -38,7 +38,7 @@ export const createVantaFamilyRoutedHost=async options=>{
 };
 export const createVantaFamilyWithdrawalHost=options=>createNormalHost(options,0);
 async function createNormalHost({walletController,store,provider,verificationProvider,relayerUrl,walletAddress,
- artifactBaseUrl,fetcher=fetch,signal,onProgress,asset='native',releaseContext,approvePrivateSend,partnerAssetConfiguration}={},operation){
+ artifactBaseUrl,fetcher=fetch,signal,onProgress,asset='native',releaseContext,approvePrivateSend,partnerAssetConfiguration,getReviewDisplayCache}={},operation){
  const routed=[4,5].includes(operation);
  if(!provider||!verificationProvider||provider===verificationProvider||!store||typeof walletController?.requireWallet!=='function'||
   typeof approvePrivateSend!=='function')fail('Trusted wallet, store and transaction approval are required.');
@@ -108,6 +108,9 @@ async function createNormalHost({walletController,store,provider,verificationPro
   const bytes=new Uint8Array(size);let n=0;for(const part of chunks){bytes.set(part,n);n+=part.length;}live();const result=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
   if(!response.ok)fail(typeof result.error==='string'&&/^(?:Relayer gas:|Relayer submission:|The private transaction)/u.test(result.error)&&result.error.length<240?result.error:'Relayer authorization is unavailable.');return result;};
  const inventory=()=>recoverFamilyCanonicalNotes({provider,verificationProvider,delivery,wallet,deploymentBlock:d.deploymentBlock});
+ // Only read-only review may reuse the display checkpoint. Funded preparation
+ // and reconciliation always call the independent canonical inventory above.
+ const reviewInventory=()=>recoverFamilyCanonicalNotes({provider,verificationProvider,delivery,wallet,deploymentBlock:d.deploymentBlock,displayCache:getReviewDisplayCache?.()});
  const review=row=>Object.freeze({...row.review,preparedId:row.id,phase:row.phase,transactionHash:row.transactionHash??null,transactionDigest:row.calldataHash??null,
   ...(row.batch?{batch:true,recipientCount:row.batch.recipients.length,payments:row.review.payments}:{}),
   ...(routed?{transactionTarget:targetFor(row),publicReceiver:row.route.receiver,minimumOutputAtomic:row.route.minimumOutput,maximumDeliveryFeeAtomic:row.route.maximumDeliveryFee,
@@ -140,7 +143,6 @@ async function createNormalHost({walletController,store,provider,verificationPro
   async quote(input){
    // Quote while the user edits; only initialize public software/material.
    // Witnesses and proofs remain behind prepareReviewed after confirmation.
-   void api.warmProofRuntime().catch(()=>{});
    live();if(typeof input.amountAtomic!=='string'||!/^[1-9][0-9]{0,36}$/u.test(input.amountAtomic)||BigInt(input.amountAtomic)>=(1n<<120n))fail('Enter a positive supported total amount.');
    const gross=BigInt(input.amountAtomic);
    const batchRecipients=input.payments?.length;
@@ -152,16 +154,22 @@ async function createNormalHost({walletController,store,provider,verificationPro
     verifyOutput=async()=>{const at=await anchor();await verifyPrivateSwapOutput(provider,scope,output.pool,output.poolCodehash,at.number);};
    }
    const requestGas=width=>post('gas',{asset,partnerHandle:input.partnerHandle,operation,width,maximumDeliveryFee:routed?input.maximumDeliveryFeeAtomic??'0':'0',...(batchRecipients?{batchRecipients}:{}),...(input.privateOutput?{privateOutput:input.privateOutput}:{})});
-   // No signatures, reservations, witnesses or proofs: all independent live
-   // review reads overlap. Gas starts as soon as note width is known, without
-   // waiting for the additional route/destination dependency checks.
-   const selection=Promise.all([inventory(),fences.blocked()]).then(([recovered,blocked])=>{
+   // Fees and the usual gas width do not depend on private note recovery.
+   // Start them immediately; request the wider quote only when selected.
+   const standardGas=routed?undefined:requestGas(8);
+   void standardGas?.catch(()=>{});
+   const feePolicy=prepareFamilyOperationFeeReview({provider,verificationProvider,releaseContext,asset,partnerHandle:input.partnerHandle,operation});
+   void feePolicy.catch(()=>{});
+   const selection=Promise.all([reviewInventory(),fences.blocked()]).then(([recovered,blocked])=>{
     const selected=selectFamilyPrivateSendNotes(recovered,blocked,gross);if(!selected)fail('Insufficient unlocked private balance.');return selected;
    });
-   const [selected,gas,feeReview,netRoute]=await Promise.all([selection,selection.then(s=>requestGas(s.width)),
-    prepareFamilyOperationFeeReview({provider,verificationProvider,releaseContext,asset,partnerHandle:input.partnerHandle,operation}),
+   // Initiate the network reads before any optional proof-runtime warmup.
+   const reviewWork=Promise.all([selection,selection.then(s=>s.width===8&&standardGas?standardGas:requestGas(s.width)),
+    feePolicy,
     routed?prepareFamilyNetRoute({provider,verificationProvider,releaseContext,asset,operation,slippageBps:input.slippageBps??100,receiver:input.receiver}):null,
-    verifyOutput()]);live();
+    verifyOutput()]);
+   void api.warmProofRuntime().catch(()=>{});
+   const [selected,gas,feeReview,netRoute]=await reviewWork;live();
    if(gas.schema!=='stealthos-family-relay-gas-v1'||gas.pool!==d.pool||gas.asset!==d.asset||gas.generationId!==r.generationId||gas.operation!==operation||gas.width!==selected.width||
     !/^0x[0-9a-f]{40}$/u.test(gas.relayWallet??'')||typeof gas.gasReserveAtomic!=='string'||!/^[1-9][0-9]{0,36}$/u.test(gas.gasReserveAtomic)||typeof gas.token!=='string'||gas.expiresAt<=Date.now()/1000+60||
     (batchRecipients&&(gas.batchRecipients!==batchRecipients||gas.batchGateway!==batchScope().gateway)))fail('A current nonzero relayer gas quote is required.');

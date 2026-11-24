@@ -11,7 +11,7 @@ import {createVantaEnhancedCandidateHost} from "./family-enhanced-runtime.mjs";
 const POOL=new Interface(["function asset() view returns(address)","function maximumWindowEpochs() view returns(uint64)",
   "function minimumDelayEpochs() view returns(uint64)","function maximumAuthorizationAgeEpochs() view returns(uint64)"]);
 export async function createVantaFamilyEnhancedHost({walletController,store,provider,verificationProvider,relayerUrl,
-  walletAddress,signConsent,artifactBaseUrl,fetcher,journalStore,getSession,signal,onProgress,asset="native",releaseContext}={}){
+  walletAddress,signConsent,artifactBaseUrl,fetcher,journalStore,getSession,signal,onProgress,asset="native",releaseContext,getReviewDisplayCache}={}){
   if(typeof walletController?.requireWallet!=="function"||!store||!provider||!verificationProvider||provider===verificationProvider||
     typeof getSession!=="function")throw Error("Enhanced host requires trusted wallet, session and RPC adapters.");
   getAddress(walletAddress);signal?.throwIfAborted();
@@ -35,7 +35,7 @@ export async function createVantaFamilyEnhancedHost({walletController,store,prov
   const guardedRelay=Object.freeze({...relay,async submit(...args){await verifyOperation();return relay.submit(...args);}});
   try{
     const result=await createVantaEnhancedCandidateHost({wallet:walletController.requireWallet(),store,provider,verificationProvider,
-      relay:guardedRelay,artifactBaseUrl,fetcher,journalStore,getSession,signal,onProgress,asset,releaseContext});
+      relay:guardedRelay,artifactBaseUrl,fetcher,journalStore,getSession,signal,onProgress,asset,releaseContext,getReviewDisplayCache});
     const guard=api=>Object.freeze({...api,...Object.fromEntries(['prepare','execute'].filter(k=>typeof api[k]==='function').map(k=>[k,async(...args)=>{await verifyOperation();return api[k](...args);}]))});
     return Object.freeze({...result,host:guard(result.host),publicBatch:guard(result.publicBatch),quoteWithdrawal:result.quoteWithdrawal,prepareReviewedWithdrawal:result.prepareReviewedWithdrawal});
   }

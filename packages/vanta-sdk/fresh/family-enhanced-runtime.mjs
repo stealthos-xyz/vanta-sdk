@@ -46,7 +46,7 @@ export function expireEnhancedUnsignedPreparations(rows, timestamp) {
 /** Internal disposable constructor. All executable bytes and deployment
  * identities come from separately compiled inventories, never options. */
 export async function createVantaEnhancedCandidateHost({ wallet, store, provider, verificationProvider, relay,
-  artifactBaseUrl, fetcher, journalStore, getSession, signal, onProgress, asset="native",releaseContext } = {}) {
+  artifactBaseUrl, fetcher, journalStore, getSession, signal, onProgress, asset="native",releaseContext,getReviewDisplayCache } = {}) {
   if (!wallet || typeof wallet.privateWalletKeys !== "function" || !store || typeof store.read !== "function" ||
       typeof store.transact !== "function" || !store.scope?.startsWith("vanta-host-v1/") ||
       !provider || !verificationProvider || provider === verificationProvider || typeof getSession !== "function" ||
@@ -374,7 +374,7 @@ export async function createVantaEnhancedCandidateHost({ wallet, store, provider
       void standardGas.pending.catch(()=>{});
       const review=async()=>{
         // Recovery releases expired unsigned reservations before note selection.
-        const inventory=await recovery(),blocked=await fences.blocked();
+        const inventory=await recovery(getReviewDisplayCache?.()),blocked=await fences.blocked();
         live();
         for(const width of[8,32]){
           const selected=selectEnhancedNotes(inventory,blocked,n,width);if(!selected)continue;
@@ -405,7 +405,7 @@ export async function createVantaEnhancedCandidateHost({ wallet, store, provider
       const partnerHandle=input.partnerHandle;
       const gross=BigInt(normalized.totalAtomic),authority=sessionFor('prepare',{payments});
       const [publicFees,inventory]=await Promise.all([
-        quoteFamilyOperationFees({provider,verificationProvider,releaseContext,asset,partnerHandle,operation:3,amountAtomic:'3'}),recovery()]);
+        quoteFamilyOperationFees({provider,verificationProvider,releaseContext,asset,partnerHandle,operation:3,amountAtomic:'3'}),recovery(getReviewDisplayCache?.())]);
       const blocked=await fences.blocked();
       for(const width of[8,32]){
         const selected=selectEnhancedNotes(inventory,blocked,gross,width);if(!selected)continue;

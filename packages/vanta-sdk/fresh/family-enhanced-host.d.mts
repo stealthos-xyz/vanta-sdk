@@ -41,6 +41,8 @@ export interface VantaFamilyEnhancedHostOptions {
   readonly getSession: () => EnhancedWithdrawalHostSession;
   readonly signal?: AbortSignal;
   readonly onProgress?: (progress: unknown) => void;
+  /** Local display checkpoint for non-authorizing fee previews only. */
+  readonly getReviewDisplayCache?: () => import('./family-note-recovery.mjs').FamilyDisplayCheckpointCache | undefined;
 }
 export interface VantaPublicBatchPayment { readonly recipient: string; readonly amountAtomic: string; }
 export interface FamilyPublicBatchQuote {
