@@ -1,0 +1,69 @@
+/** Pre-freeze fault regressions. Synthetic event/transport fixtures, no chain writes or proof generation. */
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {Interface,keccak256} from 'ethers';
+import {recoverFamilyCanonicalNotes} from '../fresh/family-note-recovery.mjs';
+import {recoverFamilyBalanceSummary} from '../fresh/family-balance-projection.mjs';
+import {createFamilyBalanceCache} from '../fresh/family-balance-cache.mjs';
+import {createFamilyRpcProviders,canonicalFamilyProvider} from '../fresh/family-rpc.mjs';
+import {buildVantaFamilyEnhancedConsentMessage} from '../fresh/family-enhanced-consent.mjs';
+const word=n=>'0x'+BigInt(n).toString(16).padStart(64,'0');
+const addr=n=>'0x'+BigInt(n).toString(16).padStart(40,'0');
+const domain={schema:'vanta-family-note-domain-v1',safeForFunds:false,chainId:6281971,familyTag:'0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445',genesisHash:word(100),generationId:word(2),setupId:word(3),pool:addr(101),asset:addr(0),poolCodehash:keccak256('0x6000'),nativeGlueSha256:'11'.repeat(32),nativeWasmSha256:'22'.repeat(32)};
+const abi=new Interface(['function releaseSetupId() view returns(bytes32)','function releaseGenerationId() view returns(bytes32)','function releaseFamilyTag() view returns(bytes32)','function releaseChainId() view returns(uint256)','function releaseGenesisHash() view returns(bytes32)','function asset() view returns(address)','function activeGeneration() view returns(uint64,uint64,uint256)','function sourceSnapshot(uint64) view returns(uint64,uint256,uint256,uint256,bool)','event CanonicalKzgRow(uint64 indexed epoch,uint64 indexed row,uint256 indexed commitment)','event CanonicalEncryptedNote(uint64 indexed epoch,uint64 indexed row,uint256 indexed commitment,bytes32 envelopeHash,bytes encryptedEnvelope)']);
+function fixture(){
+ const envelope='0x01'+'00'.repeat(63),logs=[];
+ for(const [name,args] of [['CanonicalKzgRow',[0,32,5]],['CanonicalEncryptedNote',[0,32,5,keccak256(envelope),envelope]]]){
+  logs.push({...abi.encodeEventLog(abi.getEvent(name),args),address:domain.pool,blockNumber:4,blockHash:word(104),transactionHash:word(55),index:logs.length});
+ }
+ const values={releaseSetupId:[domain.setupId],releaseGenerationId:[domain.generationId],releaseFamilyTag:[domain.familyTag],releaseChainId:[domain.chainId],releaseGenesisHash:[domain.genesisHash],asset:[domain.asset],activeGeneration:[0,33,19],sourceSnapshot:[33,12,13,19,false]};
+ const make=()=>({getNetwork:async()=>({chainId:6281971n}),getCode:async()=>'0x6000',getBlock:async n=>{let h=n==='latest'?11:n;return {number:h,hash:word(h+100),parentHash:word(h+99)};},call:async r=>{const n=abi.parseTransaction(r).name;return abi.encodeFunctionResult(n,values[n]);},getLogs:async f=>{assert.deepEqual(Object.keys(f).sort(),['address','fromBlock','toBlock','topics']);assert.equal(f.topics.length,1);return structuredClone(logs.filter(l=>l.blockNumber>=f.fromBlock&&l.blockNumber<=f.toBlock));}});
+ const primary=make(),secondary=make(),wallet={},delivery={context:domain,walletRecipient:async()=>({}),decrypt:async({commitment})=>({note:{commitment,amount_units:'17'},verification:{commitment,nullifier:word(7),nonspendable:false}})};
+ const run=verificationProvider=>recoverFamilyCanonicalNotes({provider:primary,verificationProvider,delivery,wallet,deploymentBlock:0});
+ return {primary,secondary,run};
+}
+for(const [name,mutate] of [
+ ['secondary unavailable',s=>s.getNetwork=async()=>{throw Error('unavailable');}],
+ ['secondary stale',s=>s.getBlock=async n=>{let h=n==='latest'?8:n;return {number:h,hash:word(h+100),parentHash:word(h+99)};}],
+ ['contradictory block',s=>s.getBlock=async n=>{let h=n==='latest'?11:n;return {number:h,hash:word(h===10?999:h+100)};}],
+ ['wrong genesis',s=>s.getBlock=async n=>{let h=n==='latest'?11:n;return {number:h,hash:word(h===0?999:h+100)};}],
+ ['different runtime code',s=>s.getCode=async()=>'0x6001'],
+ ['different policy read',s=>s.call=async()=>abi.encodeFunctionResult('releaseChainId',[1])],
+ ['missing canonical event',s=>s.getLogs=async()=>[]],
+]){
+ test(name+' fails closed; healthy retry recovers the same synthetic note',async()=>{
+  const {secondary,run}=fixture(),original={...secondary};mutate(secondary);
+  await assert.rejects(()=>run(secondary));Object.assign(secondary,original);
+  const actual=await run(secondary);assert.equal(actual.balanceAtomicAtAnchor,'17');
+  assert.deepEqual(actual.receivedTransactions,[{transactionHash:word(55),blockNumber:4,amountAtomic:'17'}]);
+ });
+}
+test('identical HTTPS endpoints are not independent SDK providers',()=>{
+ const result=createFamilyRpcProviders('https://rpc.example.invalid','https://rpc.example.invalid/',6281971);
+ try{assert.equal(result.mode,'single-endpoint');assert.equal(canonicalFamilyProvider(result.verificationProvider),result.provider);}
+ finally{result.verificationProvider.destroy();result.provider.destroy();}
+});
+test('new selected-asset receipt survives unrelated history outage then complete refresh',async()=>{
+ const generationId=word(2),blockHash=word(1001),poolA=addr(201),poolB=addr(202),assetA=addr(301),assetB=addr(302);
+ const resources=[{generationId,deployment:{pool:poolA,asset:assetA,assetSymbol:'A',assetDecimals:18}},{generationId,deployment:{pool:poolB,asset:assetB,assetSymbol:'B',assetDecimals:6}}];
+ const receipt={transactionHash:word(111),blockNumber:42,amountAtomic:'19'};
+ const inv=(i,amount,receivedTransactions)=>({context:{generationId,pool:resources[i].deployment.pool,asset:resources[i].deployment.asset},complete:true,blockNumber:42,blockHash,epochs:[{epoch:0}],notes:[{status:'spendable',nullifier:word(i+10),epoch:0,opening:{amount_units:amount}}],receivedTransactions,verifiedEmpty:false});
+ const store={read:async()=>[],transact:async()=>{writes++;}},primary=inv(0,'19',[receipt]),secondary=inv(1,'25',[]);
+ let writes=0;
+ const cache=createFamilyBalanceCache({store,identity:'synthetic',generationId,pools:resources.map(r=>r.deployment)});
+ const partial=await recoverFamilyBalanceSummary({primaryInventory:primary,resources,store,recover:async()=>{throw Error('other asset unavailable');}});
+ assert.equal(partial.complete,false);assert.deepEqual(partial.receivedTransactions,[{...receipt,pool:poolA}]);
+ await cache.saveSnapshot(partial);assert.equal(writes,0);
+ const full=await recoverFamilyBalanceSummary({primaryInventory:primary,resources,store,recover:async()=>secondary});
+ assert.equal(full.complete,true);assert.deepEqual(full.receivedTransactions,[{...receipt,pool:poolA}]);
+ assert.deepEqual(full.pools.map(p=>p.spendableBalanceUnits),['19','25']);
+ await cache.saveSnapshot(full);assert.equal(writes,1);
+});
+test('enhanced consent is bound to exact calldata, pool, asset and approved intent',()=>{
+ const release={schema:'stealthos-family-sdk-release-v2',setup:{family:{id:'dogeos',tag:domain.familyTag}},pins:{networkId:'eip155:6281971',genesisHash:domain.genesisHash,generationId:domain.generationId},activation:{network:{id:'eip155:6281971',genesisHash:domain.genesisHash},familyTag:domain.familyTag},lock:{familyTag:domain.familyTag,contracts:[{kind:'pool',address:domain.pool}]}};
+ const context={networkId:release.pins.networkId,generationId:domain.generationId,pool:domain.pool,assetAddress:domain.asset};
+ const request={asset:domain.asset,calldata:'0x1234',intentId:'approved-intent',pool:domain.pool,requestId:'request-0001'};
+ const m=buildVantaFamilyEnhancedConsentMessage(release,context,request,request.intentId);
+ assert.notEqual(buildVantaFamilyEnhancedConsentMessage(release,context,{...request,calldata:'0x1235'},request.intentId),m);
+ for(const change of [{intentId:'different-intent'},{asset:addr(9)},{pool:addr(8)}])assert.throws(()=>buildVantaFamilyEnhancedConsentMessage(release,context,{...request,...change},request.intentId));
+});
