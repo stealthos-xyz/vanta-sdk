@@ -1,5 +1,5 @@
 /** Browser implementation of the SDK's existing encrypted, atomic host store.
- * Other wallets use separate databases and are never read or migrated. */
+ * Version 2 deletes legacy remembered keys without changing encrypted records. */
 import type {VantaHostStorageBackend} from "../fresh/host-storage.mjs";
 
 const DATABASE = "stealthos-vanta-family-host-v1", TABLE = "ciphertexts";
@@ -36,15 +36,28 @@ export async function createFamilyWalletStoreBackend({scope, indexedDB: factory 
   cryptoProvider = globalThis.crypto}: {scope: string; indexedDB?: IDBFactory; cryptoProvider?: Crypto}) {
   if (!/^(?:vanta-wallet-v1\/[^/]+\/0x[0-9a-f]{40}|vanta-host-v1\/[^/]+\/0x[0-9a-f]{40}\/eip155:[1-9][0-9]*\/0x[0-9a-f]{64})$/u.test(scope) ||
       scope.length > 1024 || !factory || !cryptoProvider?.subtle) fail();
-  const opening = factory.open(DATABASE, 1);
-  opening.onupgradeneeded = () => opening.result.createObjectStore(TABLE);
+  const opening = factory.open(DATABASE, 2);
+  opening.onupgradeneeded = (event) => {
+    if (event.oldVersion === 0) {opening.result.createObjectStore(TABLE); return;}
+    // Retire all persisted device decryption keys, including inactive wallet scopes.
+    // The versionchange transaction is atomic; a failed deletion aborts migration.
+    const table = opening.transaction!.objectStore(TABLE);
+    const cursor = table.openKeyCursor();
+    cursor.onsuccess = () => {
+      const entry = cursor.result;
+      if (!entry) return;
+      if (typeof entry.primaryKey === "string" && entry.primaryKey.startsWith("@device-key/"))
+        table.delete(entry.primaryKey);
+      entry.continue();
+    };
+  };
   const database = await new Promise<IDBDatabase>((accept, reject) => {
     opening.onsuccess = () => accept(opening.result);
     opening.onerror = () => reject(opening.error ?? Error("Private storage could not open."));
     opening.onblocked = () => reject(Error("Close the other wallet tab before upgrading private storage."));
   });
   let key: CryptoKey | null = null, keyRecord: KeyRecord | null = null, newKey = false, closed = false, epoch = 0;
-  const pending = new Set<IDBTransaction>(), keyName = "@key/" + scope, deviceName="@device-key/"+scope, policyName="@password-policy/"+scope;
+  const pending = new Set<IDBTransaction>(), keyName = "@key/" + scope;
   const live = (revision = epoch) => {if (closed || revision !== epoch) fail();};
   const locked = () => {live(); if (!key) fail(); return key;};
   const namespace = (value: string) => {
@@ -114,11 +127,6 @@ export async function createFamilyWalletStoreBackend({scope, indexedDB: factory 
   };
   const close = () => {if (!closed) {lock(); closed = true; database.close();}};
   database.onversionchange = close;
-  type DeviceKey={schema:'stealthos-wallet-device-key-v1';key:CryptoKey;record:KeyRecord};
-  const requiresPassword=(policy:unknown)=>{if(policy===undefined)return false;const p=policy as {schema:string;required:boolean};if(!p||p.schema!=='stealthos-wallet-password-policy-v1'||typeof p.required!=='boolean')fail();return p.required;};
-  const deviceKey=(value:unknown,record:unknown):DeviceKey|null=>{const d=value as DeviceKey;if(!d||d.schema!=='stealthos-wallet-device-key-v1'||!d.key||d.key.type!=='secret'||d.key.extractable!==false||d.key.algorithm.name!=='AES-GCM'||(d.key.algorithm as AesKeyAlgorithm).length!==256||d.key.usages.slice().sort().join()!=='decrypt,encrypt')return null;try{return sameKeyRecord(record,d.record)?d:null;}catch{return null;}};
-  const savedUnlock=async()=>{const {table,done}=transaction('readonly');const [policy,record,device]=await Promise.all([request(table.get(policyName)),request(table.get(keyName)),request(table.get(deviceName))]);await done;return {required:requiresPassword(policy),record,device:record?deviceKey(device,record):null};};
-  const persistDevice=async(required:boolean|undefined)=>{const current=locked(),started=epoch,metadata=keyRecord;if(!metadata||newKey)fail();const {table,tx,done}=transaction('readwrite');try{const [policy,record]=await Promise.all([request(table.get(policyName)),request(table.get(keyName))]);live(started);if(!sameKeyRecord(record,metadata))fail();const requirePassword=required??requiresPassword(policy);if(required!==undefined)await request(table.put({schema:'stealthos-wallet-password-policy-v1',required},policyName));if(requirePassword)await request(table.delete(deviceName));else await request(table.put({schema:'stealthos-wallet-device-key-v1',key:current,record:metadata} satisfies DeviceKey,deviceName));await done;live(started);return !requirePassword;}catch(error){try{tx.abort();}catch{}await done.catch(()=>{});throw error;}};
   const backend: VantaHostStorageBackend & {
     unlock(password: string): Promise<void>; hasRecoveryPhrase(): Promise<boolean>; lock(): void; close(): void;
     scoped(operationScope:string):VantaHostStorageBackend;
@@ -127,10 +135,13 @@ export async function createFamilyWalletStoreBackend({scope, indexedDB: factory 
     exportRecoveryBackup(record:unknown):Promise<unknown>;
   } = {
     capabilities: {localOnly: true, encryptedAtRest: true, durableAtomicCompareAndSwap: true},
-    async passwordSettings(){live();const saved=await savedUnlock();return {requirePassword:saved.required,canUnlockWithoutPassword:!saved.required&&Boolean(saved.device)};},
-    async unlockOnDevice(){live();lock();const started=epoch,saved=await savedUnlock();live(started);if(saved.required||!saved.device)return false;const marker=await open(saved.device.key,keyName,saved.record);live(started);if(JSON.stringify(marker)!==JSON.stringify({scope}))fail();const current=await savedUnlock();live(started);if(current.required||!current.device||!sameKeyRecord(current.record,saved.device.record))return false;key=saved.device.key;keyRecord=saved.device.record;return true;},
-    rememberIfAllowed:()=>persistDevice(undefined),
-    async setRequirePassword(required){if(typeof required!=='boolean')fail();await persistDevice(required);},
+    async passwordSettings(){live();return {requirePassword:true,canUnlockWithoutPassword:false};},
+    async unlockOnDevice(){live();lock();return false;},
+    async rememberIfAllowed(){live();return false;},
+    async setRequirePassword(required){
+      live();
+      if (required !== true) throw Error("Password protection is required for private wallets.");
+    },
     async unlock(password) {
       live(); lock(); const started = epoch;
       const record = await get(keyName) as KeyRecord | undefined; live(started);
