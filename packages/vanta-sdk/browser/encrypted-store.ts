@@ -1,10 +1,20 @@
 /** Browser implementation of the SDK's existing encrypted, atomic host store.
- * Version 2 deletes legacy remembered keys without changing encrypted records. */
+ * Version 2 deletes private-wallet remembered keys without changing encrypted records.
+ * Only isolated public-payment journals retain their device-local journal key. */
 import type {VantaHostStorageBackend} from "../fresh/host-storage.mjs";
 
 const DATABASE = "stealthos-vanta-family-host-v1", TABLE = "ciphertexts";
 const SCHEMA = "vanta-family-browser-store-v1", ITERATIONS = 600_000;
 const MAX_BYTES = 16 * 1024 * 1024;
+// Public payers have no spending wallet or recovery phrase. Their separate
+// durable payment journal must survive reload and uncertain broadcasts.
+const PAYMENT_SCOPE = /^vanta-host-v1\/payment-[0-9a-f]{64}\/0x[0-9a-f]{40}\/eip155:[1-9][0-9]*\/0x[0-9a-f]{64}$/u;
+const PAYMENT_NAMESPACE = /^(?:public-payment-device-v1|family-kzg-deposits-v1%2F0x[0-9a-fA-F]{40})$/u;
+function paymentRecordScope(name: string) {
+  const parts = name.split("/");
+  const scope = parts.slice(0, 5).join("/");
+  return PAYMENT_SCOPE.test(scope) ? {scope, name: parts.slice(5).join("/")} : null;
+}
 /** Restore accepts ciphertext only. Decryption remains in the trusted worker. */
 export async function decryptFamilyWalletRecoveryBackup({backup,password,cryptoProvider=globalThis.crypto}:{backup:unknown;password:string;cryptoProvider?:Crypto}):Promise<string>{
  const fail=():never=>{throw Error("The encrypted recovery backup or its password is invalid.");};
@@ -32,22 +42,41 @@ const request = <T,>(input: IDBRequest<T>) => new Promise<T>((accept, reject) =>
   input.onerror = () => reject(input.error ?? Error("Private storage request failed."));
 });
 
-export async function createFamilyWalletStoreBackend({scope, indexedDB: factory = globalThis.indexedDB,
-  cryptoProvider = globalThis.crypto}: {scope: string; indexedDB?: IDBFactory; cryptoProvider?: Crypto}) {
+export async function createFamilyWalletStoreBackend({scope, paymentJournalOnly = false, indexedDB: factory = globalThis.indexedDB,
+  cryptoProvider = globalThis.crypto}: {scope: string; paymentJournalOnly?: boolean; indexedDB?: IDBFactory; cryptoProvider?: Crypto}) {
   if (!/^(?:vanta-wallet-v1\/[^/]+\/0x[0-9a-f]{40}|vanta-host-v1\/[^/]+\/0x[0-9a-f]{40}\/eip155:[1-9][0-9]*\/0x[0-9a-f]{64})$/u.test(scope) ||
-      scope.length > 1024 || !factory || !cryptoProvider?.subtle) fail();
+      scope.length > 1024 || !factory || !cryptoProvider?.subtle ||
+      paymentJournalOnly !== PAYMENT_SCOPE.test(scope)) fail();
   const opening = factory.open(DATABASE, 2);
   opening.onupgradeneeded = (event) => {
     if (event.oldVersion === 0) {opening.result.createObjectStore(TABLE); return;}
-    // Retire all persisted device decryption keys, including inactive wallet scopes.
-    // The versionchange transaction is atomic; a failed deletion aborts migration.
+    // Delete all private-wallet device keys. Keep only existing public-payment
+    // journal keys with a payment marker and no non-payment storage namespaces.
+    // The versionchange transaction is atomic; failed deletion aborts migration.
     const table = opening.transaction!.objectStore(TABLE);
+    const paymentKeys = new Map<string, string>(), markers = new Set<string>(), invalid = new Set<string>();
     const cursor = table.openKeyCursor();
     cursor.onsuccess = () => {
       const entry = cursor.result;
-      if (!entry) return;
-      if (typeof entry.primaryKey === "string" && entry.primaryKey.startsWith("@device-key/"))
-        table.delete(entry.primaryKey);
+      if (!entry) {
+        for (const [scope, key] of paymentKeys)
+          if (!markers.has(scope) || invalid.has(scope)) table.delete(key);
+        return;
+      }
+      const name = entry.primaryKey;
+      if (typeof name === "string") {
+        if (name.startsWith("@device-key/")) {
+          const owner = name.slice("@device-key/".length);
+          if (PAYMENT_SCOPE.test(owner)) paymentKeys.set(owner, name);
+          else table.delete(name);
+        } else {
+          const payment = paymentRecordScope(name);
+          if (payment) {
+            if (payment.name === "public-payment-device-v1") markers.add(payment.scope);
+            else if (!PAYMENT_NAMESPACE.test(payment.name)) invalid.add(payment.scope);
+          }
+        }
+      }
       entry.continue();
     };
   };
@@ -57,11 +86,13 @@ export async function createFamilyWalletStoreBackend({scope, indexedDB: factory 
     opening.onblocked = () => reject(Error("Close the other wallet tab before upgrading private storage."));
   });
   let key: CryptoKey | null = null, keyRecord: KeyRecord | null = null, newKey = false, closed = false, epoch = 0;
-  const pending = new Set<IDBTransaction>(), keyName = "@key/" + scope;
+  const pending = new Set<IDBTransaction>(), keyName = "@key/" + scope,
+    deviceName = "@device-key/" + scope, paymentMarker = scope + "/public-payment-device-v1";
   const live = (revision = epoch) => {if (closed || revision !== epoch) fail();};
   const locked = () => {live(); if (!key) fail(); return key;};
   const namespace = (value: string) => {
-    if (typeof value !== "string" || !value.startsWith(scope + "/") || value.length > scope.length + 8192) fail();
+    if (typeof value !== "string" || !value.startsWith(scope + "/") || value.length > scope.length + 8192 ||
+        (paymentJournalOnly && !PAYMENT_NAMESPACE.test(value.slice(scope.length + 1)))) fail();
     return value;
   };
   const aad = (name: string, revision: string) => new TextEncoder().encode(JSON.stringify([SCHEMA, scope, name, revision]));
@@ -127,14 +158,55 @@ export async function createFamilyWalletStoreBackend({scope, indexedDB: factory 
   };
   const close = () => {if (!closed) {lock(); closed = true; database.close();}};
   database.onversionchange = close;
+  type DeviceKey = {schema: "stealthos-wallet-device-key-v1"; key: CryptoKey; record: KeyRecord};
+  const validPaymentKey = (value: unknown, record: KeyRecord): DeviceKey => {
+    const device = value as DeviceKey;
+    if (!device || device.schema !== "stealthos-wallet-device-key-v1" ||
+        !device.key || device.key.type !== "secret" || device.key.extractable !== false ||
+        device.key.algorithm.name !== "AES-GCM" || (device.key.algorithm as AesKeyAlgorithm).length !== 256 ||
+        device.key.usages.slice().sort().join() !== "decrypt,encrypt" || !sameKeyRecord(record, device.record)) fail();
+    return device;
+  };
+  const openPaymentJournal = async () => {
+    if (!paymentJournalOnly) fail();
+    live(); lock(); const started = epoch;
+    const [record, device, marker] = await Promise.all([get(keyName), get(deviceName), get(paymentMarker)]);
+    live(started);
+    if (record !== undefined || device !== undefined || marker !== undefined) {
+      if (record === undefined || device === undefined || marker === undefined) fail();
+      const metadata = record as KeyRecord, saved = validPaymentKey(device, metadata);
+      const owner = await open(saved.key, keyName, metadata);
+      const contents = await open(saved.key, paymentMarker, marker);
+      live(started);
+      if (JSON.stringify(owner) !== JSON.stringify({scope}) || !Array.isArray(contents) || contents.length !== 0) fail();
+      key = saved.key; keyRecord = metadata; return;
+    }
+    const created = await cryptoProvider.subtle.generateKey({name:"AES-GCM",length:256}, false, ["encrypt","decrypt"]);
+    const metadata: KeyRecord = {...await seal(created, keyName, "0", {scope}),
+      salt:cryptoProvider.getRandomValues(new Uint8Array(32)),iterations:ITERATIONS};
+    const empty = await seal(created, paymentMarker, "1", []);
+    live(started);
+    const {table, tx, done} = transaction("readwrite");
+    try {
+      // A racing worker must reopen the existing journal, not replace its key.
+      const existing = await Promise.all([request(table.get(keyName)),request(table.get(deviceName)),request(table.get(paymentMarker))]);
+      live(started); if (existing.some(value => value !== undefined)) fail();
+      await request(table.put(metadata, keyName));
+      await request(table.put({schema:"stealthos-wallet-device-key-v1",key:created,record:metadata} satisfies DeviceKey, deviceName));
+      await request(table.put(empty, paymentMarker));
+      await done; live(started); key = created; keyRecord = metadata;
+    } catch (error) {try {tx.abort();} catch {} await done.catch(()=>{}); throw error;}
+  };
   const backend: VantaHostStorageBackend & {
     unlock(password: string): Promise<void>; hasRecoveryPhrase(): Promise<boolean>; lock(): void; close(): void;
     scoped(operationScope:string):VantaHostStorageBackend;
     passwordSettings():Promise<{requirePassword:boolean;canUnlockWithoutPassword:boolean}>;
     unlockOnDevice():Promise<boolean>;rememberIfAllowed():Promise<boolean>;setRequirePassword(required:boolean):Promise<void>;
     exportRecoveryBackup(record:unknown):Promise<unknown>;
+    openPaymentJournal():Promise<void>;
   } = {
     capabilities: {localOnly: true, encryptedAtRest: true, durableAtomicCompareAndSwap: true},
+    openPaymentJournal,
     async passwordSettings(){live();return {requirePassword:true,canUnlockWithoutPassword:false};},
     async unlockOnDevice(){live();lock();return false;},
     async rememberIfAllowed(){live();return false;},
@@ -143,6 +215,7 @@ export async function createFamilyWalletStoreBackend({scope, indexedDB: factory 
       if (required !== true) throw Error("Password protection is required for private wallets.");
     },
     async unlock(password) {
+      if (paymentJournalOnly) fail();
       live(); lock(); const started = epoch;
       const record = await get(keyName) as KeyRecord | undefined; live(started);
       if (record === undefined) {
@@ -182,6 +255,7 @@ export async function createFamilyWalletStoreBackend({scope, indexedDB: factory 
       } catch (error) {try {tx.abort();} catch {} await done.catch(() => {}); throw error;}
     },
     async exportRecoveryBackup(record) {
+      if (paymentJournalOnly) fail();
       const current=locked(),started=epoch,metadata=keyRecord;if(!metadata)fail();
       const sealed=await seal(current,"@recovery-backup/v1","0",record);live(started);
       const hex=(data:Uint8Array)=>Array.from(data,b=>b.toString(16).padStart(2,"0")).join("");

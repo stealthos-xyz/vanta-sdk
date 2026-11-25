@@ -5,7 +5,7 @@ import {DEPOSIT_INSUFFICIENT_FUNDS,DEPOSIT_SUBMISSION_REJECTED,depositFailure,pu
 /// <reference lib="webworker" />
 /** Trusted local SDK bootstrap. Only reviews, public identity and status leave
  * this worker; the separate UI port handles local unlock and encrypted HTTP. */
-import {JsonRpcProvider, Interface, hexlify, getAddress,keccak256,toUtf8Bytes,randomBytes} from "ethers";
+import {JsonRpcProvider, Interface, hexlify, getAddress,keccak256,toUtf8Bytes} from "ethers";
 import {getCompiledFamilyEvmRelease} from "../fresh/family-network.mjs";
 import {getCompiledVantaFamilyProofResources} from '../fresh/family-proof-resources.mjs';
 import {createFamilyRpcProviders} from '../fresh/family-rpc.mjs';
@@ -151,7 +151,7 @@ async function initialize(value: FamilyBootstrap, secretPort: MessagePort) {
   live();
   const identity = {accountId: value.paymentRecipient?'payment-'+keccak256(toUtf8Bytes(session.subjectId)).slice(2):session.subjectId, address: value.session.wallet,
     networkId: release.pins.networkId, generationId: release.pins.generationId};
-  backend = await createFamilyWalletStoreBackend({scope: vantaHostStorageScope(identity)});
+  backend = await createFamilyWalletStoreBackend({scope: vantaHostStorageScope(identity),paymentJournalOnly:Boolean(value.paymentRecipient)});
   store = createVantaHostAtomicStore({host: backend, scope: identity});
   if(value.paymentRecipient)return {hasBackup:false,requirePassword:false,canUnlockWithoutPassword:false,release:{chainId,networkLabel:release.pins.networkId,generationId:release.pins.generationId,
     ceremony:{releaseHash:release.setup.ceremonyReleaseHash},bootstrap:{finalizedBlockNumber:null},pools:release.lock.contracts.filter(c=>c.kind==='pool').map(c=>({asset:c.name,pool:c.address}))}};
@@ -273,11 +273,7 @@ async function invoke(command: FamilyCommand, payload: Record<string, unknown>, 
   if(config.paymentRecipient&&!['openPublicPayment',...depositCommands].includes(command))fail();
   if(command==='openPublicPayment'){
     if(!config.paymentRecipient||Object.keys(payload).length||deposit)fail();
-    if(!await backend!.unlockOnDevice()){
-      await backend!.unlock(hexlify(randomBytes(32)));
-      await store!.transact('public-payment-device-v1',rows=>({next:rows,result:null}));
-      await backend!.rememberIfAllowed();
-    }
+    await backend!.openPaymentJournal();
     deposit=await createVantaFamilyDepositHost({paymentRecipient:config.paymentRecipient,store:store!,provider,verificationProvider:independent,
       relayerUrl:config.relayerUrl,artifactBaseUrl:config.artifactBaseUrl,asset:config.asset??'native',walletAddress:config.session.wallet,fetcher,signal:controller.signal,partnerAssetConfiguration:config.partnerAssetConfiguration,
       getSession:()=>{live();return {...session,permissions:depositAction?['deposit']:[]};},

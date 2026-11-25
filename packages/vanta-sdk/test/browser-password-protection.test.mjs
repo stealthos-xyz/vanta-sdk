@@ -54,3 +54,31 @@ test("wallet upgrade removes legacy device keys but preserves encrypted records"
  await store.setRequirePassword(true);
  store.close();
 });
+
+test("only marked public-payment namespaces retain legacy device keys; private wallets cannot open them",async()=>{
+ const payment="vanta-host-v1/payment-"+"ab".repeat(32)+"/0x"+"22".repeat(20)+"/eip155:6281971/0x"+"33".repeat(32);
+ const contaminated=payment.replace("ab".repeat(32),"cd".repeat(32));
+ const missing=payment.replace("ab".repeat(32),"ef".repeat(32));
+ const paymentKey={schema:"stealthos-wallet-device-key-v1",key:"synthetic-payment-key"};
+ const records=new Map([
+  ["@device-key/"+payment,paymentKey],
+  [payment+"/public-payment-device-v1",{}],
+  [payment+"/family-kzg-deposits-v1%2F0x"+"44".repeat(20),{}],
+  ["@device-key/"+contaminated,{}],[contaminated+"/public-payment-device-v1",{}],
+  [contaminated+"/privacy-recovery-phrase-v1",{}],["@device-key/"+missing,{}],
+  ["@device-key/"+scope,{}],[scope+"/privacy-recovery-phrase-v1",{}]
+ ]);
+ const model=oldDatabase(records);
+ const privateStore=await createFamilyWalletStoreBackend({scope,indexedDB:model.factory});
+ assert.equal(records.get("@device-key/"+payment),paymentKey);
+ for(const other of [scope,contaminated,missing])assert.equal(records.has("@device-key/"+other),false);
+ await assert.rejects(privateStore.openPaymentJournal(),/locked or invalid/);
+ await assert.rejects(createFamilyWalletStoreBackend({scope,paymentJournalOnly:true,indexedDB:model.factory}),/locked or invalid/);
+ await assert.rejects(createFamilyWalletStoreBackend({scope:payment,indexedDB:model.factory}),/locked or invalid/);
+ privateStore.close();
+ const journal=await createFamilyWalletStoreBackend({scope:payment,paymentJournalOnly:true,indexedDB:oldDatabase(records).factory});
+ await assert.rejects(journal.unlock("synthetic-password"),/locked or invalid/);
+ await assert.rejects(journal.exportRecoveryBackup({}),/locked or invalid/);
+ assert.equal(await journal.unlockOnDevice(),false);
+ journal.close();
+});
