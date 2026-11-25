@@ -1,0 +1,27 @@
+name: FYEO SDK remediation verification
+on:
+  push:
+    branches: [audit/fyeo-remediation-20261124]
+permissions:
+  contents: read
+jobs:
+  sdk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.14.1'
+          cache: npm
+      - run: npm ci
+      - name: Verify original signed release is unchanged
+        run: npm run verify:release -- 0.4.65
+      - name: Execute focused FYEO tests
+        run: node --test packages/vanta-sdk/test/browser-password-protection.test.mjs packages/vanta-sdk/test/direct-deposit-nonce-mode.test.mjs
+      - name: Execute SDK regression and type checks
+        run: npm test
+      - name: Build package candidate
+        run: npm run build
