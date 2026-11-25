@@ -8,7 +8,7 @@ const pkg=JSON.parse(await readFile(resolve(root,"package.json"),"utf8"));
 const {STEALTHOS_SDK_VERSION}=await import('../fresh/sdk-version.mjs');
 if(STEALTHOS_SDK_VERSION!==pkg.version)throw Error('SDK runtime identity differs from package version.');
 const strings=value=>typeof value==="string"?[value]:value&&typeof value==="object"?Object.values(value).flatMap(strings):[];
-const queued=[...strings(pkg.exports),...strings(pkg.imports)],seen=new Set();
+const queued=[...strings(pkg.exports),...strings(pkg.imports),...strings(pkg.bin)],seen=new Set();
 const exists=async path=>{try{return (await stat(path)).isFile();}catch(error){if(error.code==="ENOENT")return false;throw error;}};
 while(queued.length){
   let name=queued.pop().replace(/^\.\//u,"");if(seen.has(name))continue;

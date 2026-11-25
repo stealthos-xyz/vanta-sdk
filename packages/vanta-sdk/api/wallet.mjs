@@ -2,3 +2,4 @@ export {STEALTHOS_SDK_VERSION, openStealthOSPartnerApp, openStealthOSPublicPayme
 export {encodeVantaFamilyReceivingAddress, decodeVantaFamilyReceivingAddress} from '../fresh/family-normal-address.mjs';
 export {normalizeVantaFamilyHandle} from '../fresh/family-handle.mjs';
 export {normalizeFamilyPrivateMemo, FAMILY_PRIVATE_MEMO_MAX_BYTES} from '../fresh/family-note-delivery.mjs';
+export {VANTA_ROUTE,VANTA_ERROR_CODES,VantaSdkError,normalizeVantaError,normalizeVantaTransactionStatus} from './developer.mjs';

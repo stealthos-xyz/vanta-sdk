@@ -1,0 +1,47 @@
+name: SDK verification
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sdk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.14.1'
+          cache: npm
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Verify immutable signed release
+        run: npm run verify:release -- 0.4.65
+      - name: SDK regression and TypeScript tests
+        run: npm test
+      - name: Build package candidate
+        run: npm run build
+      - name: Install candidate into clean reference app
+        working-directory: examples/vanilla-js
+        run: |
+          archive=$(find ../../.build -maxdepth 1 -name 'stealthos-vanta-sdk-*.tgz' -print -quit)
+          test -n "$archive"
+          npm install --no-save --ignore-scripts --package-lock=false "$archive"
+          npm test
+          npm run build
+          npm exec -- vanta-setup-workers public/stealthos
+          test -s public/stealthos/app-wallet-worker.mjs
+          test -s public/stealthos/unified-bound4-bootstrap-worker.js
+      - name: Build React reference
+        working-directory: examples/react
+        run: |
+          archive=$(find ../../.build -maxdepth 1 -name 'stealthos-vanta-sdk-*.tgz' -print -quit)
+          test -n "$archive"
+          npm install --no-save --ignore-scripts --package-lock=false "$archive"
+          npm run build

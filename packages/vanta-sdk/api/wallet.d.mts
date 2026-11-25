@@ -9,3 +9,6 @@ export type {FamilyDepositQuote, FamilyDepositReview} from '../fresh/family-depo
 export type {FamilyRoutedQuote, FamilyRoutedReview} from '../fresh/family-routed-host.mjs';
 export type {FamilyPublicBatchQuote, FamilyWithdrawalQuote, FamilyWithdrawalRecord} from '../fresh/family-enhanced-host.mjs';
 export type {EnhancedWithdrawalAvailability, EnhancedWithdrawalHost, EnhancedWithdrawalHostContext, EnhancedWithdrawalReview, EnhancedWithdrawalStatus, EnhancedWithdrawalClaimState} from '../fresh/enhanced-host.mjs';
+export {VANTA_ROUTE,VANTA_ERROR_CODES,VantaSdkError,normalizeVantaError,normalizeVantaTransactionStatus} from './developer.mjs';
+export type {VantaOperation,VantaTransactionPhase,VantaTransactionStatus,VantaErrorCode,VantaRecoveryAction,VantaProgressEvent,VantaProgressListener} from './developer.mjs';
+export type {VantaPartnerWallet,VantaWithdrawalPreparation,VantaNormalWithdrawalReview,VantaEnhancedAuthorization} from '../browser/partner-app.mjs';
