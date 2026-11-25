@@ -1,11 +1,12 @@
-name: SDK 0.4.66 release candidate
+name: SDK 0.4.67 release candidate
 on:
   push:
     branches: [main]
     paths:
       - 'scripts/prepare-software-release.mjs'
       - '.github/workflows/software-release-candidate.yml'
-      - 'packages/vanta-sdk/browser/**'
+      - 'packages/vanta-sdk/**'
+      - 'package-lock.json'
   workflow_dispatch:
 permissions:
   contents: read
@@ -24,14 +25,14 @@ jobs:
           cache: npm
       - run: npm install -g npm@11.11.0 --no-audit --no-fund
       - run: npm ci
-      - run: npm run verify:release -- 0.4.65
+      - run: npm run verify:release -- 0.4.66
       - run: npm test
       - run: npm run build
       - name: Construct exact unsigned publication and record hashes
         run: node scripts/prepare-software-release.mjs
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: unsigned-sdk-0.4.66
+          name: unsigned-sdk-0.4.67
           path: .release-candidate/
           retention-days: 14
           if-no-files-found: error

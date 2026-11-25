@@ -56,7 +56,7 @@ export async function routeFamilyRpcPayload(payload,primary,backup){
 }
 class FamilyReadProvider extends JsonRpcProvider{
  constructor(primary,secondary,chainId,genesisHash){
-  super(request(primary),chainId,{batchMaxCount:8,batchStallTime:0});
+  super(request(primary),chainId,{batchMaxCount:8,batchStallTime:0,cacheTimeout:-1});
   this.chainId=BigInt(chainId);this.genesisHash=genesisHash;
   this.secondary=secondary?new JsonRpcProvider(request(secondary),chainId,{batchMaxCount:1}):null;
  }

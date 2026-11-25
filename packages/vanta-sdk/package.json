@@ -227,7 +227,7 @@
   },
   "type": "module",
   "types": "./api/wallet.d.mts",
-  "version": "0.4.66",
+  "version": "0.4.67",
   "bin": {
     "vanta-setup-workers": "./bin/setup-workers.mjs"
   },

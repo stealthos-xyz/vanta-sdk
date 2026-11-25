@@ -121,11 +121,13 @@ test('a non-range RPC error and a rejected single-block window fail closed',asyn
  }
 });
 
-test('independent wallet providers disable transport batching',()=>{
- const result=createFamilyRpcProviders('https://rpc.example.invalid','https://verify.example.invalid',6281971);
+test('wallet fallback aliases the primary trust source and bounds batching',()=>{
+ const result=createFamilyRpcProviders('https://rpc.example.invalid','https://verify.example.invalid',6281971,domain.genesisHash);
  try{
-  assert.equal(result.provider._getOption('batchMaxCount'),1);
-  assert.equal(result.verificationProvider._getOption('batchMaxCount'),1);
+  assert.equal(result.mode,'primary-fallback');
+  assert.equal(canonicalFamilyProvider(result.verificationProvider),result.provider);
+  assert.equal(result.provider._getOption('batchMaxCount'),8);
+  assert.equal(result.provider._getOption('cacheTimeout'),-1);
  }finally{result.verificationProvider.destroy();result.provider.destroy();}
 });
 test('interrupted verified display scan resumes from saved public windows without rescanning them',async()=>{
