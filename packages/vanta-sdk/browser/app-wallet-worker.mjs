@@ -2,7 +2,7 @@
 import { quoteFamilyNetRoute } from "../fresh/family-route-review.mjs";
 import { createFamilyBalanceCache } from "../fresh/family-balance-cache.mjs";
 import { createFamilyPublicArtifactCache, walletWarmupPins, depositWarmupPins, enhancedWarmupPins } from "../fresh/family-public-artifact-cache.mjs";
-import { DEPOSIT_INSUFFICIENT_FUNDS, depositFailure, publicDepositFailure, readDepositFailure } from "../fresh/family-deposit-errors.mjs";
+import { DEPOSIT_INSUFFICIENT_FUNDS, DEPOSIT_SUBMISSION_REJECTED, depositFailure, publicDepositFailure, readDepositFailure } from "../fresh/family-deposit-errors.mjs";
 import { hexlify, keccak256, toUtf8Bytes, randomBytes } from "ethers";
 import { getCompiledFamilyEvmRelease } from "../fresh/family-network.mjs";
 import { getCompiledVantaFamilyProofResources } from "../fresh/family-proof-resources.mjs";
@@ -559,7 +559,7 @@ async function initialize(value, secretPort) {
     uiPending.delete(data.id);
     if (data.ok === true) pending.accept(data.value);
     else {
-      const code = data.code === "USER_REJECTED" || data.code === DEPOSIT_INSUFFICIENT_FUNDS ? data.code : void 0;
+      const code = data.code === "USER_REJECTED" || data.code === DEPOSIT_INSUFFICIENT_FUNDS || data.code === DEPOSIT_SUBMISSION_REJECTED ? data.code : void 0;
       pending.reject(readDepositFailure(data.depositFailure) ?? Object.assign(Error("Trusted wallet action was unavailable."), { code }));
     }
   };
@@ -649,6 +649,7 @@ function enhancedForAsset(asset) {
     asset,
     fetcher,
     walletAddress: config.session.wallet,
+    getReviewDisplayCache: () => balanceCache,
     signConsent: async (request2) => {
       const revision = epoch;
       live();
@@ -714,6 +715,7 @@ function withdrawalForAsset(asset, revision = epoch) {
     fetcher,
     signal: controller.signal,
     partnerAssetConfiguration: config.partnerAssetConfiguration,
+    getReviewDisplayCache: () => balanceCache,
     approvePrivateSend: async (review) => {
       live(revision);
       if (!privateSendAction) fail2();
@@ -735,6 +737,7 @@ function routeForAsset(asset, operation, revision = epoch, routesRevision = rout
     fetcher,
     signal: controller.signal,
     partnerAssetConfiguration: config.partnerAssetConfiguration,
+    getReviewDisplayCache: () => balanceCache,
     approveRoute: async (review) => {
       live(revision);
       if (!routedAction || routeEpoch !== routesRevision) fail2();
@@ -757,6 +760,7 @@ function privateSendForAsset(asset) {
     fetcher,
     signal: controller.signal,
     partnerAssetConfiguration: config.partnerAssetConfiguration,
+    getReviewDisplayCache: () => balanceCache,
     approvePrivateSend: async (review) => {
       live();
       if (!privateSendAction) fail2();

@@ -10,7 +10,7 @@ export interface FamilyDepositReview {
  /** Present only for public-wallet payments to an explicitly reviewed recipient. */
  readonly recipient?:string;
  readonly phase:"prepared"|"broadcast-uncertain"|"finalized"|"expired-unused"|"failed";
- readonly failure?:"insufficient-funds";
+ readonly failure?:"insufficient-funds"|"user-rejected"|"submission-rejected";
 }
 export interface FamilyDepositQuote extends Omit<FamilyDepositReview,'preparedId'|'phase'|'transactionDigest'> {
  readonly quoteId:string;readonly partnerId:string;readonly policyVersion:string;

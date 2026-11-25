@@ -5,7 +5,7 @@ const schema='stealthos-wallet-core-channel-v1',methods=new Set(['connect','bala
 export function connectStealthOSWalletCore({window:browser=globalThis.window}={}){
  if(!browser?.crypto?.getRandomValues||browser.location.protocol!=='https:')throw Error('Open the partner app over HTTPS.');
  const nonce=Array.from(browser.crypto.getRandomValues(new Uint8Array(32)),b=>b.toString(16).padStart(2,'0')).join(''),
-  url=new URL('/recovery/0.3.1/',STEALTHOS_WALLET_CORE_ORIGIN);
+  url=new URL('/',STEALTHOS_WALLET_CORE_ORIGIN);
  url.hash=new URLSearchParams({origin:browser.location.origin,nonce}).toString();
  const popup=browser.open(url.href,'stealthos-wallet-'+nonce,'popup,width=540,height=780');
  if(!popup)throw Error('Allow the StealthOS wallet window to open.');

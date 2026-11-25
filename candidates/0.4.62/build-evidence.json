@@ -1,0 +1,54 @@
+{
+  "schema": "vanta-sdk-release-hygiene-candidate-v1",
+  "date": "2026-11-24",
+  "version": "0.4.62",
+  "sourceCommit": "0b3e70af0a090da131bbeff17b22718fe50f1da1",
+  "baseCommit": "1f9a915f0bbcfd067d48d28489e9b413d9e29871",
+  "baseArchiveSha256": "f248e331c54b29742f0e39408e326c442aa45eedfa9901528a1df544156b8c7b",
+  "verifiedBaseBuildSourceBlobs": 257,
+  "network": "DogeOS Chikyu (6281971)",
+  "signed": false,
+  "activated": false,
+  "safeForFunds": false,
+  "archive": {
+    "name": "stealthos-vanta-sdk-0.4.62.tgz",
+    "gitBlob": "13cec3ff3b621b1eb9783b3abacab3d5e749088c",
+    "bytes": 1331158,
+    "sha256": "70aa8c448a3094ac9e514ef24510771b8d7c405c60b975cfa174db6e3ed634f7"
+  },
+  "deterministicBuilds": 2,
+  "tests": {
+    "passed": 103,
+    "failed": 0,
+    "addedReleaseHygieneRegressions": 3,
+    "sourceTypeConsumerChecks": "passed",
+    "packedPublicTypeConsumerChecks": "passed",
+    "packedWasmInitialization": "passed",
+    "releaseWordingFilesChecked": 145,
+    "releaseWordingFindings": 0,
+    "packageFiles": 153
+  },
+  "archiveComparison": {
+    "changedFiles": 8,
+    "addedFiles": 0,
+    "removedFiles": 0,
+    "networkAndResourceManifestsUnchanged": true,
+    "proofWorkerSha256": "87040b79a3175d2d9905f57a8cf2537a450dc8277dd2ad96f0fd520c1f231cd6",
+    "proofWorkerUnchanged": true
+  },
+  "changes": [
+    "Remove unused demo identity, demo public action and research wallet cache wrapper exports from both generated pinned binding factories.",
+    "Rename the unsupported internal BOUND4 initializer and improve stale experimental/research/mock comments and the error message.",
+    "Correct enhanced host, component declaration and durable storage wording.",
+    "Add a first-party release wording build gate and regressions, with exact compatibility exceptions."
+  ],
+  "preserved": [
+    "Legacy proof schema tags, research_only/researchOnly and safeForFunds/candidateOnly fields, deployed EIP-712 domain names, event names, all proof and resource hash pins, public export surface, generation checks and testnet restriction.",
+    "Third-party bundled code and license notices unchanged."
+  ],
+  "limitations": [
+    "No new funded-chain or full Chromium lifecycle test executed in this pass; the proof-worker bytes are identical to the earlier qualified worker and actual pinned WASM initialization passed with the new bindings.",
+    "The source-only TypeScript suite passes in the repository; running all internal tests against the deliberately pruned archive is not supported. The actual public installed-package TypeScript test passed.",
+    "No new signature, publication, consumer activation or real-funds/mainnet authorization."
+  ]
+}

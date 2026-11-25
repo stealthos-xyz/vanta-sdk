@@ -43,11 +43,17 @@ export function composeFamilyBridgeDeliveryMonitor({routes,signal,provider}){
   const [allowed]=ROUTER.decodeFunctionResult('isOffRamp',await provider.call({to:d.router,data:ROUTER.encodeFunctionData('isOffRamp',[routes.sourceSelector,d.offRamp]),blockTag:block.number}));
   if(!allowed||(await provider.getBlock(block.number))?.hash!==block.hash)fail();live();return {number:block.number,hash:block.hash};
  }
- return Object.freeze({anchor,async monitor({messageId,receiver,amountAtomic,start,scanBlock}){
+ return Object.freeze({anchor,async monitor({messageId,receiver,amountAtomic,start,scanBlock,scanAnchor}){
   if(!word(messageId)||BigInt(messageId)===0n||!/^0x[0-9a-f]{40}$/u.test(receiver)||!Number.isSafeInteger(start?.number)||start.number<0||!word(start.hash)||
    !/^[1-9][0-9]{0,36}$/u.test(amountAtomic)||(scanBlock!==undefined&&(!Number.isSafeInteger(scanBlock)||scanBlock<start.number)))fail();
-  const head=await anchor();if((await provider.getBlock(start.number))?.hash!==start.hash||head.number<start.number||scanBlock>head.number+1)fail();
+  const head=await anchor();if((await provider.getBlock(start.number))?.hash!==start.hash||head.number<start.number)fail();
   let from=scanBlock??start.number,failed;
+  // A persisted height is only useful while its chain anchor remains canonical.
+  // Legacy journals have no anchor and must rescan from their immutable start.
+  if(scanBlock!==undefined){
+   const validAnchor=Number.isSafeInteger(scanAnchor?.number)&&scanAnchor.number>=start.number&&scanAnchor.number<=head.number&&word(scanAnchor.hash);
+   if(!validAnchor||(await provider.getBlock(scanAnchor.number))?.hash!==scanAnchor.hash||from>head.number+1)from=start.number;
+  }
   for(let page=0;from<=head.number&&page<16;page++,from+=2048){
    const logs=await provider.getLogs({address:d.offRamp,fromBlock:from,toBlock:Math.min(from+2047,head.number),
     topics:[OFFRAMP.getEvent('ExecutionStateChanged').topicHash,toBeHex(BigInt(routes.sourceSelector),32),null,messageId]});
@@ -61,9 +67,9 @@ export function composeFamilyBridgeDeliveryMonitor({routes,signal,provider}){
     const transfers=receipt.logs.filter(l=>l.address.toLowerCase()===d.token&&l.topics[0]===TOKEN.getEvent('Transfer').topicHash&&l.topics[2]===zeroPadValue(receiver,32))
      .map(l=>TOKEN.parseLog(l).args).filter(t=>t.value===BigInt(amountAtomic));
     if(transfers.length!==1||(await provider.getBlock(head.number))?.hash!==head.hash)fail();live();
-    return Object.freeze({phase:'delivered-finalized',messageId,transactionHash:log.transactionHash,blockNumber:receipt.blockNumber,blockHash:receipt.blockHash,amountAtomic,receiver,scanBlock:from});
+    return Object.freeze({phase:'delivered-finalized',messageId,transactionHash:log.transactionHash,blockNumber:receipt.blockNumber,blockHash:receipt.blockHash,amountAtomic,receiver,scanBlock:from,scanAnchor:{number:head.number,hash:head.hash}});
    }
   }
-  live();return Object.freeze({...failed,phase:failed?'delivery-failed':'awaiting-delivery',messageId,scanBlock:Math.min(from,head.number+1),finalizedBlock:head.number});
+  live();return Object.freeze({...failed,phase:failed?'delivery-failed':'awaiting-delivery',messageId,scanBlock:Math.min(from,head.number+1),scanAnchor:{number:head.number,hash:head.hash},finalizedBlock:head.number});
  },dispose(){provider.destroy();}});
 }

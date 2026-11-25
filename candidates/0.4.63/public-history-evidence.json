@@ -1,0 +1,40 @@
+{
+  "schema": "vanta-family-public-history-checkpoint-evidence-v1",
+  "networkId": "eip155:6281971",
+  "generationId": "0x2acecbe256faf24f04b0c5ddd06a40cfa7d832677ce6e476e2eb69fa2321c7e0",
+  "anchor": {
+    "number": 9765846,
+    "hash": "0x5e28365f40113bd39169e0e08115f8b95ee5cbe7472e04c843edf40568147b23"
+  },
+  "rpcOrigins": [
+    "https://rpc.testnet.dogeos.com",
+    "https://rpc.ankr.com"
+  ],
+  "logRequests": [
+    472,
+    472
+  ],
+  "pools": [
+    {
+      "symbol": "DOGE",
+      "rows": 160,
+      "spends": 184
+    },
+    {
+      "symbol": "USD1",
+      "rows": 0,
+      "spends": 0
+    },
+    {
+      "symbol": "USDC",
+      "rows": 43,
+      "spends": 64
+    },
+    {
+      "symbol": "CCIP-BnM",
+      "rows": 99,
+      "spends": 96
+    }
+  ],
+  "mode": "operator-signed-release-display-only"
+}

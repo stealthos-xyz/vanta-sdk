@@ -37,7 +37,7 @@ export function createVantaBrowserBound4WorkerFactory(
       !HASH.test(release.glueSha256)||!HASH.test(release.wasmSha256)||
       typeof release.glueUrl!=="string"||typeof release.wasmUrl!=="string"||
       typeof runtime.Worker!=="function"||!runtime.location)
-    throw Error("Vanta browser BOUND4 requires a pinned research release and Web Workers");
+    throw Error("Vanta browser BOUND4 requires a pinned release descriptor and Web Workers");
   const root=runtime.location;
   if(root.protocol!=="https:"&&
       !(root.protocol==="http:"&&

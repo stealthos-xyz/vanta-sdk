@@ -455,7 +455,7 @@ var HASH3 = /^[0-9a-f]{64}$/iu;
 function createVantaBrowserBound4WorkerFactory(release, artifacts) {
   let runtime = globalThis;
   if (release?.researchOnly !== !0 || release.profileName !== "8x5" && release.profileName !== "32x5" || !HASH3.test(release.glueSha256) || !HASH3.test(release.wasmSha256) || typeof release.glueUrl != "string" || typeof release.wasmUrl != "string" || typeof runtime.Worker != "function" || !runtime.location)
-    throw Error("Vanta browser BOUND4 requires a pinned research release and Web Workers");
+    throw Error("Vanta browser BOUND4 requires a pinned release descriptor and Web Workers");
   let root = runtime.location;
   if (root.protocol !== "https:" && !(root.protocol === "http:" && (root.hostname === "localhost" || root.hostname === "127.0.0.1")))
     throw Error("Vanta browser BOUND4 requires a secure same-origin context");
@@ -600,7 +600,7 @@ function createVantaPinnedPublicArtifactReader(input) {
 
 // packages/sdk/src/vanta/unified-browser-bound4-runtime.ts
 var HASH5 = /^[0-9a-f]{64}$/iu;
-async function initializeVantaBrowserBound4ResearchRuntime(input) {
+async function initializeVantaBrowserBound4Runtime(input) {
   let runtime = globalThis;
   if (!runtime.crypto?.subtle || !runtime.location)
     throw Error("Vanta browser proving requires secure WebCrypto.");
@@ -671,7 +671,7 @@ function selectVantaFamilyOperationProofs(descriptor, operation, width) {
 export {
   VANTA_DOGEOS_FAMILY_TAG,
   createVantaBrowserBound4WorkerFactory,
-  initializeVantaBrowserBound4ResearchRuntime,
+  initializeVantaBrowserBound4Runtime,
   proveVantaFamilyBound4InWallet,
   selectVantaFamilyBound4Driver,
   selectVantaFamilyOperationProofs,

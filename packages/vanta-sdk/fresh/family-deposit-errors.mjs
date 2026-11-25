@@ -26,15 +26,43 @@ export const DEPOSIT_INSUFFICIENT_FUNDS = 'INSUFFICIENT_FUNDS';
 
 // Classify only explicit rejection from the wallet or its transaction RPC.
 // A transport failure or a generic wallet error can occur after broadcast.
-export function depositWalletSubmissionCode(error){
- const candidates=[error,error?.info?.error,error?.error,error?.data?.originalError];
- for(const candidate of candidates){
-  if(candidate?.code===DEPOSIT_INSUFFICIENT_FUNDS)return DEPOSIT_INSUFFICIENT_FUNDS;
-  if([-32000,-32003].includes(candidate?.code)&&typeof candidate.message==='string'&&
-    /\binsufficient funds for (?:gas\s*\*\s*price\s*\+\s*value|intrinsic transaction cost|transaction cost)\b/iu.test(candidate.message))
-   return DEPOSIT_INSUFFICIENT_FUNDS;
+export const DEPOSIT_USER_REJECTED = 'USER_REJECTED';
+export const DEPOSIT_SUBMISSION_REJECTED = 'WALLET_SUBMISSION_REJECTED';
+const submissionErrors=error=>{
+ const queue=[error],seen=new Set(),values=[];
+ while(queue.length&&seen.size<32){
+  const item=queue.shift();if(!item||typeof item!=='object'||seen.has(item))continue;
+  seen.add(item);values.push(item);
+  for(const key of ['error','info','data','originalError','cause','receipt','transaction','response'])if(item[key]&&typeof item[key]==='object')queue.push(item[key]);
  }
- return undefined;
+ return {values,complete:queue.length===0};
+};
+export function depositWalletSubmissionCode(error){
+ const {values,complete}=submissionErrors(error);
+ // Never release the durable barrier when a transaction identity or an
+ // explicitly ambiguous broadcast outcome accompanies a nested rejection.
+ if(!complete||values.some(v=>[v.hash,v.transactionHash,v.txHash].some(h=>typeof h==='string'&&/^0x[0-9a-f]{64}$/iu.test(h))||
+  /\b(?:already known|nonce too low|replacement transaction|broadcast|timed out|timeout)\b/iu.test(String(v.message??''))))return undefined;
+ const codes=new Set();
+ for(const v of values){
+  if(v.code===DEPOSIT_INSUFFICIENT_FUNDS||[-32000,-32003,-32603].includes(v.code)&&typeof v.message==='string'&&
+    /\binsufficient funds for (?:gas\s*\*\s*price\s*\+\s*value|intrinsic transaction cost|transaction cost)\b/iu.test(v.message))codes.add(DEPOSIT_INSUFFICIENT_FUNDS);
+  if(v.code===4001||v.code==='4001'||v.code===DEPOSIT_USER_REJECTED||v.code==='ACTION_REJECTED'&&v.reason==='rejected')codes.add(DEPOSIT_USER_REJECTED);
+  if(v.code===DEPOSIT_SUBMISSION_REJECTED)codes.add(DEPOSIT_SUBMISSION_REJECTED);
+ }
+ return codes.size===1?[...codes][0]:undefined;
+}
+export function uncertainDepositSubmission(error){
+ const {values}=submissionErrors(error);
+ const codes=values.map(v=>v.code),message=values.map(v=>String(v.message??'')).join(' ');
+ const detail=codes.includes(-32002)?' A wallet request is already open.':
+  codes.includes(4100)||codes.includes(4900)||codes.includes(4901)?' The wallet reported an account, permission or network connection error.':
+  codes.includes(-32602)?' The wallet reported invalid transaction parameters.':
+  codes.includes(-32005)||/rate.?limit|too many requests/iu.test(message)?' The RPC reported a rate limit.':
+  codes.includes('TIMEOUT')||/timed out|timeout/iu.test(message)?' The wallet or RPC timed out.':
+  /nonce too low|already known|replacement transaction/iu.test(message)?' The RPC reported an existing or conflicting transaction.':
+  ' The wallet did not return a confirmed transaction hash.';
+ return Object.assign(Error('Family deposit: Submission outcome is uncertain.'+detail+' Check History; the deposit will not be resent automatically.'),{code:'AUTHORIZATION_UNCERTAIN'});
 }
 export function depositFailure(error,stage){
  if(known.has(error))return error;
@@ -46,7 +74,9 @@ export function depositFailure(error,stage){
  let data=error?.data??nested?.data;if(data&&typeof data==='object')data=data.data??data.result??data.originalError?.data;
  const selector=typeof data==='string'&&/^0x[0-9a-f]{8}/iu.test(data)?data.slice(0,10).toLowerCase():null;
  let cause;
- if(code===DEPOSIT_INSUFFICIENT_FUNDS&&stage==='Wallet submission')cause='The connected wallet does not have enough native tokens to cover this deposit and its network fee.';
+ if(code===DEPOSIT_USER_REJECTED&&stage==='Wallet submission')cause='The transaction was cancelled in the connected wallet. No deposit was submitted.';
+ else if(code===DEPOSIT_SUBMISSION_REJECTED&&stage==='Wallet submission')cause='The wallet request was not submitted because its reviewed transaction or connected account no longer matched.';
+ else if(code===DEPOSIT_INSUFFICIENT_FUNDS&&stage==='Wallet submission')cause='The connected wallet does not have enough native tokens to cover this deposit and its network fee.';
  else if(selector&&errors.has(selector))cause='Contract reverted: '+errors.get(selector)+' ('+selector+').';
  else if(/rate.?limit|too many requests/u.test(rpcMessage)||nested?.code===-32005)cause='RPC rate limit reached.';
  else if(/insufficient (?:funds|balance)/u.test(rpcMessage))cause='RPC rejected the deposit simulation: insufficient funds for value and gas.';

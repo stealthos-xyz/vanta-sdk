@@ -20,6 +20,6 @@ export interface FamilyRoutedHost {
  list(options?:{cached?:boolean}):Promise<readonly FamilyRoutedReview[]>;dispose():void;
 }
 export function createVantaFamilyRoutedHost(options:Pick<VantaFamilyEnhancedHostOptions,
- 'walletController'|'store'|'provider'|'verificationProvider'|'relayerUrl'|'walletAddress'|'asset'|'artifactBaseUrl'|'fetcher'|'releaseContext'|'signal'|'onProgress'>&{partnerAssetConfiguration?:Readonly<{url:string;handleId:string}>;
+ 'walletController'|'store'|'provider'|'verificationProvider'|'relayerUrl'|'walletAddress'|'asset'|'artifactBaseUrl'|'fetcher'|'releaseContext'|'signal'|'onProgress'|'getReviewDisplayCache'>&{partnerAssetConfiguration?:Readonly<{url:string;handleId:string}>;
  operation:4|5;approveRoute(review:FamilyRoutedReview):Promise<boolean>;
 }):Promise<FamilyRoutedHost>;

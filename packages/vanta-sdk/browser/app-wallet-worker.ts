@@ -1,7 +1,7 @@
 import {quoteFamilyNetRoute} from '../fresh/family-route-review.mjs';
 import {createFamilyBalanceCache} from '../fresh/family-balance-cache.mjs';
 import {createFamilyPublicArtifactCache,walletWarmupPins,depositWarmupPins,enhancedWarmupPins} from '../fresh/family-public-artifact-cache.mjs';
-import {DEPOSIT_INSUFFICIENT_FUNDS,depositFailure,publicDepositFailure,readDepositFailure} from '../fresh/family-deposit-errors.mjs';
+import {DEPOSIT_INSUFFICIENT_FUNDS,DEPOSIT_SUBMISSION_REJECTED,depositFailure,publicDepositFailure,readDepositFailure} from '../fresh/family-deposit-errors.mjs';
 /// <reference lib="webworker" />
 /** Trusted local SDK bootstrap. Only reviews, public identity and status leave
  * this worker; the separate UI port handles local unlock and encrypted HTTP. */
@@ -125,7 +125,7 @@ async function initialize(value: FamilyBootstrap, secretPort: MessagePort) {
     const pending = uiPending.get(data?.id); if (!pending) return; uiPending.delete(data.id);
     if (data.ok === true) pending.accept(data.value);
     else {
-      const code=data.code==='USER_REJECTED'||data.code===DEPOSIT_INSUFFICIENT_FUNDS?data.code:undefined;
+      const code=data.code==='USER_REJECTED'||data.code===DEPOSIT_INSUFFICIENT_FUNDS||data.code===DEPOSIT_SUBMISSION_REJECTED?data.code:undefined;
       pending.reject(readDepositFailure(data.depositFailure)??Object.assign(Error("Trusted wallet action was unavailable."),{code}));
     }
   };
@@ -177,6 +177,7 @@ function enhancedForAsset(asset: FamilyAsset) {
   return createVantaFamilyEnhancedHost({walletController: wallet!, store: store!, provider, verificationProvider: independent,
         relayerUrl: config.relayerUrl, artifactBaseUrl: config.artifactBaseUrl, asset, fetcher,
         walletAddress: config.session.wallet,
+        getReviewDisplayCache:()=>balanceCache,
         signConsent: async request => {
           const revision = epoch; live();
           const signature = await secret("walletSignConsent", request);
@@ -198,16 +199,19 @@ function depositForAsset(asset: FamilyAsset) {
 }
 function withdrawalForAsset(asset: FamilyAsset, revision = epoch) {
   return createVantaFamilyWithdrawalHost({walletController:wallet!,store:store!,provider,verificationProvider:independent,relayerUrl:config.relayerUrl,artifactBaseUrl:config.artifactBaseUrl,asset,walletAddress:config.session.wallet,fetcher,signal:controller.signal,partnerAssetConfiguration:config.partnerAssetConfiguration,
+    getReviewDisplayCache:()=>balanceCache,
     approvePrivateSend:async review=>{live(revision);if(!privateSendAction)fail();return await secret('privateSendApprove',review)===true;}});
 }
 function routeForAsset(asset: FamilyAsset, operation: 4 | 5, revision = epoch, routesRevision = routeEpoch) {
   return createVantaFamilyRoutedHost({operation,walletController:wallet!,store:store!,provider,verificationProvider:independent,
     relayerUrl:config.relayerUrl,artifactBaseUrl:config.artifactBaseUrl,asset,walletAddress:config.session.wallet,fetcher,signal:controller.signal,partnerAssetConfiguration:config.partnerAssetConfiguration,
+    getReviewDisplayCache:()=>balanceCache,
     approveRoute:async review=>{live(revision);if(!routedAction||routeEpoch!==routesRevision)fail();const approved=await secret('routedApprove',review);live(revision);return approved===true;}});
 }
 function privateSendForAsset(asset: FamilyAsset) {
   return createVantaFamilyPrivateSendHost({walletController:wallet!,store:store!,provider,verificationProvider:independent,
        relayerUrl:config.relayerUrl,artifactBaseUrl:config.artifactBaseUrl,asset,walletAddress:config.session.wallet,fetcher,signal:controller.signal,partnerAssetConfiguration:config.partnerAssetConfiguration,
+       getReviewDisplayCache:()=>balanceCache,
        approvePrivateSend:async review=>{live();if(!privateSendAction)fail();const revision=epoch;
         const approved=await secret('privateSendApprove',review);live(revision);return approved===true;}});
 }

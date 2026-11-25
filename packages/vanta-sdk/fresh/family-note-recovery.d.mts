@@ -11,7 +11,7 @@ export interface FamilyRecoveryProvider {
 }
 export interface FamilyDisplayCheckpointCache {
   readCheckpoint(pool:string):Promise<unknown>;
-  saveCheckpoint(pool:string,checkpoint:unknown):Promise<void>;
+  saveCheckpoint(pool:string,checkpoint:unknown,discardedAnchor?:Readonly<{number:number;hash:string}>):Promise<void>;
 }
 export function recoverFamilyCanonicalNotes(input: {
   provider: FamilyRecoveryProvider;
@@ -22,6 +22,7 @@ export function recoverFamilyCanonicalNotes(input: {
   chunkBlocks?: number;
   confirmedAnchor?: Readonly<{number:number;hash:string}>;
   displayCache?: FamilyDisplayCheckpointCache;
+  useSharedHistory?: boolean;
 }): Promise<Readonly<{
   schema: "vanta-family-canonical-note-recovery-v1";
   safeForFunds: false;

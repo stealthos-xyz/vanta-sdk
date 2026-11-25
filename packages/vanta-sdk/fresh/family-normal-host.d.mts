@@ -32,7 +32,7 @@ export interface FamilyPrivateSendHost {
  * enter quote requests. The relayer pays network gas and receives the reviewed
  * proof-bound private gas note after explicit customer review. */
 export function createVantaFamilyPrivateSendHost(options:Pick<VantaFamilyEnhancedHostOptions,
- 'walletController'|'store'|'provider'|'verificationProvider'|'relayerUrl'|'walletAddress'|'asset'|'artifactBaseUrl'|'fetcher'|'releaseContext'|'signal'|'onProgress'>&{partnerAssetConfiguration?:Readonly<{url:string;handleId:string}>;
+ 'walletController'|'store'|'provider'|'verificationProvider'|'relayerUrl'|'walletAddress'|'asset'|'artifactBaseUrl'|'fetcher'|'releaseContext'|'signal'|'onProgress'|'getReviewDisplayCache'>&{partnerAssetConfiguration?:Readonly<{url:string;handleId:string}>;
  approvePrivateSend(review:FamilyPrivateSendReview):Promise<boolean>;
 }):Promise<FamilyPrivateSendHost>;
 

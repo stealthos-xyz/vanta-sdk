@@ -1,7 +1,7 @@
 import type{FamilyPrivateSendQuote}from'../fresh/family-normal-host.mjs';
 import type{FamilyRoutedQuote}from'../fresh/family-routed-host.mjs';
 import type{FamilyWithdrawalQuote,FamilyWithdrawalRecord}from'../fresh/family-enhanced-host.mjs';
-import {depositWalletSubmissionCode, readDepositFailure, depositFailure, publicDepositFailure} from '../fresh/family-deposit-errors.mjs';
+import {depositWalletSubmissionCode, readDepositFailure, depositFailure, publicDepositFailure, uncertainDepositSubmission, DEPOSIT_SUBMISSION_REJECTED} from '../fresh/family-deposit-errors.mjs';
 import {matchesFamilyDepositApproval} from '../fresh/family-deposit-approval.mjs';
 import {encodeVantaFamilyReceivingAddress,decodeVantaFamilyReceivingAddress} from '../fresh/family-normal-address.mjs';
 import {SDK_TRANSACTION_CONFIRMATIONS} from '../fresh/transaction-confirmations.mjs';
@@ -223,18 +223,23 @@ export async function createStealthOSAppWallet(input: {
         }
         else if(data.kind==="depositSubmit"&&activeDepositId&&depositApproved&&!depositSubmissionAttempted&&depositContext){
           depositSubmissionAttempted=true;const review=depositReviews.get(activeDepositId),tx=data.value as FamilyDepositTransaction&{preparedId:string;transactionDigest:string};
-          if(!review||!tx||Object.keys(tx).sort().join()!=="chainId,data,from,preparedId,to,transactionDigest,value"||
-            tx.preparedId!==activeDepositId||tx.chainId!==chainId||getAddress(tx.from).toLowerCase()!==current.wallet||
-            getAddress(tx.to).toLowerCase()!==review.pool.toLowerCase()||tx.transactionDigest!==review.transactionDigest||
-            depositTransactionDigest(tx)!==review.transactionDigest||review.deadline<=Date.now()/1000||await selected()!==current.wallet)throw unavailable();
+          try{
+            if(!review||!tx||Object.keys(tx).sort().join()!=="chainId,data,from,preparedId,to,transactionDigest,value"||
+              tx.preparedId!==activeDepositId||tx.chainId!==chainId||getAddress(tx.from).toLowerCase()!==current.wallet||
+              getAddress(tx.to).toLowerCase()!==review.pool.toLowerCase()||tx.transactionDigest!==review.transactionDigest||
+              depositTransactionDigest(tx)!==review.transactionDigest||review.deadline<=Date.now()/1000||await selected()!==current.wallet)throw unavailable();
+          }catch{
+            if(active===revision)target.postMessage({id:data.id,ok:false,code:DEPOSIT_SUBMISSION_REJECTED});
+            return;
+          }
           let transactionHash:unknown;
           try {
             transactionHash=await input.provider.request({method:"eth_sendTransaction",params:[{chainId:toBeHex(chainId),
               from:tx.from,to:tx.to,data:tx.data,value:toBeHex(BigInt(tx.value))}]});
           } catch (error) {
             const code=depositWalletSubmissionCode(error);
-            if(!code)throw error;
-            if(active===revision)target.postMessage({id:data.id,ok:false,code});
+            if(active===revision)target.postMessage({id:data.id,ok:false,code,
+              depositFailure:code?undefined:publicDepositFailure(depositFailure(uncertainDepositSubmission(error),'Wallet submission'))});
             return;
           }
           if(typeof transactionHash!=="string"||!/^0x[0-9a-fA-F]{64}$/u.test(transactionHash)||active!==revision||await selected()!==current.wallet)throw unavailable();

@@ -1,7 +1,7 @@
 import {createStealthOSAppWallet,SelectedFamilyWalletProvider,FamilyAsset} from './app-wallet.mjs';
 export const STEALTHOS_SDK_VERSION:string;
 export interface StealthOSPartnerConfiguration {schema:'stealthos-partner-integration-v1';sdkVersion:string;networkId:string;generationId:string;
- partnerHandle:string;handleId:string;application:import('../fresh/partner-application.mjs').PartnerApplication;serviceUrl:string;artifactBaseUrl:string;rpcUrl:string;assetConfigurationUrl:string;}
+ partnerHandle:string;handleId:string;application:import('../fresh/partner-application.mjs').PartnerApplication;serviceUrl:string;artifactBaseUrl:string;rpcUrl:string;verificationRpcUrl?:string;assetConfigurationUrl:string;}
 export function openStealthOSPartnerApp(input:{configuration:StealthOSPartnerConfiguration;provider:SelectedFamilyWalletProvider;asset?:FamilyAsset;
  workerUrl?:string|URL;onLocked?(reason:string):void}):Promise<Awaited<ReturnType<typeof createStealthOSAppWallet>> & {
  previewNetworkGas():Promise<{gasPriceWei:string;blockNumber:number;blockHash:string}>;

@@ -26,9 +26,7 @@ var bindings = (() => {
     VantaM2MsmShard: () => VantaM2MsmShard,
     VantaOfflineMatrixProver: () => VantaOfflineMatrixProver,
     buildVantaKzgPolicyLookup: () => buildVantaKzgPolicyLookup,
-    buildVantaResearchWalletCache: () => buildVantaResearchWalletCache,
     buildVantaTestnetCaulkCache: () => buildVantaTestnetCaulkCache,
-    createVantaDemoIdentity: () => createVantaDemoIdentity,
     createVantaFamilyOwnedNote: () => createVantaFamilyOwnedNote,
     createVantaFamilyRecipientNote: () => createVantaFamilyRecipientNote,
     createVantaV8OwnedNote: () => createVantaV8OwnedNote,
@@ -37,7 +35,6 @@ var bindings = (() => {
     initSync: () => initSync,
     planVantaV8UnifiedPrivateFees: () => planVantaV8UnifiedPrivateFees,
     prepareVantaFamilyKzgEnhancedFee: () => prepareVantaFamilyKzgEnhancedFee,
-    vantaDemoPublicAction: () => vantaDemoPublicAction,
     vantaM2ArkMsmG1: () => vantaM2ArkMsmG1,
     vantaM2ArkMsmG2: () => vantaM2ArkMsmG2,
     vantaM2CombineG1: () => vantaM2CombineG1,
@@ -627,7 +624,7 @@ var bindings = (() => {
       return takeFromExternrefTable0(ret[0]);
     }
     /**
-     * Experimental genuine 8x5 V8 Gate0. This uses the pinned M2 proving
+     * Wallet-bound 8x5 V8 Gate0. This uses the pinned M2 proving
      * key, the original wallet note witness, and a canonical salted-amount
      * binding. It does not authorize funds or publish private note values.
      * @param {any} wallet_witness
@@ -646,8 +643,8 @@ var bindings = (() => {
       return takeFromExternrefTable0(ret[0]);
     }
     /**
-     * Strict external wallet witness. Build-pinned research chain only:
-     * default Anvil 31337, explicit feature enables Base Sepolia 84532 mock token.
+     * Strict external wallet witness. Legacy standalone profile: Anvil 31337,
+     * or feature-gated Base Sepolia 84532 test asset.
      * Requires pinned native VK and committed-witness base fingerprints.
      * Keeps the optimized streamed matrices and four-worker bounded MSM.
      * @param {any} wallet_witness
@@ -736,7 +733,7 @@ var bindings = (() => {
     }
     /**
      * Fast cache load. The caller must supply the SHA-256 pinned by the
-     * immutable research manifest. Hash verification happens before unchecked
+     * immutable proof-resource manifest. Hash verification happens before unchecked
      * uncompressed deserialization.
      * @param {Uint8Array} bytes
      * @param {string} expected_sha256
@@ -866,22 +863,8 @@ var bindings = (() => {
       wasm.__wbindgen_free(deferred4_0, deferred4_1, 1);
     }
   }
-  function buildVantaResearchWalletCache(_request) {
-    const ret = wasm.buildVantaResearchWalletCache(_request);
-    if (ret[2]) {
-      throw takeFromExternrefTable0(ret[1]);
-    }
-    return takeFromExternrefTable0(ret[0]);
-  }
   function buildVantaTestnetCaulkCache(request) {
     const ret = wasm.buildVantaTestnetCaulkCache(request);
-    if (ret[2]) {
-      throw takeFromExternrefTable0(ret[1]);
-    }
-    return takeFromExternrefTable0(ret[0]);
-  }
-  function createVantaDemoIdentity() {
-    const ret = wasm.createVantaDemoIdentity();
     if (ret[2]) {
       throw takeFromExternrefTable0(ret[1]);
     }
@@ -942,13 +925,6 @@ var bindings = (() => {
     } finally {
       wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
     }
-  }
-  function vantaDemoPublicAction(wire) {
-    const ret = wasm.vantaDemoPublicAction(wire);
-    if (ret[2]) {
-      throw takeFromExternrefTable0(ret[1]);
-    }
-    return takeFromExternrefTable0(ret[0]);
   }
   function vantaM2ArkMsmG1(query_bytes, scalar_bytes, expected_sha256, expected_points) {
     const ptr0 = passArray8ToWasm0(query_bytes, wasm.__wbindgen_malloc);
@@ -1739,11 +1715,9 @@ var bindings = (() => {
     VantaM2MsmShard: () => VantaM2MsmShard,
     VantaOfflineMatrixProver: () => VantaOfflineMatrixProver,
     buildVantaKzgPolicyLookup: () => buildVantaKzgPolicyLookup,
-    buildVantaResearchWalletCache: () => buildVantaResearchWalletCache,
     buildVantaTestnetCaulkCache: () => buildVantaTestnetCaulkCache,
     buildVantaV8UnifiedPublicCaulkCache: () => buildVantaV8UnifiedPublicCaulkCache,
     buildVantaV8UnifiedPublicRowKeys: () => buildVantaV8UnifiedPublicRowKeys,
-    createVantaDemoIdentity: () => createVantaDemoIdentity,
     createVantaFamilyOwnedNote: () => createVantaFamilyOwnedNote,
     createVantaFamilyRecipientNote: () => createVantaFamilyRecipientNote,
     createVantaV8OwnedNote: () => createVantaV8OwnedNote,
@@ -1752,7 +1726,6 @@ var bindings = (() => {
     initSync: () => initSync,
     planVantaV8UnifiedPrivateFees: () => planVantaV8UnifiedPrivateFees,
     prepareVantaFamilyKzgEnhancedFee: () => prepareVantaFamilyKzgEnhancedFee,
-    vantaDemoPublicAction: () => vantaDemoPublicAction,
     vantaM2ArkMsmG1: () => vantaM2ArkMsmG1,
     vantaM2ArkMsmG2: () => vantaM2ArkMsmG2,
     vantaM2CombineG1: () => vantaM2CombineG1,
@@ -2343,7 +2316,7 @@ var bindings = (() => {
       return takeFromExternrefTable0(ret[0]);
     }
     /**
-     * Experimental genuine 8x5 V8 Gate0. This uses the pinned M2 proving
+     * Wallet-bound 8x5 V8 Gate0. This uses the pinned M2 proving
      * key, the original wallet note witness, and a canonical salted-amount
      * binding. It does not authorize funds or publish private note values.
      * @param {any} wallet_witness
@@ -2362,8 +2335,8 @@ var bindings = (() => {
       return takeFromExternrefTable0(ret[0]);
     }
     /**
-     * Strict external wallet witness. Build-pinned research chain only:
-     * default Anvil 31337, explicit feature enables Base Sepolia 84532 mock token.
+     * Strict external wallet witness. Legacy standalone profile: Anvil 31337,
+     * or feature-gated Base Sepolia 84532 test asset.
      * Requires pinned native VK and committed-witness base fingerprints.
      * Keeps the optimized streamed matrices and four-worker bounded MSM.
      * @param {any} wallet_witness
@@ -2452,7 +2425,7 @@ var bindings = (() => {
     }
     /**
      * Fast cache load. The caller must supply the SHA-256 pinned by the
-     * immutable research manifest. Hash verification happens before unchecked
+     * immutable proof-resource manifest. Hash verification happens before unchecked
      * uncompressed deserialization.
      * @param {Uint8Array} bytes
      * @param {string} expected_sha256
@@ -2582,13 +2555,6 @@ var bindings = (() => {
       wasm.__wbindgen_free(deferred4_0, deferred4_1, 1);
     }
   }
-  function buildVantaResearchWalletCache(_request) {
-    const ret = wasm.buildVantaResearchWalletCache(_request);
-    if (ret[2]) {
-      throw takeFromExternrefTable0(ret[1]);
-    }
-    return takeFromExternrefTable0(ret[0]);
-  }
   function buildVantaTestnetCaulkCache(request) {
     const ret = wasm.buildVantaTestnetCaulkCache(request);
     if (ret[2]) {
@@ -2609,13 +2575,6 @@ var bindings = (() => {
     const ptr0 = passArray8ToWasm0(corpus, wasm.__wbindgen_malloc);
     const len0 = WASM_VECTOR_LEN;
     const ret = wasm.buildVantaV8UnifiedPublicRowKeys(ptr0, len0, start_row, count);
-    if (ret[2]) {
-      throw takeFromExternrefTable0(ret[1]);
-    }
-    return takeFromExternrefTable0(ret[0]);
-  }
-  function createVantaDemoIdentity() {
-    const ret = wasm.createVantaDemoIdentity();
     if (ret[2]) {
       throw takeFromExternrefTable0(ret[1]);
     }
@@ -2676,13 +2635,6 @@ var bindings = (() => {
     } finally {
       wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
     }
-  }
-  function vantaDemoPublicAction(wire) {
-    const ret = wasm.vantaDemoPublicAction(wire);
-    if (ret[2]) {
-      throw takeFromExternrefTable0(ret[1]);
-    }
-    return takeFromExternrefTable0(ret[0]);
   }
   function vantaM2ArkMsmG1(query_bytes, scalar_bytes, expected_sha256, expected_points) {
     const ptr0 = passArray8ToWasm0(query_bytes, wasm.__wbindgen_malloc);

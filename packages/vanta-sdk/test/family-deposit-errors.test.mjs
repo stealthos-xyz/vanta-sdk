@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {id}from'ethers';
-import {depositFailure,depositWalletSubmissionCode,publicDepositFailure,readDepositFailure}from'../fresh/family-deposit-errors.mjs';
+import {depositFailure,depositWalletSubmissionCode,publicDepositFailure,readDepositFailure,uncertainDepositSubmission}from'../fresh/family-deposit-errors.mjs';
 test('funded operation diagnostics preserve the concrete transfer check without deposit labels',()=>{const e=depositFailure(Error('Private transfer: Fee signature differs from the deployed pool signer.'),'Withdrawal preparation');assert.equal(e.code,'TRANSACTION_FAILED');assert.match(readDepositFailure(publicDepositFailure(e)).message,/Fee signature differs/);assert.ok(!e.message.includes('DEPOSIT_FAILED'));});
 test('deposit errors survive the worker boundary with their stage and actual contract reason',()=>{
  const e=depositFailure({code:'CALL_EXCEPTION',data:id('InvalidClearance()').slice(0,10),message:'private transaction payload'},'Contract simulation');
@@ -24,7 +24,8 @@ import {createFamilyDepositJournal} from '../fresh/family-deposit-journal.mjs';
 test('a definite insufficient-funds rejection survives the browser boundary without exposing RPC data',()=>{
  const rejected={code:-32603,data:{originalError:{code:-32000,message:'insufficient funds for gas * price + value: have 100 want 101'}}};
  assert.equal(depositWalletSubmissionCode(rejected),'INSUFFICIENT_FUNDS');
- for(const error of [{code:4001},{code:-32000,message:'already known'},{code:-32000,message:'balance unavailable'},{code:'TIMEOUT'},{code:-32603,message:'insufficient funds'}])
+ assert.equal(depositWalletSubmissionCode({code:4001}),'USER_REJECTED');
+ for(const error of [{code:-32000,message:'already known'},{code:-32000,message:'balance unavailable'},{code:'TIMEOUT'},{code:-32603,message:'insufficient funds'}])
   assert.equal(depositWalletSubmissionCode(error),undefined);
  const sanitized=depositFailure({code:depositWalletSubmissionCode(rejected)},'Wallet submission');
  assert.match(readDepositFailure(publicDepositFailure(sanitized)).message,/network fee/);
@@ -55,4 +56,36 @@ test('only an armed, hashless deposit can become a definitive wallet gas failure
  await journal.recordInsufficientFunds(second);
  assert.equal((await journal.read(second)).phase,'broadcast-uncertain');
  assert.equal((await journal.read(second)).transactionHash,identifier(201));
+});
+
+test('only definite wallet rejections become terminal; conflicting and ambiguous outcomes remain pending',()=>{
+ const txHash='0x'+'a'.repeat(64);
+ for(const e of [{code:4001},{code:-32603,data:{originalError:{code:4001}}},{code:'ACTION_REJECTED',reason:'rejected'}])
+  assert.equal(depositWalletSubmissionCode(e),'USER_REJECTED');
+ assert.equal(depositWalletSubmissionCode({code:'WALLET_SUBMISSION_REJECTED'}),'WALLET_SUBMISSION_REJECTED');
+ for(const e of [{code:4001,transactionHash:txHash},{code:-32603,error:{code:4001},receipt:{hash:txHash}},{code:'TIMEOUT',message:'broadcast timed out',cause:{code:4001}},{code:4001,cause:{code:'INSUFFICIENT_FUNDS'}},{code:-32002},{code:4900},{code:-32602}])
+  assert.equal(depositWalletSubmissionCode(e),undefined);
+ const failure=depositFailure(uncertainDepositSubmission({code:'TIMEOUT',data:{private:'not forwarded'}}),'Wallet submission');
+ assert.equal(failure.code,'AUTHORIZATION_UNCERTAIN');
+ assert.match(readDepositFailure(publicDepositFailure(failure)).message,/timed out/);
+ assert.ok(!failure.message.includes('not forwarded'));
+ assert.match(depositFailure({code:'USER_REJECTED'},'Wallet submission').message,/cancelled/);
+});
+test('cancelled and pre-dispatch rejections settle only hashless armed journal rows',async()=>{
+ const id=n=>'0x'+n.toString(16).padStart(64,'0');let rows=[];
+ const store={scope:'vanta-host-v1/wallet/doge/current',read:async()=>rows,transact:async(_ns,update)=>{const out=update(rows);rows=out.next;return out.result;}};
+ const journal=createFamilyDepositJournal({store,networkId:'doge',generationId:'current',pool:'pool'});
+ const session={subjectId:'user',sessionId:'browser',maximumSessionDebitAtomic:'1000'};
+ for(const [i,code,failure] of [[1,'USER_REJECTED','user-rejected'],[2,'WALLET_SUBMISSION_REJECTED','submission-rejected'],[3,'USER_REJECTED','user-rejected']]){
+  const preparedId=id(i);
+  await journal.reserve({preparedId,quoteNonce:id(100+i),session,amountAtomic:'100',deadline:Math.floor(Date.now()/1000)+600,plan:{}});
+  await journal.recordRejection(preparedId,code);assert.equal((await journal.read(preparedId)).phase,'prepared');
+  await journal.arm(preparedId,session);
+  if(i===3)await journal.mark(preparedId,'broadcast-uncertain',id(303));
+  await journal.recordRejection(preparedId,code);
+  const row=await journal.read(preparedId);
+  assert.equal(row.phase,i===3?'broadcast-uncertain':'failed');
+  if(i!==3)assert.equal(row.failure,failure);else assert.equal(row.transactionHash,id(303));
+ }
+ await assert.rejects(journal.recordRejection(id(3),'AUTHORIZATION_UNCERTAIN'));
 });

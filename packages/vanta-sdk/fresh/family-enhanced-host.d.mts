@@ -41,6 +41,8 @@ export interface VantaFamilyEnhancedHostOptions {
   readonly getSession: () => EnhancedWithdrawalHostSession;
   readonly signal?: AbortSignal;
   readonly onProgress?: (progress: unknown) => void;
+  /** Local display checkpoint for non-authorizing fee previews only. */
+  readonly getReviewDisplayCache?: () => import('./family-note-recovery.mjs').FamilyDisplayCheckpointCache | undefined;
 }
 export interface VantaPublicBatchPayment { readonly recipient: string; readonly amountAtomic: string; }
 export interface FamilyPublicBatchQuote {
@@ -85,6 +87,7 @@ export function createVantaFamilyEnhancedHost(options: VantaFamilyEnhancedHostOp
   exportRecoveryBackup(): Promise<EnhancedEncryptedRecoveryBackup>;
   importRecoveryBackup(backup: EnhancedEncryptedRecoveryBackup): Promise<Readonly<{ restored: number }>>;
   recoverNotes(options?:{displayCache?:import("./family-note-recovery.mjs").FamilyDisplayCheckpointCache}): Promise<Readonly<{ generationId: string; blockNumber: number; blockHash: string;
+    complete:boolean; unavailablePools:readonly Readonly<{pool:string;asset:string;assetSymbol:string;reason:'history-unavailable'|'local-history-unavailable'}>[];
     receivedTransactions: readonly Readonly<{pool: string; transactionHash: string; blockNumber: number; amountAtomic: string; memo?: string}>[];
     pools: readonly Readonly<{ asset: string; assetDecimals: number; pool: string; spendableBalanceUnits: string;
       spentBalanceUnits: string; spendableCount: number; spentCount: number; verifiedEmpty: boolean }>[];

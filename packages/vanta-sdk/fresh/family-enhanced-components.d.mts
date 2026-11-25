@@ -21,6 +21,6 @@ export interface VantaFamilyEnhancedComponents {
   proveClaim(input:{claim:VantaPreparedEnhancedComponent}):Promise<Readonly<Record<string,unknown>>>;
   dispose():void;
 }
-/** Typed pre-ceremony components; every result remains safeForFunds:false. */
+/** Typed authorization and claim components. Prepared results do not authorize use of funds. */
 export function createVantaFamilyEnhancedComponents(options:{releaseContext?:import("./family-network.mjs").FamilyReleaseContext;provider:Provider;verificationProvider:Provider;pool:string;
   artifactBaseUrl:string;fetcher?:typeof fetch;signal?:AbortSignal}):Promise<Readonly<VantaFamilyEnhancedComponents>>;

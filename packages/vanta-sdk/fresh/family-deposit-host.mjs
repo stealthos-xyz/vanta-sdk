@@ -1,6 +1,6 @@
 import {VANTA_POLICY_REGISTRY_ABI as POLICY,vantaPolicyPoseidon} from './partner-policy-kzg.mjs';
 import {matchesReviewedDepositPolicy} from './family-deposit-approval.mjs';
-import {depositFailure,depositWalletSubmissionCode} from './family-deposit-errors.mjs';
+import {depositFailure,depositWalletSubmissionCode,uncertainDepositSubmission} from './family-deposit-errors.mjs';
 import {createVantaFamilyPartnerAssetConfiguration} from './family-partner-app-config.mjs';
 /** Current compiled-family deposit composition. No caller selects proof keys,
  * circuits, routes, pool addresses or fee policy. All private notes stay local. */
@@ -12,13 +12,12 @@ import {createVantaFamilyProofRuntime} from "./family-proof-runtime.mjs";
 import {createVantaFamilyPartnerRegistry} from "./family-partner-registry.mjs";
 import {createVantaEnhancedFundingRuntime} from "./family-enhanced-funding-runtime.mjs";
 import {createFamilyNoteDelivery} from "./family-note-delivery.mjs";
-import {recoverFamilyCanonicalNotes} from "./family-note-recovery.mjs";
 import {resolveFamilyDepositRoute,normalizeFreshHandle} from "./family-deposit-route.mjs";
 import {buildDirectFamilyDepositIntent} from './family-direct-deposit.mjs';
 import {requireNativeWalletClearance} from './family-native-clearance.mjs';
 import {createFamilyDepositJournal} from "./family-deposit-journal.mjs";
 import {encodeVantaFamilyReceivingAddress,decodeVantaFamilyReceivingAddress} from './family-normal-address.mjs';
-import {verifyPublicPaymentReceipt} from './family-public-payment-receipt.mjs';
+import {reconcileFamilyDepositReceipt} from './family-public-payment-receipt.mjs';
 import {DEPOSIT_FIELD as FR,DEPOSIT_ZERO as ZERO,depositWord as word,depositAmount,depositPoolAbi as ABI,
  depositCoder as coder,depositPublicSignals,assertFamilyDepositProof,depositFeeTerms,depositTransactionDigest} from "./family-deposit-wire.mjs";
 const address=v=>getAddress(v).toLowerCase(),same=(a,b)=>String(a).toLowerCase()===String(b).toLowerCase();
@@ -134,7 +133,7 @@ export async function createVantaFamilyDepositHost({walletController,store,provi
    pool:d.pool,asset:d.asset,assetSymbol:d.assetSymbol,payer,amountAtomic:r.amountAtomic,protocolFeeAtomic:"0",
    partnerFeeAtomic:r.plan.quote.partnerFeeCap,netAmountAtomic:r.plan.ownedNote.amount_units,
    deadline:r.deadline,transactionDigest:r.transactionDigest,phase:r.phase,...(recipientAddress?{recipient:recipientAddress}:{}),
-   ...(r.failure==="insufficient-funds"?{failure:r.failure}:{})});
+   ...(["insufficient-funds","user-rejected","submission-rejected"].includes(r.failure)?{failure:r.failure}:{})});
   const prepareDeposit=async({amountAtomic,partnerHandle}={},expectedQuote)=>{
     if(busy)fail("another deposit is running");busy=true;let stage="Wallet session";
     try{
@@ -263,11 +262,13 @@ export async function createVantaFamilyDepositHost({walletController,store,provi
      }catch(error){
       const code=depositWalletSubmissionCode(error);
       if(code){
-       await journal.recordInsufficientFunds(r.preparedId);
+       await journal.recordRejection(r.preparedId,code);
        throw Object.assign(Error("Wallet rejected the deposit."),{code});
       }
-      throw error;
+      if(error?.code==='AUTHORIZATION_UNCERTAIN')throw error;
+      throw uncertainDepositSubmission(error);
      }
+     if(!/^0x[0-9a-f]{64}$/u.test(sent?.transactionHash??''))throw uncertainDepositSubmission(undefined);
      hash(sent?.transactionHash);await journal.mark(r.preparedId,"broadcast-uncertain",sent.transactionHash);
      return Object.freeze({preparedId:r.preparedId,transactionHash:sent.transactionHash,phase:"broadcast-uncertain"});
     }catch(error){throw depositFailure(error,stage);}finally{busy=false;}
@@ -277,39 +278,21 @@ export async function createVantaFamilyDepositHost({walletController,store,provi
     if(r.paymentRecipient!==recipientAddress)fail('saved payment recipient differs');
     if(["finalized","failed","expired-unused"].includes(r.phase))
      return Object.freeze({...review(r),transactionHash:r.transactionHash});
-    if(publicRecipient){
-     const result=await verifyPublicPaymentReceipt({provider,verificationProvider,record:r,transactionHash});
-     if(result.phase==='finalized'||result.phase==='failed')await journal.mark(r.preparedId,result.phase,result.transactionHash);
-     else if(result.anchor.timestamp>r.deadline){const used=(await both(d.pool,ABI,'usedNonce',[r.quoteNonce],result.anchor))[0];
-      if(used)fail('payment nonce consumed without its exact canonical recipient outputs');await journal.mark(r.preparedId,'expired-unused');}
-     const saved=await journal.read(r.preparedId);return Object.freeze({...review(saved),transactionHash:saved.transactionHash});
+    // Reconcile the exact prepared transaction and its three public outputs.
+    // Never send wallet-specific note filters or replay pool balance history.
+    if(depositTransactionDigest(r.transaction)!==r.transactionDigest||!same(r.quoteNonce,r.plan.quote.nonce)||
+      !Number.isSafeInteger(r.preparedAtBlock)||r.preparedAtBlock<d.deploymentBlock)fail('saved deposit transaction differs');
+    await Promise.all([provider,verificationProvider].map(p=>verifyCompiledFamilyOperationRuntime(p,d.pool,releaseContext,['native-screening-clearance'])));
+    const result=await reconcileFamilyDepositReceipt({provider,verificationProvider,record:r,transactionHash,
+     validateAnchor:async anchor=>{await pinCode(d.pool,anchor);await stable(anchor);},
+     readUsedNonce:async anchor=>(await both(d.pool,ABI,'usedNonce',[r.quoteNonce],anchor))[0]});
+    if(result.phase==='finalized'&&!publicRecipient){
+     const restored=await delivery.decrypt({wallet,envelope:r.plan.encryptedOutputs[0],commitment:r.plan.ownedNote.commitment});
+     if(!restored||Object.keys(restored.note).length!==Object.keys(r.plan.ownedNote).length||
+       Object.keys(r.plan.ownedNote).some(key=>restored.note[key]!==r.plan.ownedNote[key]))fail('recovered deposit opening differs');
     }
-    const found=await recoverFamilyCanonicalNotes({provider,verificationProvider,delivery,wallet,deploymentBlock:d.deploymentBlock});
-    if(!found.complete)fail("canonical recovery is incomplete");
-    const note=found.notes.find(n=>n.commitment===r.plan.ownedNote.commitment);
-    if(note){
-     if(note.opening.amount_units!==r.plan.ownedNote.amount_units||note.opening.random!==r.plan.ownedNote.random)fail("recovered deposit opening differs");
-     const [a,b]=await Promise.all([provider.getTransaction(note.transactionHash),verificationProvider.getTransaction(note.transactionHash)]);
-     for(const tx of [a,b])if(!tx||address(tx.from)!==payer||address(tx.to)!==d.pool||
-      !same(tx.data,r.transaction.data)||BigInt(tx.value)!==BigInt(r.transaction.value))fail("recovered deposit transaction differs");
-     await journal.mark(r.preparedId,"finalized",note.transactionHash);
-    }else{
-     if(r.transactionHash){
-      const result=await verifyPublicPaymentReceipt({provider,verificationProvider,record:r});
-      if(result.phase==="failed"){
-       await journal.mark(r.preparedId,"failed",result.transactionHash);
-       const saved=await journal.read(r.preparedId);
-       return Object.freeze({...review(saved),transactionHash:saved.transactionHash});
-      }
-      if(result.phase==="finalized")fail("deposit is confirmed but its canonical owned note is missing");
-     }
-     const block=await provider.getBlock(found.blockNumber);
-     if(!same(block?.hash,found.blockHash))fail("canonical block changed during deposit recovery");
-     const used=(await both(d.pool,ABI,"usedNonce",[r.quoteNonce],block))[0];
-     await stable(block);
-     if(used)fail("deposit nonce consumed without its canonical owned note");
-     if(block.timestamp>r.deadline)await journal.mark(r.preparedId,"expired-unused");
-    }
+    await stable(result.anchor);
+    if(['finalized','failed','expired-unused'].includes(result.phase))await journal.mark(r.preparedId,result.phase,result.transactionHash);
     const current=await journal.read(r.preparedId);return Object.freeze({...review(current),transactionHash:current.transactionHash});
    },
    async listDepositHistory(){live();return Object.freeze((await journal.list()).filter(r=>r.paymentRecipient===recipientAddress).map(r=>Object.freeze({...review(r),transactionHash:r.transactionHash??null})));},

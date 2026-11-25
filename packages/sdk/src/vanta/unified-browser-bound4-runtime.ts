@@ -12,7 +12,7 @@ type Runtime=Readonly<{location?:{href:string;origin:string};
 type Module=VantaV8FullBound4Wasm&Readonly<{
   default(input:{module_or_path:Uint8Array}):Promise<unknown>;
 }>;
-export async function initializeVantaBrowserBound4ResearchRuntime(input:{
+export async function initializeVantaBrowserBound4Runtime(input:{
   release:VantaBrowserBound4Release;signal?:AbortSignal;fetcher?:typeof fetch;
 }):Promise<Readonly<{wasm:VantaV8FullBound4Wasm;
   createShardWorker:ReturnType<typeof createVantaBrowserBound4WorkerFactory>}>>{
