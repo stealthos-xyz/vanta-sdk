@@ -15,6 +15,7 @@ Integrate a private StealthOS wallet into your application on a supported deploy
 | [Partner integration guide](docs/PARTNER_INTEGRATION.md) | Registration, setup, wallet lifecycle, fee review, all supported transaction flows, recovery and launch checklist |
 | [Signed SDK release](releases/0.4.65/) | Exact released npm archive and operator-signed publication |
 | [Audit report (PDF)](docs/audit/Vanta_DOGE_Audit_Report_2026-11-24.pdf) | Full 28-page audit, including cryptography, adversarial security checks, findings and remediation |
+| [FYEO security code review + remediation results (PDF)](docs/audit/FYEO_StealthOS_Audit_with_Remediation_Results.pdf) | Original external scan and follow-up results: all 14 original findings no longer reported |
 | [Audit findings and assurance summary](docs/audit/README.md) | At-a-glance evidence, finding dispositions, scope and release boundaries |
 | [API reference](packages/vanta-sdk/api/wallet.d.mts) | Public exports and types |
 | [Wallet client method types](packages/vanta-sdk/browser/app-wallet.d.mts) | Exact method signatures for integration |
@@ -75,6 +76,8 @@ The current release includes selected-asset recovery isolation, canonical transa
 Use the package root for wallet and public-payment clients; use `/worker` and `/proof-worker` for worker assets. Optional network metadata, enrollment and recovery APIs live under `/network`, `/setup` and `/recovery`. See [public entry points](packages/vanta-sdk/README.md).
 
 ## Security and audit
+
+**External FYEO security code review:** [Read the original report and remediation addendum (PDF)](docs/audit/FYEO_StealthOS_Audit_with_Remediation_Results.pdf). The supplied FYEO rescan results show that all 14 original findings are no longer reported. The original six report pages are retained unchanged; the seventh page is a StealthOS-prepared record of the rescan. This result is scoped to the original findings and does not establish that all deployed contract changes have been activated.
 
 The agreed internal DOGE fund-safety audit register is closed with zero assigned items outstanding. The [full audit report](docs/audit/Vanta_DOGE_Audit_Report_2026-11-24.pdf) and [findings summary](docs/audit/README.md) explain the tested controls, including adversarial checks, and distinguish historical/deployed evidence from new candidate evidence. This is scoped engineering assurance, not third-party certification or approval to custody mainnet funds. Candidate contract remediation applies only to the matching future deployment.
 

@@ -6,6 +6,14 @@
 
 The agreed internal fund-safety audit register is closed with **0 assigned audit items outstanding**. This summary is a navigation aid to the full report, not a separate audit or a guarantee of safety for real funds. The report is a first-party, AI-assisted engineering assessment, not independent third-party certification or a formal proof of soundness.
 
+## External FYEO security code review
+
+[View the seven-page FYEO report with remediation results (PDF)](FYEO_StealthOS_Audit_with_Remediation_Results.pdf) · [Download PDF](https://raw.githubusercontent.com/stealthos-xyz/vanta-sdk/main/docs/audit/FYEO_StealthOS_Audit_with_Remediation_Results.pdf)
+
+The original FYEO scan (24 November 2026, `stealthos-xyz/vanta-audit`, main, `44fcb59`, 97 files) recorded 14 findings. The follow-up dashboard supplied by StealthOS lists all 14 original findings as no longer reported, plus the scan-summary entry (15 fixed entries). The PDF preserves the original six report pages and appends a StealthOS-prepared, selectable-text remediation record dated 25 November 2026. The rescan result is not a claim that a later scan found no other issues or that the revised immutable contracts are already deployed.
+
+PDF SHA-256: `073c8bf689ade59dac2e8a29bafdae6127e901381f992b606314d794c987aea7` (5,562,694 bytes).
+
 ## Key evidence
 
 | Control group | Recorded result | Report pages |
