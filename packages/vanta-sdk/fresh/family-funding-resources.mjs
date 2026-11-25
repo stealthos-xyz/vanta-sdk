@@ -20,7 +20,8 @@ export function validateVantaFamilyFundingResources(raw,release){
   const locks=release.lock.contracts.filter(v=>v.kind==="pool");
   required(Array.isArray(raw.pools)&&raw.pools.length===locks.length&&raw.pools.length>0&&raw.pools.length<=8,"one host configuration per signed pool is required");
   const pools=raw.pools.map(p=>{
-    exact(p,["pool","asset","poolCodehash","deploymentBlock","assetSymbol","assetDecimals","protocolBps","relayerAddress","hostPolicy"]);
+    exact(p,["pool","asset","poolCodehash","deploymentBlock","assetSymbol","assetDecimals","protocolBps","relayerAddress","hostPolicy",...(Object.hasOwn(p,"depositNonceMode")?["depositNonceMode"]:[])]);
+    required(!Object.hasOwn(p,"depositNonceMode")||p.depositNonceMode==="isolated-v2","invalid deposit nonce mode");
     required([p.pool,p.asset,p.relayerAddress].every(v=>ADDRESS.test(v))&&BigInt(p.pool)>0n&&BigInt(p.relayerAddress)>0n&&
       WORD.test(p.poolCodehash)&&BigInt(p.poolCodehash)>0n&&locks.some(v=>v.address.toLowerCase()===p.pool&&v.codehash.toLowerCase()===p.poolCodehash)&&
       Number.isSafeInteger(p.deploymentBlock)&&p.deploymentBlock>0&&/^[A-Za-z0-9][A-Za-z0-9._-]{0,23}$/u.test(p.assetSymbol)&&

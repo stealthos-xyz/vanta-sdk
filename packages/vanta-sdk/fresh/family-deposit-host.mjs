@@ -19,7 +19,7 @@ import {createFamilyDepositJournal} from "./family-deposit-journal.mjs";
 import {encodeVantaFamilyReceivingAddress,decodeVantaFamilyReceivingAddress} from './family-normal-address.mjs';
 import {reconcileFamilyDepositReceipt} from './family-public-payment-receipt.mjs';
 import {DEPOSIT_FIELD as FR,DEPOSIT_ZERO as ZERO,depositWord as word,depositAmount,depositPoolAbi as ABI,
- depositCoder as coder,depositPublicSignals,assertFamilyDepositProof,depositFeeTerms,depositTransactionDigest} from "./family-deposit-wire.mjs";
+ depositCoder as coder,depositPublicSignals,assertFamilyDepositProof,depositFeeTerms,depositTransactionDigest,directDepositNonceMethod} from "./family-deposit-wire.mjs";
 const address=v=>getAddress(v).toLowerCase(),same=(a,b)=>String(a).toLowerCase()===String(b).toLowerCase();
 const json=v=>JSON.parse(JSON.stringify(v,(_,x)=>typeof x==="bigint"?x.toString():x));
 const fail=message=>{throw Error("Family deposit: "+message);};
@@ -38,6 +38,7 @@ export async function createVantaFamilyDepositHost({walletController,store,provi
  if(isFamilyWithdrawalOnlyContext(releaseContext))fail("Historical generations accept withdrawals only.");
  const release=getCompiledFamilyEvmRelease(releaseContext),inventory=getCompiledVantaFamilyProofResources(release,releaseContext);
  const resources=selectVantaFamilyFundingResources(release,inventory,asset),d=resources.deployment,payer=address(walletAddress);
+ const nonceMethod=directDepositNonceMethod(d);
  const publicRecipient=paymentRecipient===undefined?null:decodeVantaFamilyReceivingAddress(encodeVantaFamilyReceivingAddress(paymentRecipient));
  if(publicRecipient){for(const [key,value]of Object.entries({chainId:resources.chainId,familyTag:resources.familyTag,genesisHash:resources.genesisHash,generationId:resources.generationId,setupId:d.setupId,pool:d.pool,asset:d.asset}))
   if(publicRecipient[key]!==value)fail('payment recipient belongs to a different network, generation, pool or asset');}
@@ -107,7 +108,7 @@ export async function createVantaFamilyDepositHost({walletController,store,provi
   if(record.deadline<=block.timestamp+30)fail("deposit quote expires too soon");
   const q=record.plan.quote,source=await both(d.pool,ABI,"currentSource",[],block);
   if(BigInt(source.epoch)!==BigInt(q.epoch)||BigInt(source.checkpoint)!==BigInt(q.checkpoint)||Number(source.rows)!==record.plan.rowStart)fail("deposit source moved; prepare again");
-  if((await both(d.pool,ABI,"usedNonce",[q.nonce],block))[0])fail("deposit quote nonce is already consumed");
+  if((await both(d.pool,ABI,nonceMethod,[q.nonce],block))[0])fail("deposit quote nonce is already consumed");
   if(BigInt(d.asset)!==0n){
    await pinCode(d.asset,block);
    for(const [method,args] of [["allowance",[payer,d.pool]],["balanceOf",[payer]]])
@@ -285,7 +286,7 @@ export async function createVantaFamilyDepositHost({walletController,store,provi
     await Promise.all([provider,verificationProvider].map(p=>verifyCompiledFamilyOperationRuntime(p,d.pool,releaseContext,['native-screening-clearance'])));
     const result=await reconcileFamilyDepositReceipt({provider,verificationProvider,record:r,transactionHash,
      validateAnchor:async anchor=>{await pinCode(d.pool,anchor);await stable(anchor);},
-     readUsedNonce:async anchor=>(await both(d.pool,ABI,'usedNonce',[r.quoteNonce],anchor))[0]});
+     readUsedNonce:async anchor=>(await both(d.pool,ABI,nonceMethod,[r.quoteNonce],anchor))[0]});
     if(result.phase==='finalized'&&!publicRecipient){
      const restored=await delivery.decrypt({wallet,envelope:r.plan.encryptedOutputs[0],commitment:r.plan.ownedNote.commitment});
      if(!restored||Object.keys(restored.note).length!==Object.keys(r.plan.ownedNote).length||

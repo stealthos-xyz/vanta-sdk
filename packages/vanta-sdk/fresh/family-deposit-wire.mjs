@@ -13,7 +13,8 @@ export const FAMILY_DEPOSIT_ABI=Object.freeze([
  "function feeSigner() view returns(address)","function feePolicyHash() view returns(bytes32)",
  "function protocolFeeRecipient() view returns(address)","function partnerFeeRecipient() view returns(address)",
  "function combinedFeePartnerVerifier() view returns(address)","function asset() view returns(address)",
- "function usedNonce(bytes32) view returns(bool)"
+ "function usedNonce(bytes32) view returns(bool)",
+ "function usedDepositNonce(bytes32) view returns(bool)"
 ]);
 export const depositPoolAbi=new Interface(FAMILY_DEPOSIT_ABI);
 export const depositAmount=value=>{if(typeof value!=="string"||!/^[1-9][0-9]{0,36}$/u.test(value)||BigInt(value)>((1n<<120n)-1n))throw Error("Invalid positive deposit amount.");return BigInt(value);};
@@ -47,4 +48,13 @@ export async function depositFeeTerms({domain,feePolicyHash,tokenHash,protocolRo
   0,partnerFee,0,protocolRoute.collectorMpk,partnerRoute.collectorMpk,0,1,2,5,...outputs,0,0,0,blinding];
  let h=0x5638465445520001n;for(let i=0;i<values.length;i+=2)h=await depositPoseidon(h,values[i],values[i+1]??0);
  return depositWord(h);
+}
+
+/** Select the nonce registry from authenticated deployment resource metadata.
+ * Legacy signed inventories omit the mode; new pools must pin isolated-v2.
+ * Never infer the registry from RPC failures or try a fallback after a revert. */
+export function directDepositNonceMethod(deployment){
+ if(deployment?.depositNonceMode==="isolated-v2")return "usedDepositNonce";
+ if(deployment&& !Object.hasOwn(deployment,"depositNonceMode"))return "usedNonce";
+ throw Error("Unsupported direct deposit nonce registry");
 }
