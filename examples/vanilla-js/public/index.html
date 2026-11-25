@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vanta | Partner integration reference</title>
+<link rel="stylesheet" href="./style.css">
+<script type="module" src="./app.mjs"></script>
+</head>
+<body>
+<main>
+<header><p class="eyebrow">STEALTHOS / VANTA</p><h1>DogeOS partner reference</h1>
+<p>Signed SDK 0.4.65 · Chikyu testnet only. Use a registered origin and test funds. All private details are displayed locally; never share this screen or its journal IDs.</p></header>
+<fieldset><legend>1. Connect</legend>
+<label>Wallet provider<select id="provider"></select></label>
+<button id="connect">Connect private wallet</button>
+<label>Public payment recipient (encoded private address)<input id="paymentRecipient" autocomplete="off"></label>
+<button id="connectPayment">Connect public payment</button>
+<button id="lock">Lock / disconnect</button>
+</fieldset>
+<fieldset id="walletPanel"><legend>2. Local wallet</legend>
+<label>Password<input id="password" type="password" autocomplete="off"></label>
+<label>Recovery phrase (restore only)<input id="phrase" type="password" autocomplete="off"></label>
+<button id="create">Create wallet</button><button id="restore">Restore / unlock</button><button id="remembered">Unlock remembered</button>
+<label>Registered asset (native or lowercase token address)<input id="asset" value="native" autocomplete="off"></label>
+<button id="selectAsset">Select asset</button><button id="balance">Recover balances</button><button id="receive">Receiving address</button>
+<label>Handle<input id="handle" autocomplete="off"></label>
+<button id="checkHandle">Check availability</button><button id="claimHandle">Claim handle</button><button id="currentHandle">Current handle</button>
+<button id="backup">Export encrypted backup</button><label>Import encrypted backup<input id="backupFile" type="file" accept="application/json"></label><button id="importBackup">Import</button>
+</fieldset>
+<fieldset id="txPanel"><legend>3. Transaction review</legend>
+<label>Operation<select id="kind"><option value="deposit">Deposit</option><option value="private">Private transfer</option><option value="withdrawal">Public withdrawal</option><option value="enhanced">Enhanced withdrawal</option><option value="batch">Public batch</option><option value="swap">Swap</option><option value="bridge">Bridge</option><option value="payment">Public payment link</option></select></label>
+<label>Amount (integer atomic units; not decimal human units)<input id="amount" inputmode="numeric" autocomplete="off"></label>
+<label>Public destination / route receiver / private recipient<input id="destination" autocomplete="off"></label>
+<label>Private recipient format<select id="recipientKind"><option value="address">Encoded private address</option><option value="handle">Private handle</option></select></label>
+<label>Private transfer memo (optional)<input id="memo" autocomplete="off"></label>
+<label>Route slippage (basis points)<input id="slippage" value="100" type="number" min="1" max="5000"></label>
+<label>Public batch payments (JSON array, amounts in atomic units)<textarea id="payments" placeholder='[{"recipient":"0x...","amountAtomic":"1000"}]'></textarea></label>
+<button id="quote">Get fee review</button>
+<p>Review exact recipient, amount, fee fields, total debit or net amount, gas and expiry. For deposits, public wallet network gas is separate; for routed operations, input and output units may differ.</p>
+<pre id="review" aria-live="polite">No active review.</pre>
+<label class="check"><input type="checkbox" id="approved"> I approve the exact displayed transaction and fees.</label>
+<button id="submit" disabled>Prepare and submit reviewed operation</button>
+</fieldset>
+<fieldset id="historyPanel"><legend>4. History &amp; reconciliation</legend>
+<p>Select the same operation and original asset above, then recover its history. Never resubmit an uncertain transaction. Enter the original preparedId / transactionId to reconcile.</p>
+<button id="history">Read operation history</button>
+<label>Original journal ID<input id="historyId" autocomplete="off"></label>
+<button id="reconcile">Reconcile original operation</button><button id="recoverEnhanced">Recover enhanced withdrawal</button>
+</fieldset>
+<section aria-live="polite"><h2>Status / local result</h2><p id="status">Connect a wallet to start.</p><pre id="result"></pre></section>
+</main>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# Integration architecture
+
+Browser application (registered origin, customer review) -> ESM partner wrapper -> local wallet module worker -> local proof worker/WASM and encrypted browser journal. The selected EIP-1193 wallet supplies account/signing requests. The wrapper authenticates the customer against StealthOS's existing service and validates registered partner config. Signed public proof resources and independent RPCs support release and canonical state checks. Direct deposits are public wallet transactions to existing signed pools; relayed operations use the approved proof-bound fee/authorization and are reconciled against the signed contracts.
+
+The partner builds UI and chooses supported operations, not proof statements, private key custody or relayer authorization internals. Never put secrets or witnesses into backend requests. No partner-hosted protocol signing service, custom pool deployment or ceremony is required. Links: [Solidity contracts](https://github.com/stealthos-xyz/contracts), [signed publication](../releases/0.4.65/publication.json), [audit scope](audit/README.md).

@@ -1,0 +1,7 @@
+# Browser deployment and acceptance
+
+Use a modern browser with ES2022 modules, module workers, WebAssembly, Web Crypto, IndexedDB and a compatible EIP-1193 wallet. This is a browser SDK; server rendering is not a wallet runtime. No blanket browser/version or mobile performance guarantee is claimed.
+
+Host both worker files side by side under the app origin. Correct JS MIME type, HTTPS, no SPA fallback on worker URLs. Configure CSP with script and worker access to the required local modules and WebAssembly compilation, plus connect-src for the exact service, proof artifact, RPC and asset configuration origins. Begin restrictive; add only origins or browser-specific WASM directives actually required by the release. Avoid blanket unsafe-eval or wildcard policies. Confirm CORS for registered origin and RPCs; avoid credential-bearing URLs.
+
+Test on intended desktop and mobile browsers with realistic available memory. Show cached wallet UI early, warm public proof resources in the SDK, allow recovery in parallel where safe, and do not add repeated RPC scans or duplicate worker instances. Keep the tab active during proving/approval; reopen and reconcile after background lock. Distinguish fee review latency from proving and chain finality. Test low memory, storage restrictions, reload, network changes, rejected wallet requests and worker errors. Record measured cold/warm timings per device rather than promise a fixed duration.

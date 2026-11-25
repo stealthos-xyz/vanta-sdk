@@ -6,6 +6,8 @@ Integrate a private StealthOS wallet into your application on DogeOS Chikyu usin
 
 ## Start here
 
+**DogeOS engineering:** Start with the [partner implementation guide](docs/DOGEOS_PARTNER_GUIDE.md), [quickstart](docs/QUICKSTART.md) and [reference application](examples/vanilla-js/). See the [public Solidity contracts](https://github.com/stealthos-xyz/contracts).
+
 | Resource | What you will find |
 | --- | --- |
 | [Partner integration guide](docs/PARTNER_INTEGRATION.md) | Registration, setup, wallet lifecycle, fee review, all supported transaction flows, recovery and launch checklist |
@@ -15,6 +17,8 @@ Integrate a private StealthOS wallet into your application on DogeOS Chikyu usin
 | [API reference](packages/vanta-sdk/api/wallet.d.mts) | Public exports and types |
 | [Wallet client method types](packages/vanta-sdk/browser/app-wallet.d.mts) | Exact method signatures for integration |
 | [Worker build example](examples/build-workers.mjs) | ESM wallet worker and standalone proof worker |
+
+Detailed references: [API](docs/API_REFERENCE.md) · [configuration](docs/CONFIGURATION.md) · [transactions](docs/TRANSACTIONS.md) · [fees](docs/FEES.md) · [recovery](docs/WALLET_RECOVERY.md) · [errors](docs/ERROR_HANDLING.md) · [browser](docs/BROWSER_COMPATIBILITY.md) · [frameworks](docs/FRAMEWORKS.md) · [architecture](docs/ARCHITECTURE.md) · [upgrades](docs/UPGRADING.md) · [changelog](CHANGELOG.md).
 
 ## 1. Install the signed SDK
 

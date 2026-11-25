@@ -1,0 +1,19 @@
+{
+  "name": "vanta-partner-reference",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.14.1"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@stealthos/vanta-sdk": "https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/artifacts/objects/097e12aad803a824d4aab872cfd612b53195f510f91a2e799a00d29bb5e00940.tgz"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}

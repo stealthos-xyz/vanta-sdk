@@ -4,6 +4,8 @@
 
 This is the repository-level integration guide for the current signed release. The [audit report and findings](audit/README.md) are available separately. Partners integrate with the registered StealthOS service and existing signed pools; they do not need to run a ceremony, deploy their own pools, expose service signing keys, or host private wallet credentials.
 
+For a shareable DogeOS onboarding guide and reference app, see [DogeOS implementation guide](DOGEOS_PARTNER_GUIDE.md) and [quickstart](QUICKSTART.md). Detailed operation examples and lifecycle states are in [TRANSACTIONS.md](TRANSACTIONS.md).
+
 ## 1. Register the partner application
 
 1. Open the [partner portal](https://partners.stealthos.xyz). Register the partner handle, supported assets, applicable partner fees and each exact HTTPS app origin.
@@ -82,8 +84,8 @@ export async function reviewDeposit(wallet, configuration, amountAtomic) {
 }
 
 // Invoke only after your UI has displayed the exact quote and the user approves.
-// If the selected token requires an allowance, use approveDepositAsset with
-// the reviewed quoteId and handle the connected wallet's separate approval.
+// Preparation already handles any required token allowance approval.
+// Optionally stage approveDepositAsset with the same reviewed quoteId.
 export async function submitReviewedDeposit(wallet, quoteId) {
   const prepared = await wallet.prepareReviewedDeposit({quoteId});
   const submitted = await wallet.executeDeposit({preparedId: prepared.preparedId});
@@ -105,7 +107,7 @@ An ERC20 approval is not a deposit. Reconcile the result and pending history rat
 | Public batch | `quotePublicBatch({payments, partnerHandle})` | `prepareReviewedPublicBatch({quoteId})` | `authorizePublicBatch({intentId})`, `monitorPublicBatch({transactionId})` |
 | Swap / bridge | `quoteRoute({operation, amountAtomic, slippageBps, receiver})`, then `quoteRouteFees` with the bound venue quote fields | `prepareReviewedRoute({operation, quoteId})` | `executeRoute({operation, preparedId})`, `reconcileRoute({operation, preparedId})` |
 
-For route reviews use operation 4 for swap and 5 for bridge; pass the reviewed receiver, amount, minimum output, maximum delivery fee, and partner handle to `quoteRouteFees`. Use supported assets and receivers only. For public batches, `payments` is an array of `{recipient, amountAtomic}`. The registered partner wrapper binds the configured partner handle; passing it explicitly is compatible with the published method types. Refer to the [wallet client method types](../packages/vanta-sdk/browser/app-wallet.d.mts) and [quote types](../packages/vanta-sdk/api/wallet.d.mts) for exact return values.
+For route reviews use operation 4 for swap and 5 for bridge; pass the reviewed receiver, amount, minimum output, maximum delivery fee, and partner handle to `quoteRouteFees`. Use supported assets and receivers only. For public batches, `payments` is an array of `{recipient, amountAtomic}`. The registered partner wrapper binds the configured partner handle; passing it explicitly is compatible with the published method types. Refer to the [wallet client method types](../packages/vanta-sdk/browser/app-wallet.d.mts) and [public exports and quote types](../packages/vanta-sdk/api/wallet.d.mts) for exact return values.
 
 For public payment links, use the separate root export `openStealthOSPublicPayment({configuration, provider, recipient, workerUrl})` and its `quotePayment`, `approvePaymentAsset`, `prepareReviewedPayment`, `executePayment`, `reconcilePayment` and `listPendingPayments` methods. Dispose of the client when done.
 
