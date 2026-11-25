@@ -34,5 +34,6 @@ jobs:
         with:
           name: unsigned-sdk-0.4.67
           path: .release-candidate/
+          include-hidden-files: true
           retention-days: 14
           if-no-files-found: error
