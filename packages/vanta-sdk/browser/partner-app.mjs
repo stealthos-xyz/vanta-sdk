@@ -4,8 +4,10 @@ import {getCompiledFamilyEvmRelease} from '../fresh/family-network.mjs';
 import {normalizePartnerApplication,partnerApplicationHash} from '../fresh/partner-application.mjs';
 import {resolvePartnerRpcEndpoints} from '../fresh/family-rpc.mjs';
 import {STEALTHOS_SDK_VERSION} from '../fresh/sdk-version.mjs';
+import {notifyProgress,observePartnerClient,reconcilePartnerTransaction} from './partner-progress.mjs';
+import {normalizeVantaError,normalizeVantaTransactionStatus} from '../api/developer.mjs';
 export {STEALTHOS_SDK_VERSION};
-export async function openStealthOSPartnerApp({configuration:c,provider,asset='native',workerUrl,onLocked,paymentRecipient}){
+async function openPartner({configuration:c,provider,asset='native',workerUrl,onLocked,paymentRecipient}){
  const release=getCompiledFamilyEvmRelease(),origin=globalThis.location.origin;
  if(c?.schema!=='stealthos-partner-integration-v1'||c.sdkVersion!==STEALTHOS_SDK_VERSION||c.networkId!==release.pins.networkId||
   c.generationId!==release.pins.generationId||!/^0x[0-9a-f]{64}$/u.test(c.handleId??'')||!provider?.request)throw Error('Load the public configuration for this signed SDK release.');
@@ -61,7 +63,8 @@ export async function openStealthOSPartnerApp({configuration:c,provider,asset='n
     !/^0x[0-9a-f]{64}$/u.test(value.blockHash)||!/^[1-9][0-9]{0,36}$/u.test(value.gasPriceWei))throw Error('Invalid network fee preview.');
    return {gasPriceWei:value.gasPriceWei,blockNumber:value.blockNumber,blockHash:value.blockHash};
  }
- return Object.freeze({...bridge,
+ const client={...bridge,
+  reconcileTransaction:input=>reconcilePartnerTransaction(bridge,input),
   previewNetworkGas(){
    return previewPending??=fetchNetworkGas().finally(()=>{previewPending=undefined;});
   },
@@ -73,16 +76,26 @@ export async function openStealthOSPartnerApp({configuration:c,provider,asset='n
   quotePublicBatch:input=>bridge.quotePublicBatch({...input,partnerHandle:c.partnerHandle}),
   quoteRouteFees:input=>bridge.quoteRouteFees({...input,partnerHandle:c.partnerHandle}),
   preparePrivateSend:input=>bridge.preparePrivateSend({...input,partnerHandle:c.partnerHandle}),
-  prepareRoute:input=>bridge.prepareRoute({...input,partnerHandle:c.partnerHandle})});
+  prepareRoute:input=>bridge.prepareRoute({...input,partnerHandle:c.partnerHandle})};
+ return client;
+}
+export async function openStealthOSPartnerApp(input){
+ const listener=input?.onProgress;
+ notifyProgress(listener,{method:'openStealthOSPartnerApp',stage:'connecting',state:'started'});
+ try{const client=await openPartner(input);notifyProgress(listener,{method:'openStealthOSPartnerApp',stage:'connecting',state:'completed'});return observePartnerClient(client,listener);}
+ catch(error){notifyProgress(listener,{method:'openStealthOSPartnerApp',stage:'connecting',state:'failed',code:normalizeVantaError(error).code});throw error;}
 }
 /** Pay a request from an EOA. No private identity, phrase or password is created. */
-export async function openStealthOSPublicPayment({configuration,provider,recipient,workerUrl,onLocked}){
- const {decodeVantaFamilyReceivingAddress}=await import('../fresh/family-normal-address.mjs');
+export async function openStealthOSPublicPayment({configuration,provider,recipient,workerUrl,onLocked,onProgress}){
+ notifyProgress(onProgress,{method:'openStealthOSPublicPayment',stage:'connecting',state:'started'});
+ let bridge;
+ try{const {decodeVantaFamilyReceivingAddress}=await import('../fresh/family-normal-address.mjs');
  const target=decodeVantaFamilyReceivingAddress(recipient),asset=BigInt(target.asset)===0n?'native':target.asset;
- const bridge=await openStealthOSPartnerApp({configuration,provider,asset,workerUrl,onLocked,paymentRecipient:target});
- try{const context=await bridge.openPublicPayment();return Object.freeze({context,recipient,
+ bridge=await openPartner({configuration,provider,asset,workerUrl,onLocked,paymentRecipient:target});
+ const context=await bridge.openPublicPayment();notifyProgress(onProgress,{method:'openStealthOSPublicPayment',stage:'connecting',state:'completed'});return observePartnerClient({context,recipient,
+  reconcileTransaction:async({id,transactionHash})=>normalizeVantaTransactionStatus({operation:'payment',id,result:await bridge.reconcileDeposit({preparedId:id,...(transactionHash===undefined?{}:{transactionHash})})}),
   quotePayment:input=>bridge.quoteDeposit(input),approvePaymentAsset:input=>bridge.approvePaymentAsset(input),prepareReviewedPayment:input=>bridge.prepareReviewedDeposit(input),
   executePayment:input=>bridge.executeDeposit(input),reconcilePayment:input=>bridge.reconcileDeposit(input),
-  listPendingPayments:()=>bridge.listPendingDeposits(),dispose:()=>bridge.dispose()});
- }catch(error){bridge.dispose();throw error;}
+  listPendingPayments:()=>bridge.listPendingDeposits(),dispose:()=>bridge.dispose()},onProgress);
+ }catch(error){bridge?.dispose();notifyProgress(onProgress,{method:'openStealthOSPublicPayment',stage:'connecting',state:'failed',code:normalizeVantaError(error).code});throw error;}
 }

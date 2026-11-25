@@ -7,7 +7,7 @@
     "ethers": "^6.17.0",
     "snarkjs": "0.7.6"
   },
-  "description": "StealthOS partner wallet SDK for DogeOS Chikyu",
+  "description": "StealthOS Vanta partner privacy wallet SDK",
   "devDependencies": {
     "@types/node": "^20.0.0",
     "circomlibjs": "0.1.7",
@@ -52,6 +52,8 @@
   "files": [
     "PARTNER_INTEGRATION.md",
     "README.md",
+    "api/developer.d.mts",
+    "api/developer.mjs",
     "api/network.d.mts",
     "api/network.mjs",
     "api/recovery.d.mts",
@@ -60,6 +62,7 @@
     "api/setup.mjs",
     "api/wallet.d.mts",
     "api/wallet.mjs",
+    "bin/setup-workers.mjs",
     "browser/app-wallet-worker.d.mts",
     "browser/app-wallet-worker.mjs",
     "browser/app-wallet.d.mts",
@@ -67,6 +70,7 @@
     "browser/enhanced-types.d.mts",
     "browser/partner-app.d.mts",
     "browser/partner-app.mjs",
+    "browser/partner-progress.mjs",
     "dist/vendor/THIRD_PARTY_NOTICES.txt",
     "dist/vendor/circom-crypto.browser.js",
     "dist/vendor/licenses",
@@ -223,5 +227,20 @@
   },
   "type": "module",
   "types": "./api/wallet.d.mts",
-  "version": "0.4.65"
+  "version": "0.4.66",
+  "bin": {
+    "vanta-setup-workers": "./bin/setup-workers.mjs"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stealthos-xyz/vanta-sdk.git",
+    "directory": "packages/vanta-sdk"
+  },
+  "homepage": "https://github.com/stealthos-xyz/vanta-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/stealthos-xyz/vanta-sdk/issues"
+  }
 }

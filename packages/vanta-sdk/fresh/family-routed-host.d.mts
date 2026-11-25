@@ -1,10 +1,11 @@
 import type{FamilyOperationFeeQuote}from'./family-operation-review.mjs';
 import type {VantaFamilyEnhancedHostOptions} from './family-enhanced-host.mjs';
 import type {FamilyPrivateSendReview} from './family-normal-host.mjs';
-export interface FamilyRoutedReview extends Omit<FamilyPrivateSendReview,'recipient'> {
+export interface FamilyRoutedReview extends Omit<FamilyPrivateSendReview,'recipient'|'phase'> {
+ readonly phase:FamilyPrivateSendReview['phase']|'private-output-pending';
  readonly privateOutput?:boolean;readonly outputAsset?:string;readonly outputDecimals?:number;readonly outputAmountAtomic?:string;readonly outputTransactionHash?:string|null;
  readonly recipient:string;readonly operation:4|5;readonly transactionTarget:string;readonly publicReceiver:string;readonly minimumOutputAtomic:string;
- readonly maximumDeliveryFeeAtomic:string;readonly destinationChainId?:number;readonly messageId?:string|null;readonly delivery?:unknown;
+ readonly maximumDeliveryFeeAtomic:string;readonly destinationChainId?:number;readonly messageId?:string|null;readonly delivery?:Readonly<{phase:'awaiting-delivery'|'delivery-failed'|'delivered-finalized';messageId:string;transactionHash?:string;blockNumber?:number;blockHash?:string;amountAtomic?:string;receiver?:string}>|null;
 }
 export interface FamilyRoutedQuote extends FamilyOperationFeeQuote {readonly privateOutput?:boolean;readonly outputAsset?:string;readonly publicReceiver:string;readonly minimumOutputAtomic:string;readonly maximumDeliveryFeeAtomic:string;readonly gasReserveAtomic:string;}
 export interface FamilyRoutedHost {

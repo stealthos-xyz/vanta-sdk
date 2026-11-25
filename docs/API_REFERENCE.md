@@ -16,3 +16,8 @@ The type declarations are authoritative. Import from supported package exports, 
 Wallet methods: createPrivateWallet, restoreWallet, unlockRememberedWallet, getPasswordSettings, setPasswordRequirement, selectAsset, getCachedBalance, recoverNotes, receivingAddress, publicReceivingIdentity, handleAvailable, claimHandle, checkHandle, currentHandle, findHandle, resolveHandle, lockWallet and dispose. The wrapper additionally provides previewNetworkGas for a session-authenticated estimate, not a spend authorization.
 
 All funded methods and readback methods are documented in [TRANSACTIONS.md](TRANSACTIONS.md). The `authorizeWithdrawal` and `monitorWithdrawal` browser declarations currently use broad return types; regular withdrawal authorization/monitor returns a normal review with preparedId/phase, while enhanced authorization returns transactionId/status and monitor returns enhanced claim status. Validate the runtime shape before using. For historical-generation recovery, use [WALLET_RECOVERY.md](WALLET_RECOVERY.md).
+
+
+## 0.4.66 candidate developer API
+
+See [developer experience](DEVELOPER_EXPERIENCE.md) for the new public types, VANTA_ROUTE, normalized error/status helpers, lifecycle events and uniform reconcileTransaction entry point. These additions are candidate-only until the next signed release. The signed 0.4.65 API above remains unchanged.

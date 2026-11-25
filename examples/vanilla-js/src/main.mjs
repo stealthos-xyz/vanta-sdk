@@ -1,4 +1,4 @@
-import {openStealthOSPartnerApp, openStealthOSPublicPayment, decodeVantaFamilyReceivingAddress,
+import {STEALTHOS_SDK_VERSION, openStealthOSPartnerApp, openStealthOSPublicPayment, decodeVantaFamilyReceivingAddress,
   encodeVantaFamilyReceivingAddress, normalizeFamilyPrivateMemo} from '@stealthos/vanta-sdk';
 import {createReview, readHistory, reconcile} from './flows.mjs';
 
@@ -44,11 +44,11 @@ async function connect(nextMode) {
   if (!provider?.request) throw new Error('Choose an injected EIP-1193 provider.');
   const revision = epoch;
   await provider.request({method:'eth_requestAccounts'});
-  if (BigInt(await provider.request({method:'eth_chainId'})) !== 6281971n) throw new Error('Switch your wallet to DogeOS Chikyu.');
   const response = await fetch('/stealthos-partner-config.json', {cache:'no-store', redirect:'error'});
   if (!response.ok) throw new Error('Download your portal configuration.');
   configuration = await response.json();
-  if (configuration.sdkVersion !== '0.4.65' || configuration.networkId !== 'eip155:6281971' || !configuration.verificationRpcUrl) throw new Error('Use matching testnet configuration and independent RPC.');
+  if (configuration.sdkVersion !== STEALTHOS_SDK_VERSION || !/^eip155:[1-9][0-9]*$/.test(configuration.networkId) || !configuration.verificationRpcUrl) throw new Error('Use matching signed configuration and independent RPC.');
+  if (BigInt(await provider.request({method:'eth_chainId'})) !== BigInt(configuration.networkId.split(':')[1])) throw new Error('Switch your wallet to the configured network.');
   const onLocked = () => {
     if (revision !== epoch) return;
     const previous = client; client = null; mode = null; unlocked = false; epoch++;

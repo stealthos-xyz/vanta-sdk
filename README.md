@@ -6,6 +6,8 @@ Integrate a private StealthOS wallet into your application on a supported deploy
 
 ## Start here
 
+**Developer-experience candidate (0.4.66):** [API polish and migration guide](docs/DEVELOPER_EXPERIENCE.md) · [React example](examples/react/) · [Release process](docs/RELEASE_PROCESS.md) · [Developer portal source](docs/index.html). This source candidate does not replace the current signed 0.4.65 archive.
+
 **Partner engineering:** Start with the [partner implementation guide (PDF)](docs/StealthOS_Vanta_Partner_Implementation_Guide.pdf) or [Markdown guide](docs/PARTNER_IMPLEMENTATION_GUIDE.md), [quickstart](docs/QUICKSTART.md) and [reference application](examples/vanilla-js/). See the [public Solidity contracts](https://github.com/stealthos-xyz/contracts).
 
 | Resource | What you will find |
@@ -89,4 +91,4 @@ npm run build
 
 The source is in `packages/vanta-sdk` and shared TypeScript build inputs in `packages/sdk/src`. `verify:release` verifies the operator signature, package digest and byte-for-byte reproduction of the archived signed package. The build command creates a development candidate. Repository-level integration documentation is maintained separately from the immutable signed archives; the bundled documentation is retained exactly as released.
 
-See [third-party notices](packages/vanta-sdk/dist/vendor/THIRD_PARTY_NOTICES.txt).
+See [security policy](SECURITY.md), [licensing status](LICENSING.md) and [third-party notices](packages/vanta-sdk/dist/vendor/THIRD_PARTY_NOTICES.txt).

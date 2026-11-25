@@ -1,12 +1,22 @@
-import {openStealthOSPartnerApp, openStealthOSPublicPayment, normalizeVantaFamilyHandle, type StealthOSPartnerConfiguration, type SelectedFamilyWalletProvider} from '@stealthos/vanta-sdk';
+import {openStealthOSPartnerApp, openStealthOSPublicPayment, normalizeVantaFamilyHandle, normalizeVantaError, normalizeVantaTransactionStatus, VANTA_ROUTE, type VantaTransactionStatus, type VantaProgressEvent, type StealthOSPartnerConfiguration, type SelectedFamilyWalletProvider} from '@stealthos/vanta-sdk';
 import {getCompiledFamilyEvmRelease} from '@stealthos/vanta-sdk/network';
 import {normalizePartnerApplication} from '@stealthos/vanta-sdk/setup';
 import {createVantaLocalPrivacyWallet} from '@stealthos/vanta-sdk/recovery';
 
 declare const provider: SelectedFamilyWalletProvider;
 declare const configuration: StealthOSPartnerConfiguration;
-const wallet = await openStealthOSPartnerApp({provider, configuration});
-void wallet.quoteDeposit;
-void wallet.quotePrivateSend;
+const wallet = await openStealthOSPartnerApp({provider, configuration,onProgress(event:VantaProgressEvent){void event.stage;}});
+await wallet.quoteDeposit({amountAtomic:'1000'});
+await wallet.quoteDeposit({amountAtomic:'1000',partnerHandle:'legacy.stealth'});
+await wallet.quoteWithdrawal({amountAtomic:'1000',destination:'0x'+'11'.repeat(20),enhanced:false});
+const ordinary=await wallet.authorizeWithdrawal({intentId:'intent',enhanced:false});
+const enhanced=await wallet.authorizeWithdrawal({intentId:'intent',enhanced:true});
+void ordinary.preparedId;void enhanced.transactionId;void enhanced.status.completed;
+const state:VantaTransactionStatus=await wallet.reconcileTransaction({operation:'withdrawal',id:ordinary.preparedId});
+void state.complete;
+const route=await wallet.reconcileRoute({operation:VANTA_ROUTE.SWAP,preparedId:'intent'});
+if(route.phase==='private-output-pending')void route.outputTransactionHash;
+void normalizeVantaError(new Error()).recovery;
+void normalizeVantaTransactionStatus({operation:'withdrawal',result:ordinary});
 void wallet.dispose;
-void [openStealthOSPublicPayment, normalizeVantaFamilyHandle, getCompiledFamilyEvmRelease, normalizePartnerApplication, createVantaLocalPrivacyWallet];
+void [openStealthOSPublicPayment,normalizeVantaFamilyHandle,getCompiledFamilyEvmRelease,normalizePartnerApplication,createVantaLocalPrivacyWallet];
