@@ -21,7 +21,7 @@ jobs:
       - name: Verify original signed release is unchanged
         run: npm run verify:release -- 0.4.65
       - name: Execute focused FYEO tests
-        run: node --test packages/vanta-sdk/test/browser-password-protection.test.mjs packages/vanta-sdk/test/direct-deposit-nonce-mode.test.mjs
+        run: node --test packages/vanta-sdk/test/browser-password-protection.test.mjs packages/vanta-sdk/test/direct-deposit-nonce-mode.test.mjs packages/vanta-sdk/test/browser-secret-grant.test.mjs
       - name: Execute SDK regression and type checks
         run: npm test
       - name: Build package candidate

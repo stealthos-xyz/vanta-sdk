@@ -66,6 +66,29 @@ const unavailable = (code = "SESSION_EXPIRED") => Object.assign(Error(code === "
   : code === "RUNTIME_UNAVAILABLE" ? "The private wallet could not be unlocked or its runtime could not be verified."
   : "Unlock the connected wallet to continue."), {code});
 
+/** One in-flight wallet command owns its own consumable credential grant.
+ * The worker is still trusted with the credential once it is delivered. */
+function createWalletSecretGrant(name: FamilyCommand, ui: SecretUi) {
+  if (!["create", "unlock", "restore", "autoUnlock"].includes(name)) throw unavailable();
+  let password: string | undefined = ui.password, phrase = ui.phrase, confirm = ui.confirm;
+  let passwordUsed = false;
+  return {
+    take(kind: unknown, value: unknown): string | Promise<boolean> {
+      if (name === "autoUnlock") throw unavailable();
+      if (kind === "password" && !passwordUsed && typeof password === "string") {
+        passwordUsed = true; const result = password; password = undefined; return result;
+      }
+      if (kind === "restorePhrase" && name === "restore" && passwordUsed && typeof phrase === "string" && phrase) {
+        const result = phrase; phrase = undefined; return result;
+      }
+      if (kind === "confirmBackup" && name === "create" && passwordUsed && confirm && typeof value === "string") {
+        const approve = confirm; confirm = undefined; return approve(value);
+      }
+      throw unavailable();
+    },
+  };
+}
+
 export async function createStealthOSAppWallet(input: {
   provider: SelectedFamilyWalletProvider; getSessionToken(): Promise<string>; serviceUrl?:string; workerUrl?:string|URL; rpcUrl: string; verificationRpcUrl: string; artifactBaseUrl: string;
   asset?: FamilyAsset; paymentRecipient?:FamilyNoteRecipient; assetConfiguration?:{url:string;handleId:string};
@@ -83,7 +106,8 @@ export async function createStealthOSAppWallet(input: {
   if (new URL(origin).protocol !== "https:") throw Error("The private wallet requires HTTPS.");
   let worker: Worker | null = null, port: MessagePort | null = null, session: AuthenticatedSession | null = null;
   let sessionBearer: string | null = null;
-  let disposed = false, openingWallet = false, revision = 0, nextId = 0, secretUi: SecretUi | null = null;
+  let disposed = false, openingWallet = false, revision = 0, nextId = 0;
+  let secretGrant: ReturnType<typeof createWalletSecretGrant> | null = null;
   let activeConsentIntentId: string | null = null, consentAttempted = false;
   let activeHandleName:string|null=null,handleSubmissionAttempted=false;
   const depositReviews=new Map<string,FamilyDepositReview>();
@@ -107,7 +131,7 @@ export async function createStealthOSAppWallet(input: {
     return getAddress(accounts[0]).toLowerCase();
   };
   const stop = (reason?: "locked" | "background" | "contextChanged") => {
-    revision++; worker?.terminate(); worker = null; port?.close(); port = null; secretUi = null; opened = null; session = null; sessionBearer = null;
+    revision++; worker?.terminate(); worker = null; port?.close(); port = null; secretGrant = null; opened = null; session = null; sessionBearer = null;
     activeConsentIntentId = null; consentAttempted = false;
     activeHandleName=null;handleSubmissionAttempted=false;
     activeDepositId=null;depositApprovalAttempted=false;depositApproved=false;depositSubmissionAttempted=false;depositReviews.clear();
@@ -179,10 +203,15 @@ export async function createStealthOSAppWallet(input: {
         if (session !== current || current.expiresAt <= Date.now() / 1000) throw unavailable();
         let result: unknown;
         const depositContext=opened?.context??paymentContext;
-        if (data.kind === "password" && secretUi) result = secretUi.password;
-        else if (data.kind === "restorePhrase" && secretUi?.phrase) result = secretUi.phrase;
-        else if (data.kind === "confirmBackup" && secretUi?.confirm && typeof data.value === "string")
-          result = await secretUi.confirm(data.value);
+        if (["password", "restorePhrase", "confirmBackup"].includes(data.kind)) {
+          const grant = secretGrant;
+          if (!grant || await selected() !== current.wallet || await authorization() !== sessionBearer ||
+              secretGrant !== grant || active !== revision || session !== current ||
+              current.expiresAt <= Date.now() / 1000) throw unavailable();
+          result = await grant.take(data.kind, data.value);
+          if (secretGrant !== grant || active !== revision || session !== current ||
+              port !== target || current.expiresAt <= Date.now() / 1000) throw unavailable();
+        }
         else if (data.kind === "relayFetch" && typeof data.value?.path === "string")
           result = await authFetch(data.value.path, data.value.body, current.wallet, data.value.headers);
         else if((data.kind==='handleStatus'||data.kind==='handleSubmit'&&activeHandleName&&!handleSubmissionAttempted)&&opened){
@@ -278,7 +307,7 @@ export async function createStealthOSAppWallet(input: {
       };}
     catch (error) {stop(); throw error;}
   }
-  const command = <T,>(name: FamilyCommand, payload: object = {}) => {
+  const command = <T,>(name: FamilyCommand, payload: object = {}, ui?: SecretUi) => {
     const started = revision;
     const quoteCommand=["quoteWithdrawal","quotePrivateSend","quoteRouteFees","quotePublicBatch"].includes(name),quoteStamp=quoteCommand?++quoteRevision:quoteRevision;
     const operation = queue.then(async () => {
@@ -318,10 +347,14 @@ export async function createStealthOSAppWallet(input: {
         if (!pool || !opened) throw unavailable();
         historyRelayContext = {networkId: release.pins.networkId, generationId: release.pins.generationId, pool: pool.pool};
       }
+      const grant = ui ? createWalletSecretGrant(name, ui) : null;
+      if (grant && secretGrant) throw unavailable("STATE_CHANGED");
       try {
+        if (grant) secretGrant = grant;
         const result = await send({kind: "invoke", command: name, payload});
         if (started !== revision) throw unavailable(); return result as T;
       } finally {
+        if (grant && secretGrant === grant) secretGrant = null;
         historyRelayContext = null;
         if (signing) { activeConsentIntentId = null; consentAttempted = false; }
         if(name==='claimHandle'){activeHandleName=null;handleSubmissionAttempted=false;}
@@ -337,8 +370,8 @@ export async function createStealthOSAppWallet(input: {
   const openWallet = async (name: "create" | "unlock" | "restore" | "autoUnlock", ui: SecretUi) => {
     if (openingWallet) throw unavailable("STATE_CHANGED");
     openingWallet = true;
-    try {await start(); secretUi = ui; opened = await command<OpenedWallet>(name); return opened;}
-    finally {secretUi = null; openingWallet = false;}
+    try {await start(); opened = await command<OpenedWallet>(name, {}, ui); return opened;}
+    finally {openingWallet = false;}
   };
   const events = ["accountsChanged", "chainChanged", "disconnect"].map(name => {
     const listener = () => stop("contextChanged"); input.provider.on?.(name, listener); return {name, listener};
