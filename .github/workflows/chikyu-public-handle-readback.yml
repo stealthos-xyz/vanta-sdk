@@ -1,0 +1,43 @@
+name: Chikyu public handle readback
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/chikyu-public-handle-readback.yml','packages/vanta-sdk/fresh/family-customer-handles.mjs']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  readback:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.14.1'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Exercise public handle resolution without keys or transaction submissions
+        run: |
+          node --input-type=module <<'EOF'
+          import {createFamilyCustomerHandles} from './packages/vanta-sdk/fresh/family-customer-handles.mjs';
+          import {getCompiledFamilyEvmRelease} from './packages/vanta-sdk/fresh/family-network.mjs';
+          import {getCompiledVantaFamilyProofResources} from './packages/vanta-sdk/fresh/family-proof-resources.mjs';
+          import {createFamilyRpcProviders} from './packages/vanta-sdk/fresh/family-rpc.mjs';
+          import {Interface} from 'ethers';
+          const release=getCompiledFamilyEvmRelease(),inventory=getCompiledVantaFamilyProofResources(release);
+          const {provider,verificationProvider}=createFamilyRpcProviders('https://rpc.testnet.dogeos.com/','https://rpc.ankr.com/dogeos_testnet',6281971,release.pins.genesisHash);
+          const wallet={},store={transact(){throw Error('Readback must not write');}};
+          const handles=await createFamilyCustomerHandles({walletController:{requireWallet:()=>wallet},store,provider,verificationProvider,submitTransaction(){throw Error('Readback must not submit');}});
+          try{
+            const pin=release.lock.contracts.find(c=>c.name==='handle-registry');
+            const abi=new Interface(['event HandleRegistered(bytes32 indexed handleId,bytes32 indexed recordCommitment,bytes32 indexed nullifier,bytes32 ownerCommitment,uint64 epoch)']);
+            const head=await provider.getBlockNumber();
+            const classify=e=>({code:e?.code??null,nested:e?.info?.error?.code??e?.error?.code??null,reason:/block range|range of blocks|query returned more than/i.test(String(e?.info?.error?.message??e?.error?.message??e?.message))?'log-range-limit':/rate.?limit|too many requests/i.test(String(e?.message))?'rate-limit':/^Private handle: /.test(String(e?.message))?e.message:'other'});
+            try{await provider.getLogs({address:pin.address,fromBlock:Math.max(0,head-9999),toBlock:head,topics:[abi.getEvent('HandleRegistered').topicHash]});console.log('PUBLIC_LOG_RANGE_ACCEPTED');}catch(e){console.log('PUBLIC_LOG_RANGE_REJECTED '+JSON.stringify(classify(e)));}
+            const start=performance.now();
+            try{const target=await handles.resolve('protocol.stealth','native');console.log('PUBLIC_HANDLE_RESOLVED '+JSON.stringify({matchesPool:inventory.funding.pools.some(p=>p.pool===target.pool&&BigInt(p.asset)===0n),elapsedMs:Math.round(performance.now()-start)}));}
+            catch(e){console.log('PUBLIC_HANDLE_FAILED '+JSON.stringify(classify(e)));process.exitCode=1;}
+          }finally{provider.destroy();}
+          EOF
