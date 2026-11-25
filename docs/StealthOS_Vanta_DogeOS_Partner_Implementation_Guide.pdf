@@ -1,0 +1,436 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 7 /Kids [9 0 R 13 0 R 16 0 R 19 0 R 21 0 R 24 0 R 32 0 R] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Type /Annot /Subtype /Link /Rect [48 306.00000000000006 282 321.00000000000006] /Border [0 0 0] /A << /S /URI /URI (https://partners.stealthos.xyz) >> >>
+endobj
+7 0 obj
+<< /Type /Annot /Subtype /Link /Rect [48 287.00000000000006 354 302.00000000000006] /Border [0 0 0] /A << /S /URI /URI (https://github.com/stealthos-xyz/vanta-sdk) >> >>
+endobj
+8 0 obj
+<< /Length 3926 >>
+stream
+0.055 0.11 0.16 rg 0 708 612 84 re f
+0.03 0.46 0.40 rg 0 704 612 4 re f
+BT /F2 12 Tf 0.69 0.89 0.85 rg 1 0 0 1 48 765 Tm (STEALTHOS / VANTA) Tj ET
+BT /F2 19 Tf 1 1 1 rg 1 0 0 1 48 738 Tm (DOGEOS PARTNER IMPLEMENTATION GUIDE) Tj ET
+BT /F1 9 Tf 0.85 0.90 0.93 rg 1 0 0 1 48 718 Tm (SDK 0.4.65  |  CHIKYU TESTNET  |  24 NOV 2026) Tj ET
+BT /F2 12 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 681 Tm (01) Tj ET
+BT /F2 23 Tf 0.055 0.11 0.16 rg 1 0 0 1 80 677 Tm (Integration overview) Tj ET
+BT /F2 12 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 646 Tm (A practical handoff for DogeOS engineering to integrate the Vanta privacy wallet) Tj ET
+BT /F2 12 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 630 Tm (into its existing application.) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 598 Tm (Integration boundary) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 579 Tm (DogeOS supplies the wallet UI, selected EIP-1193 provider, registered HTTPS origin,) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 565.2 Tm (configuration hosting, explicit customer consent and status display. StealthOS supplies the) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 551.4000000000001 Tm (signed SDK, existing pools, registry and verifiers, proof resources and authenticated) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 537.6000000000001 Tm (services.) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 515.8000000000002 Tm (The SDK validates the signed deployment, recovers notes, builds proofs locally and) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 502.00000000000017 Tm (reconciles transactions. Private wallet secrets and witnesses stay in the trusted local) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 488.20000000000016 Tm (browser environment. Partners do not deploy pools, run a ceremony or hold protocol signing) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 474.40000000000015 Tm (secrets.) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 444.60000000000014 Tm (Start here) Tj ET
+0.03 0.46 0.40 rg 49 423.60000000000014 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 425.60000000000014 Tm (Register the partner handle, exact HTTPS test origin, supported assets and fees in the) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 411.8000000000001 Tm (partner portal.) Tj ET
+0.03 0.46 0.40 rg 49 391.0000000000001 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 393.0000000000001 Tm (Download the matching public configuration for SDK 0.4.65 and DogeOS Chikyu \(6281971\).) Tj ET
+0.03 0.46 0.40 rg 49 372.2000000000001 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 374.2000000000001 Tm (Install the signed archive, build the module wallet worker and proof worker, then) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 360.4000000000001 Tm (connect the selected wallet provider.) Tj ET
+0.03 0.46 0.40 rg 49 339.6000000000001 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 341.6000000000001 Tm (Create or restore a private wallet, test each enabled transaction and complete the) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 327.80000000000007 Tm (acceptance checklist.) Tj ET
+BT /F2 10.6 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 309.00000000000006 Tm (Partner portal | partners.stealthos.xyz) Tj ET
+BT /F2 10.6 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 290.00000000000006 Tm (SDK repository | github.com/stealthos-xyz/vanta-sdk) Tj ET
+0.90 0.96 0.94 rg 48 235.00000000000006 516 44 re f
+0.03 0.46 0.40 rg 48 235.00000000000006 3 44 re f
+BT /F2 10.5 Tf 0.055 0.11 0.16 rg 1 0 0 1 59 266.00000000000006 Tm (Release scope: Chikyu testnet only. Final ceremony, keys, deployment and activation) Tj ET
+BT /F2 10.5 Tf 0.055 0.11 0.16 rg 1 0 0 1 59 252.00000000000006 Tm (validation are separate mainnet requirements.) Tj ET
+0.79 0.84 0.86 rg 48 42 516 1 re f
+BT /F1 8.8 Tf 0.35 0.43 0.48 rg 1 0 0 1 48 25 Tm (STEALTHOS  |  Partner engineering handoff  |  stealthos.xyz) Tj ET
+BT /F2 8.8 Tf 0.35 0.43 0.48 rg 1 0 0 1 523 25 Tm (01 / 07) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 8 0 R /Annots [6 0 R 7 0 R] >>
+endobj
+10 0 obj
+<< /Type /Annot /Subtype /Link /Rect [48 580.4000000000001 336 595.4000000000001] /Border [0 0 0] /A << /S /URI /URI (https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/artifacts/objects/097e12aad803a824d4aab872cfd612b53195f510f91a2e799a00d29bb5e00940.tgz) >> >>
+endobj
+11 0 obj
+<< /Type /Annot /Subtype /Link /Rect [48 191.20000000000005 330 206.20000000000005] /Border [0 0 0] /A << /S /URI /URI (https://github.com/stealthos-xyz/vanta-sdk/tree/main/docs) >> >>
+endobj
+12 0 obj
+<< /Length 4166 >>
+stream
+0.055 0.11 0.16 rg 0 708 612 84 re f
+0.03 0.46 0.40 rg 0 704 612 4 re f
+BT /F2 12 Tf 0.69 0.89 0.85 rg 1 0 0 1 48 765 Tm (STEALTHOS / VANTA) Tj ET
+BT /F2 19 Tf 1 1 1 rg 1 0 0 1 48 738 Tm (DOGEOS PARTNER IMPLEMENTATION GUIDE) Tj ET
+BT /F1 9 Tf 0.85 0.90 0.93 rg 1 0 0 1 48 718 Tm (SDK 0.4.65  |  CHIKYU TESTNET  |  24 NOV 2026) Tj ET
+BT /F2 12 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 681 Tm (02) Tj ET
+BT /F2 23 Tf 0.055 0.11 0.16 rg 1 0 0 1 80 677 Tm (Install and configure) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 638 Tm (Pin the signed SDK) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 619 Tm (Use Node 24.14.1 and npm 11.11.0 for repository verification. Install the exact 0.4.65) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 605.2 Tm (archive into your app, not a development candidate.) Tj ET
+BT /F2 10.6 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 583.4000000000001 Tm (Download the immutable signed SDK archive \(.tgz\)) Tj ET
+0.94 0.96 0.97 rg 48 536.6000000000001 516 35.8 re f
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 560.4000000000001 Tm (npm install --save-exact <signed-archive-URL>) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 549.0000000000001 Tm (npm install --save-dev esbuild) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 528.6000000000001 Tm (SHA-256: 097e12aad803a824d4aab872cfd612b53195f510f91a2e799a00d29bb5e00940. Size: 1,659,865) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 514.8000000000002 Tm (bytes. Commit your lockfile. In the SDK repository use npm ci and npm run verify:release --) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 501.00000000000017 Tm (0.4.65.) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 471.20000000000016 Tm (Public configuration) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 452.20000000000016 Tm (Use the downloaded JSON. Required identity fields: schema, sdkVersion, networkId,) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 438.40000000000015 Tm (generationId, partnerHandle, handleId and application \(name and registered origins\).) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 424.60000000000014 Tm (Service fields: serviceUrl, artifactBaseUrl, rpcUrl, verificationRpcUrl and) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 410.8000000000001 Tm (assetConfigurationUrl. Match the registered origin and signed generation.) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 389.0000000000001 Tm (Use credential-free HTTPS RPC URLs with no query or fragment; the verification endpoint) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 375.2000000000001 Tm (must use a distinct origin and an independent backend. The legacy one-endpoint mode is not) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 361.4000000000001 Tm (independent verification.) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 331.6000000000001 Tm (Build and host) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 312.6000000000001 Tm (Copy examples/build-workers.mjs into your project, run node build-workers.mjs, then serve) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 298.80000000000007 Tm (the following from the registered HTTPS app origin:) Tj ET
+0.94 0.96 0.97 rg 48 237.80000000000007 516 47.2 re f
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 273.00000000000006 Tm (/stealthos-partner-config.json) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 261.6000000000001 Tm (/stealthos/app-wallet-worker.mjs) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 250.20000000000007 Tm (/stealthos/unified-bound4-bootstrap-worker.js) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 229.80000000000007 Tm (Use JavaScript MIME types, module workers, WASM, Web Crypto and IndexedDB. Permit only) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 216.00000000000006 Tm (necessary CSP and CORS origins. Do not place any secret in public configuration.) Tj ET
+BT /F2 10.6 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 194.20000000000005 Tm (Configuration and browser deployment references) Tj ET
+0.79 0.84 0.86 rg 48 42 516 1 re f
+BT /F1 8.8 Tf 0.35 0.43 0.48 rg 1 0 0 1 48 25 Tm (STEALTHOS  |  Partner engineering handoff  |  stealthos.xyz) Tj ET
+BT /F2 8.8 Tf 0.35 0.43 0.48 rg 1 0 0 1 523 25 Tm (02 / 07) Tj ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 12 0 R /Annots [10 0 R 11 0 R] >>
+endobj
+14 0 obj
+<< /Type /Annot /Subtype /Link /Rect [48 247.20000000000005 276 262.20000000000005] /Border [0 0 0] /A << /S /URI /URI (https://github.com/stealthos-xyz/vanta-sdk/blob/main/packages/vanta-sdk/browser/app-wallet.d.mts) >> >>
+endobj
+15 0 obj
+<< /Length 4344 >>
+stream
+0.055 0.11 0.16 rg 0 708 612 84 re f
+0.03 0.46 0.40 rg 0 704 612 4 re f
+BT /F2 12 Tf 0.69 0.89 0.85 rg 1 0 0 1 48 765 Tm (STEALTHOS / VANTA) Tj ET
+BT /F2 19 Tf 1 1 1 rg 1 0 0 1 48 738 Tm (DOGEOS PARTNER IMPLEMENTATION GUIDE) Tj ET
+BT /F1 9 Tf 0.85 0.90 0.93 rg 1 0 0 1 48 718 Tm (SDK 0.4.65  |  CHIKYU TESTNET  |  24 NOV 2026) Tj ET
+BT /F2 12 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 681 Tm (03) Tj ET
+BT /F2 23 Tf 0.055 0.11 0.16 rg 1 0 0 1 80 677 Tm (Connect the local wallet) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 638 Tm (Open the partner client in the browser) Tj ET
+0.94 0.96 0.97 rg 48 511.4 516 115.60000000000001 re f
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 615 Tm (import {openStealthOSPartnerApp} from '@stealthos/vanta-sdk';) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 603.6 Tm (const response = await fetch\('/stealthos-partner-config.json'\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 592.2 Tm (if \(!response.ok\) throw Error\('Configuration unavailable'\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 580.8000000000001 Tm (const configuration = await response.json\(\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 569.4000000000001 Tm (const wallet = await openStealthOSPartnerApp\({) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 558.0000000000001 Tm (  configuration, provider: selectedEip1193Provider,) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 546.6000000000001 Tm (  workerUrl: '/stealthos/app-wallet-worker.mjs',) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 535.2000000000002 Tm (  onLocked: \(\) => resetPrivateWalletUI\(\),) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 523.8000000000002 Tm (}\);) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 503.4000000000002 Tm (The selected account must be connected to Chikyu. The SDK uses the provider to authenticate) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 489.6000000000002 Tm (the session and request wallet signatures; do not introduce a parallel authorization) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 475.8000000000002 Tm (service.) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 446.00000000000017 Tm (Wallet lifecycle) Tj ET
+0.03 0.46 0.40 rg 49 425.00000000000017 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 427.00000000000017 Tm (New wallet: createPrivateWallet\({password, confirmRecoveryPhrase}\); return true only) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 413.20000000000016 Tm (after secure offline phrase storage is confirmed.) Tj ET
+0.03 0.46 0.40 rg 49 392.40000000000015 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 394.40000000000015 Tm (Restore: restoreWallet\({password, phrase}\); omit phrase to unlock existing local backup.) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 380.60000000000014 Tm (Use unlockRememberedWallet\(\) only when enabled.) Tj ET
+0.03 0.46 0.40 rg 49 359.8000000000001 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 361.8000000000001 Tm (Select a registered asset with selectAsset\(asset\). Show getCachedBalance\(\) as) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 348.0000000000001 Tm (display-only; call recoverNotes\(\) for verified state. Keep reserved/pending change) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 334.2000000000001 Tm (distinct from spendable funds.) Tj ET
+0.03 0.46 0.40 rg 49 313.4000000000001 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 315.4000000000001 Tm (Use receivingAddress\(\) and encodeVantaFamilyReceivingAddress\(\), or) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 301.6000000000001 Tm (resolveHandle\(handle\), for private recipients. Never log phrases, witnesses or memos.) Tj ET
+0.03 0.46 0.40 rg 49 280.80000000000007 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 282.80000000000007 Tm (On account, chain, disconnect or page lock, clear stale reviews and dispose the old) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 269.00000000000006 Tm (client. Reconnect with the matching account and configuration.) Tj ET
+BT /F2 10.6 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 250.20000000000005 Tm (Public wallet client type declarations) Tj ET
+0.79 0.84 0.86 rg 48 42 516 1 re f
+BT /F1 8.8 Tf 0.35 0.43 0.48 rg 1 0 0 1 48 25 Tm (STEALTHOS  |  Partner engineering handoff  |  stealthos.xyz) Tj ET
+BT /F2 8.8 Tf 0.35 0.43 0.48 rg 1 0 0 1 523 25 Tm (03 / 07) Tj ET
+endstream
+endobj
+16 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 15 0 R /Annots [14 0 R] >>
+endobj
+17 0 obj
+<< /Type /Annot /Subtype /Link /Rect [48 199.6000000000002 240 214.6000000000002] /Border [0 0 0] /A << /S /URI /URI (https://github.com/stealthos-xyz/vanta-sdk/blob/main/docs/TRANSACTIONS.md) >> >>
+endobj
+18 0 obj
+<< /Length 4454 >>
+stream
+0.055 0.11 0.16 rg 0 708 612 84 re f
+0.03 0.46 0.40 rg 0 704 612 4 re f
+BT /F2 12 Tf 0.69 0.89 0.85 rg 1 0 0 1 48 765 Tm (STEALTHOS / VANTA) Tj ET
+BT /F2 19 Tf 1 1 1 rg 1 0 0 1 48 738 Tm (DOGEOS PARTNER IMPLEMENTATION GUIDE) Tj ET
+BT /F1 9 Tf 0.85 0.90 0.93 rg 1 0 0 1 48 718 Tm (SDK 0.4.65  |  CHIKYU TESTNET  |  24 NOV 2026) Tj ET
+BT /F2 12 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 681 Tm (04) Tj ET
+BT /F2 23 Tf 0.055 0.11 0.16 rg 1 0 0 1 80 677 Tm (Quote and execute transactions) Tj ET
+BT /F2 12 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 646 Tm (Quote first. Display exact terms. Obtain explicit customer approval. Prepare,) Tj ET
+BT /F2 12 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 630 Tm (submit once, then reconcile the original operation.) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 598 Tm (Direct deposit) Tj ET
+0.94 0.96 0.97 rg 48 505.6 516 81.4 re f
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 575 Tm (const q = await wallet.quoteDeposit\({amountAtomic, partnerHandle}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 563.6 Tm (// Show netAmountAtomic and fees, then obtain explicit approval.) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 552.2 Tm (const p = await wallet.prepareReviewedDeposit\({quoteId:q.quoteId}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 540.8000000000001 Tm (const s = await wallet.executeDeposit\({preparedId:p.preparedId}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 529.4000000000001 Tm (await wallet.reconcileDeposit\({preparedId:p.preparedId,) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 518.0000000000001 Tm (  transactionHash:s.transactionHash}\);) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 497.60000000000014 Tm (Preparation already checks or requests ERC20 allowance if required. An optional separate) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 483.8000000000001 Tm (approveDepositAsset uses the same reviewed quote. Allowance is not deposit settlement;) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 470.0000000000001 Tm (public wallet network gas is additional.) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 440.2000000000001 Tm (Private transfer) Tj ET
+0.94 0.96 0.97 rg 48 336.4000000000001 516 92.8 re f
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 417.2000000000001 Tm (const recipient = await wallet.resolveHandle\(handle\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 405.8000000000001 Tm (const q = await wallet.quotePrivateSend\({recipient, amountAtomic,) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 394.40000000000015 Tm (  partnerHandle}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 383.00000000000017 Tm (// Review recipient, amounts, fees and memo; obtain approval.) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 371.6000000000002 Tm (const p = await wallet.prepareReviewedPrivateSend\({quoteId:q.quoteId, memo}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 360.2000000000002 Tm (const s = await wallet.executePrivateSend\({preparedId:p.preparedId}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 348.80000000000024 Tm (await wallet.reconcilePrivateSend\({preparedId:s.preparedId}\);) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 328.40000000000026 Tm (Alternatively decode the encoded private receiving address with the package root helper.) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 314.60000000000025 Tm (Memo limit: 80 UTF-8 bytes. Recipient identity is bound to generation, pool and asset.) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 284.80000000000024 Tm (Public payment link) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 265.80000000000024 Tm (Open a separate openStealthOSPublicPayment client with configuration, provider, encoded) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 252.00000000000023 Tm (recipient and workerUrl. Use quotePayment, prepareReviewedPayment, executePayment and) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 238.20000000000022 Tm (reconcilePayment. The payer need not create a private wallet. Reopen the same payment) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 224.4000000000002 Tm (context to recover pending payments.) Tj ET
+BT /F2 10.6 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 202.6000000000002 Tm (Full examples for each operation) Tj ET
+0.79 0.84 0.86 rg 48 42 516 1 re f
+BT /F1 8.8 Tf 0.35 0.43 0.48 rg 1 0 0 1 48 25 Tm (STEALTHOS  |  Partner engineering handoff  |  stealthos.xyz) Tj ET
+BT /F2 8.8 Tf 0.35 0.43 0.48 rg 1 0 0 1 523 25 Tm (04 / 07) Tj ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 18 0 R /Annots [17 0 R] >>
+endobj
+20 0 obj
+<< /Length 5104 >>
+stream
+0.055 0.11 0.16 rg 0 708 612 84 re f
+0.03 0.46 0.40 rg 0 704 612 4 re f
+BT /F2 12 Tf 0.69 0.89 0.85 rg 1 0 0 1 48 765 Tm (STEALTHOS / VANTA) Tj ET
+BT /F2 19 Tf 1 1 1 rg 1 0 0 1 48 738 Tm (DOGEOS PARTNER IMPLEMENTATION GUIDE) Tj ET
+BT /F1 9 Tf 0.85 0.90 0.93 rg 1 0 0 1 48 718 Tm (SDK 0.4.65  |  CHIKYU TESTNET  |  24 NOV 2026) Tj ET
+BT /F2 12 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 681 Tm (05) Tj ET
+BT /F2 23 Tf 0.055 0.11 0.16 rg 1 0 0 1 80 677 Tm (Withdrawals, swaps and bridges) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 638 Tm (Regular and enhanced withdrawals) Tj ET
+0.94 0.96 0.97 rg 48 534.2 516 92.8 re f
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 615 Tm (const q = await wallet.quoteWithdrawal\({amountAtomic, destination,) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 603.6 Tm (  enhanced, partnerHandle}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 592.2 Tm (// Review payout, fees, reserve, expiry and window; approve.) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 580.8000000000001 Tm (const p = await wallet.prepareReviewedWithdrawal\({quoteId:q.quoteId}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 569.4000000000001 Tm (const s = await wallet.authorizeWithdrawal\({intentId:p.intentId, enhanced}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 558.0000000000001 Tm (const transactionId = enhanced ? s.transactionId : \(s.preparedId ?? p.intentId\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 546.6000000000001 Tm (await wallet.monitorWithdrawal\({transactionId, enhanced}\);) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 526.2000000000002 Tm (Regular withdrawal monitoring returns a normal review with phase. Enhanced monitoring) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 512.4000000000002 Tm (returns claim status: completed/total \(3\), authorization and recovery flags. Authorization) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 498.6000000000002 Tm (alone is not completion.) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 468.8000000000002 Tm (Public payout batch) Tj ET
+0.94 0.96 0.97 rg 48 387.8000000000002 516 70 re f
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 445.8000000000002 Tm (const q = await wallet.quotePublicBatch\({payments, partnerHandle}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 434.4000000000002 Tm (// Review all recipients and exact totals; approve.) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 423.0000000000002 Tm (const p = await wallet.prepareReviewedPublicBatch\({quoteId:q.quoteId}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 411.60000000000025 Tm (const s = await wallet.authorizePublicBatch\({intentId:p.intentId}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 400.2000000000003 Tm (await wallet.monitorPublicBatch\({transactionId:s.transactionId}\);) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 379.8000000000003 Tm (payments is an array of {recipient, amountAtomic}. This is a public payout batch, not a) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 366.0000000000003 Tm (batch of private transfers.) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 336.2000000000003 Tm (Swap / CCIP bridge) Tj ET
+0.94 0.96 0.97 rg 48 198.20000000000027 516 127 re f
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 313.2000000000003 Tm (const operation = 4; // 5 = bridge) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 301.8000000000003 Tm (const venue = await wallet.quoteRoute\({operation, amountAtomic,) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 290.4000000000003 Tm (  slippageBps, receiver}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 279.00000000000034 Tm (const q = await wallet.quoteRouteFees\({operation, amountAtomic, receiver,) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 267.60000000000036 Tm (  slippageBps, partnerHandle, minimumOutputAtomic:venue.minimumOutputAtomic,) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 256.2000000000004 Tm (  maximumDeliveryFeeAtomic:venue.maximumDeliveryFeeAtomic}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 244.80000000000038 Tm (// Review output, minimum, delivery fee, debit and expiry; approve.) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 233.40000000000038 Tm (const p = await wallet.prepareReviewedRoute\({operation, quoteId:q.quoteId}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 222.00000000000037 Tm (const s = await wallet.executeRoute\({operation, preparedId:p.preparedId}\);) Tj ET
+BT /F3 8.7 Tf 0.055 0.11 0.16 rg 1 0 0 1 57 210.60000000000036 Tm (await wallet.reconcileRoute\({operation, preparedId:s.preparedId}\);) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 190.20000000000036 Tm (Use registered routes and the correct receiver. Private-output swaps and CCIP require) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 176.40000000000035 Tm (output/destination reconciliation, not merely source-chain inclusion.) Tj ET
+0.79 0.84 0.86 rg 48 42 516 1 re f
+BT /F1 8.8 Tf 0.35 0.43 0.48 rg 1 0 0 1 48 25 Tm (STEALTHOS  |  Partner engineering handoff  |  stealthos.xyz) Tj ET
+BT /F2 8.8 Tf 0.35 0.43 0.48 rg 1 0 0 1 523 25 Tm (05 / 07) Tj ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 20 0 R >>
+endobj
+22 0 obj
+<< /Type /Annot /Subtype /Link /Rect [48 170.60000000000002 252 185.60000000000002] /Border [0 0 0] /A << /S /URI /URI (https://github.com/stealthos-xyz/vanta-sdk/tree/main/docs) >> >>
+endobj
+23 0 obj
+<< /Length 4671 >>
+stream
+0.055 0.11 0.16 rg 0 708 612 84 re f
+0.03 0.46 0.40 rg 0 704 612 4 re f
+BT /F2 12 Tf 0.69 0.89 0.85 rg 1 0 0 1 48 765 Tm (STEALTHOS / VANTA) Tj ET
+BT /F2 19 Tf 1 1 1 rg 1 0 0 1 48 738 Tm (DOGEOS PARTNER IMPLEMENTATION GUIDE) Tj ET
+BT /F1 9 Tf 0.85 0.90 0.93 rg 1 0 0 1 48 718 Tm (SDK 0.4.65  |  CHIKYU TESTNET  |  24 NOV 2026) Tj ET
+BT /F2 12 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 681 Tm (06) Tj ET
+BT /F2 23 Tf 0.055 0.11 0.16 rg 1 0 0 1 80 677 Tm (Fees, finality and recovery) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 638 Tm (Amount and fee display) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 619 Tm (Use integer atomic-unit strings and authenticated asset decimals. Do not convert balances) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 605.2 Tm (with floating point. Deposit quotes provide amountAtomic, netAmountAtomic,) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 591.4000000000001 Tm (protocolFeeAtomic \(0 in the type\) and partnerFeeAtomic; the connected wallet pays network) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 577.6000000000001 Tm (gas separately. Other quotes expose operation fees, gas reserve where applicable and total) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 563.8000000000002 Tm (debit. Do not hard-code basis points or use projected balance as spendable.) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 534.0000000000002 Tm (Completion is operation-specific) Tj ET
+0.03 0.46 0.40 rg 49 513.0000000000002 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 515.0000000000002 Tm (Deposit/payment: prepared, broadcast-uncertain, finalized, expired-unused or failed.) Tj ET
+0.03 0.46 0.40 rg 49 494.2000000000002 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 496.2000000000002 Tm (Private transfer/regular withdrawal/route: proving, prepared, submitting, included,) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 482.4000000000002 Tm (finalized, failed-finalized, failed, expired-unused or cancelled. Route output/delivery) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 468.6000000000002 Tm (may be separate.) Tj ET
+0.03 0.46 0.40 rg 49 447.8000000000002 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 449.8000000000002 Tm (Enhanced: monitor three claims until all finalize. Public batch: check authorized,) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 436.00000000000017 Tm (authorizationFailed and finalized.) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 409.20000000000016 Tm (Safe retry policy) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 390.20000000000016 Tm (Explicit wallet rejection is not the same as ambiguous submission. USER_REJECTED,) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 376.40000000000015 Tm (INSUFFICIENT_FUNDS and WALLET_SUBMISSION_REJECTED need corrected conditions and fresh) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 362.60000000000014 Tm (review. AUTHORIZATION_UNCERTAIN, timeout or lost transport: keep the original reservation;) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 348.8000000000001 Tm (read the journal and reconcile, never resend automatically. Expired reviews require new) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 335.0000000000001 Tm (consent.) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 313.2000000000001 Tm (Use listDepositHistory, listPendingDeposits, listPrivateSends, listWithdrawals,) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 299.4000000000001 Tm (listRoutes\(4/5\), listPendingPayments and original IDs. Use historyAsset where supported.) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 285.6000000000001 Tm (Local proof, RPC or session errors require diagnosis, not bypasses.) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 255.80000000000007 Tm (Encrypted recovery) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 236.80000000000007 Tm (Export encrypted backup text using exportRecoveryBackup\(\). On another device restore the) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 223.00000000000006 Tm (same account/network with its phrase, import the selected Blob via importRecoveryBackup\(\),) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 209.20000000000005 Tm (then reconcile. Preserve historical artifacts for generation-specific exits; see the) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 48 195.40000000000003 Tm (/recovery API.) Tj ET
+BT /F2 10.6 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 173.60000000000002 Tm (Error, recovery and fee references) Tj ET
+0.79 0.84 0.86 rg 48 42 516 1 re f
+BT /F1 8.8 Tf 0.35 0.43 0.48 rg 1 0 0 1 48 25 Tm (STEALTHOS  |  Partner engineering handoff  |  stealthos.xyz) Tj ET
+BT /F2 8.8 Tf 0.35 0.43 0.48 rg 1 0 0 1 523 25 Tm (06 / 07) Tj ET
+endstream
+endobj
+24 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 23 0 R /Annots [22 0 R] >>
+endobj
+25 0 obj
+<< /Type /Annot /Subtype /Link /Rect [48 398.40000000000026 246 413.40000000000026] /Border [0 0 0] /A << /S /URI /URI (https://github.com/stealthos-xyz/vanta-sdk/blob/main/docs/DOGEOS_PARTNER_GUIDE.md) >> >>
+endobj
+26 0 obj
+<< /Type /Annot /Subtype /Link /Rect [48 379.40000000000026 258 394.40000000000026] /Border [0 0 0] /A << /S /URI /URI (https://github.com/stealthos-xyz/vanta-sdk/tree/main/examples/vanilla-js) >> >>
+endobj
+27 0 obj
+<< /Type /Annot /Subtype /Link /Rect [48 360.40000000000026 348 375.40000000000026] /Border [0 0 0] /A << /S /URI /URI (https://github.com/stealthos-xyz/vanta-sdk/tree/main/docs) >> >>
+endobj
+28 0 obj
+<< /Type /Annot /Subtype /Link /Rect [48 341.40000000000026 354 356.40000000000026] /Border [0 0 0] /A << /S /URI /URI (https://github.com/stealthos-xyz/contracts) >> >>
+endobj
+29 0 obj
+<< /Type /Annot /Subtype /Link /Rect [48 322.40000000000026 174 337.40000000000026] /Border [0 0 0] /A << /S /URI /URI (https://github.com/stealthos-xyz/vanta-sdk/tree/main/releases/0.4.65) >> >>
+endobj
+30 0 obj
+<< /Type /Annot /Subtype /Link /Rect [48 303.40000000000026 270 318.40000000000026] /Border [0 0 0] /A << /S /URI /URI (https://github.com/stealthos-xyz/vanta-sdk/tree/main/docs/audit) >> >>
+endobj
+31 0 obj
+<< /Length 4043 >>
+stream
+0.055 0.11 0.16 rg 0 708 612 84 re f
+0.03 0.46 0.40 rg 0 704 612 4 re f
+BT /F2 12 Tf 0.69 0.89 0.85 rg 1 0 0 1 48 765 Tm (STEALTHOS / VANTA) Tj ET
+BT /F2 19 Tf 1 1 1 rg 1 0 0 1 48 738 Tm (DOGEOS PARTNER IMPLEMENTATION GUIDE) Tj ET
+BT /F1 9 Tf 0.85 0.90 0.93 rg 1 0 0 1 48 718 Tm (SDK 0.4.65  |  CHIKYU TESTNET  |  24 NOV 2026) Tj ET
+BT /F2 12 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 681 Tm (07) Tj ET
+BT /F2 23 Tf 0.055 0.11 0.16 rg 1 0 0 1 80 677 Tm (DogeOS acceptance and handoff) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 638 Tm (Testnet engineering checklist) Tj ET
+0.03 0.46 0.40 rg 49 617 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 619 Tm (Register exact origin, confirm 0.4.65 configuration, independent RPCs, signed generation) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 605.2 Tm (and all enabled assets; build both workers.) Tj ET
+0.03 0.46 0.40 rg 49 584.4000000000001 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 586.4000000000001 Tm (Connect real DogeOS wallet provider; create, restore, lock, recover, select asset,) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 572.6000000000001 Tm (receive and claim handle on desktop and mobile.) Tj ET
+0.03 0.46 0.40 rg 49 551.8000000000002 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 553.8000000000002 Tm (Complete native and enabled ERC20 deposits, token allowance/rejection, private transfer,) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 540.0000000000002 Tm (public withdrawal, enhanced payout \(3/3\), public batch, supported swaps/bridges and) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 526.2000000000003 Tm (public payment links. Verify receipt, fee, recipient and canonical balances.) Tj ET
+0.03 0.46 0.40 rg 49 505.4000000000003 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 507.4000000000003 Tm (Exercise expired quotes, insufficient funds, account/chain changes, repeat clicks, RPC) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 493.6000000000003 Tm (failure, reload after submission and second-device encrypted recovery. Confirm no) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 479.8000000000003 Tm (duplicate spending.) Tj ET
+0.03 0.46 0.40 rg 49 459.0000000000003 4 4 re f
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 461.0000000000003 Tm (Record version, generation, test origin, operation, sanitized result and appropriate) Tj ET
+BT /F1 10.6 Tf 0.12 0.20 0.26 rg 1 0 0 1 62 447.2000000000003 Tm (public receipts. Do not transmit recovery words, private journals or witness data.) Tj ET
+BT /F2 13 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 420.40000000000026 Tm (Engineering resources) Tj ET
+BT /F2 10.6 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 401.40000000000026 Tm (Complete DogeOS integration guide) Tj ET
+BT /F2 10.6 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 382.40000000000026 Tm (Reference application \(vanilla ESM\)) Tj ET
+BT /F2 10.6 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 363.40000000000026 Tm (API / configuration / transaction / framework docs) Tj ET
+BT /F2 10.6 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 344.40000000000026 Tm (Public Solidity contracts and deployment provenance) Tj ET
+BT /F2 10.6 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 325.40000000000026 Tm (Signed release 0.4.65) Tj ET
+BT /F2 10.6 Tf 0.03 0.46 0.40 rg 1 0 0 1 48 306.40000000000026 Tm (Audit report and adversarial findings) Tj ET
+0.90 0.96 0.94 rg 48 237.40000000000026 516 58 re f
+0.03 0.46 0.40 rg 48 237.40000000000026 3 58 re f
+BT /F2 10.5 Tf 0.055 0.11 0.16 rg 1 0 0 1 59 282.40000000000026 Tm (Next action: register the DogeOS test origin, obtain its public configuration and) Tj ET
+BT /F2 10.5 Tf 0.055 0.11 0.16 rg 1 0 0 1 59 268.40000000000026 Tm (complete live Chikyu acceptance. This guide and reference app do not certify a live) Tj ET
+BT /F2 10.5 Tf 0.055 0.11 0.16 rg 1 0 0 1 59 254.40000000000026 Tm (partner integration or mainnet readiness.) Tj ET
+0.79 0.84 0.86 rg 48 42 516 1 re f
+BT /F1 8.8 Tf 0.35 0.43 0.48 rg 1 0 0 1 48 25 Tm (STEALTHOS  |  Partner engineering handoff  |  stealthos.xyz) Tj ET
+BT /F2 8.8 Tf 0.35 0.43 0.48 rg 1 0 0 1 523 25 Tm (07 / 07) Tj ET
+endstream
+endobj
+32 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 31 0 R /Annots [25 0 R 26 0 R 27 0 R 28 0 R 29 0 R 30 0 R] >>
+endobj
+xref
+0 33
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000157 00000 n 
+0000000254 00000 n 
+0000000356 00000 n 
+0000000451 00000 n 
+0000000624 00000 n 
+0000000809 00000 n 
+0000004786 00000 n 
+0000004954 00000 n 
+0000005245 00000 n 
+0000005446 00000 n 
+0000009664 00000 n 
+0000009836 00000 n 
+0000010076 00000 n 
+0000014472 00000 n 
+0000014637 00000 n 
+0000014852 00000 n 
+0000019358 00000 n 
+0000019523 00000 n 
+0000024679 00000 n 
+0000024827 00000 n 
+0000025028 00000 n 
+0000029751 00000 n 
+0000029916 00000 n 
+0000030141 00000 n 
+0000030357 00000 n 
+0000030558 00000 n 
+0000030744 00000 n 
+0000030956 00000 n 
+0000031163 00000 n 
+0000035258 00000 n 
+trailer
+<< /Size 33 /Root 1 0 R >>
+startxref
+35458
+%%EOF

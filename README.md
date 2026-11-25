@@ -6,7 +6,7 @@ Integrate a private StealthOS wallet into your application on DogeOS Chikyu usin
 
 ## Start here
 
-**DogeOS engineering:** Start with the [partner implementation guide](docs/DOGEOS_PARTNER_GUIDE.md), [quickstart](docs/QUICKSTART.md) and [reference application](examples/vanilla-js/). See the [public Solidity contracts](https://github.com/stealthos-xyz/contracts).
+**DogeOS engineering:** Start with the [partner implementation guide (PDF)](docs/StealthOS_Vanta_DogeOS_Partner_Implementation_Guide.pdf) or [Markdown guide](docs/DOGEOS_PARTNER_GUIDE.md), [quickstart](docs/QUICKSTART.md) and [reference application](examples/vanilla-js/). See the [public Solidity contracts](https://github.com/stealthos-xyz/contracts).
 
 | Resource | What you will find |
 | --- | --- |

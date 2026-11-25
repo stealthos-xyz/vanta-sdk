@@ -2,6 +2,8 @@
 
 **Signed SDK 0.4.65 · DogeOS Chikyu testnet · Chain ID 6281971 · 24 November 2026**
 
+[Download the standalone PDF](StealthOS_Vanta_DogeOS_Partner_Implementation_Guide.pdf).
+
 Audience: DogeOS wallet, frontend and platform engineers. This guide defines the supported partner integration boundary and testnet acceptance path. It is not authorization for mainnet custody.
 
 ## 1. Integration at a glance
