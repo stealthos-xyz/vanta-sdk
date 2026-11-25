@@ -1,3 +1,4 @@
+import {readFamilyLogWindow} from './family-rpc.mjs';
 import {getConfirmedBlock} from './transaction-confirmations.mjs';
 /** CCIP delivery evidence is independent of source success. Only the signed
  * destination chain, token, Router and authorized OffRamp are considered. */
@@ -54,9 +55,11 @@ export function composeFamilyBridgeDeliveryMonitor({routes,signal,provider}){
    const validAnchor=Number.isSafeInteger(scanAnchor?.number)&&scanAnchor.number>=start.number&&scanAnchor.number<=head.number&&word(scanAnchor.hash);
    if(!validAnchor||(await provider.getBlock(scanAnchor.number))?.hash!==scanAnchor.hash||from>head.number+1)from=start.number;
   }
-  for(let page=0;from<=head.number&&page<16;page++,from+=2048){
-   const logs=await provider.getLogs({address:d.offRamp,fromBlock:from,toBlock:Math.min(from+2047,head.number),
-    topics:[OFFRAMP.getEvent('ExecutionStateChanged').topicHash,toBeHex(BigInt(routes.sourceSelector),32),null,messageId]});
+  let chunkBlocks=1000;
+  for(let page=0;from<=head.number&&page<16;page++){
+   const window=await readFamilyLogWindow({fromBlock:from,anchorBlock:head.number,chunkBlocks,read:(fromBlock,toBlock)=>provider.getLogs({address:d.offRamp,fromBlock,toBlock,
+    topics:[OFFRAMP.getEvent('ExecutionStateChanged').topicHash,toBeHex(BigInt(routes.sourceSelector),32),null,messageId]})});
+   const logs=window.value;chunkBlocks=window.chunkBlocks;
    if(logs.length>64)fail();
    for(const log of logs){const event=OFFRAMP.parseLog(log).args,receipt=await provider.getTransactionReceipt(log.transactionHash);
     if(log.removed||log.address.toLowerCase()!==d.offRamp||event.sourceChainSelector!==BigInt(routes.sourceSelector)||event.messageId!==messageId||
@@ -69,6 +72,7 @@ export function composeFamilyBridgeDeliveryMonitor({routes,signal,provider}){
     if(transfers.length!==1||(await provider.getBlock(head.number))?.hash!==head.hash)fail();live();
     return Object.freeze({phase:'delivered-finalized',messageId,transactionHash:log.transactionHash,blockNumber:receipt.blockNumber,blockHash:receipt.blockHash,amountAtomic,receiver,scanBlock:from,scanAnchor:{number:head.number,hash:head.hash}});
    }
+   from=window.toBlock+1;
   }
   live();return Object.freeze({...failed,phase:failed?'delivery-failed':'awaiting-delivery',messageId,scanBlock:Math.min(from,head.number+1),scanAnchor:{number:head.number,hash:head.hash},finalizedBlock:head.number});
  },dispose(){provider.destroy();}});

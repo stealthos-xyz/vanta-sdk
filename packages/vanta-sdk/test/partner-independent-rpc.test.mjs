@@ -1,8 +1,8 @@
 import test,{mock} from 'node:test';import assert from 'node:assert/strict';
 import {resolvePartnerRpcEndpoints} from '../fresh/family-rpc.mjs';
 const primary='https://rpc.testnet.dogeos.com/',verification='https://rpc.ankr.com/dogeos_testnet';
-test('distinct public RPC origins remain explicit and legacy callers are not labeled independent',()=>{
- assert.deepEqual(resolvePartnerRpcEndpoints(primary,verification),{primary,verification,mode:'independent-endpoint'});
+test('distinct public RPC origins configure fallback and legacy callers use one endpoint',()=>{
+ assert.deepEqual(resolvePartnerRpcEndpoints(primary,verification),{primary,verification,mode:'primary-fallback'});
  assert.equal(resolvePartnerRpcEndpoints(primary).mode,'single-endpoint');
 });
 test('same-origin paths and credentials cannot masquerade as independent providers',()=>{

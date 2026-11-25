@@ -7,7 +7,7 @@ import {getCompiledVantaFamilyProofResources} from './family-proof-resources.mjs
 import {createFamilyNoteDelivery} from './family-note-delivery.mjs';
 import {depositPoolAbi as poolAbi} from './family-deposit-wire.mjs';
 import {requireNativeWalletClearance} from './family-native-clearance.mjs';
-import {canonicalFamilyProvider} from './family-rpc.mjs';
+import {canonicalFamilyProvider,readFamilyLogRange,readFamilyLogWindow} from './family-rpc.mjs';
 import {getConfirmedBlock} from './transaction-confirmations.mjs';
 import {privateSwapOutputScope,privateSwapOutputEscrow,privateSwapOutputDomain,privateSwapOutputClaimTypes,
  privateSwapOutputAbi as abi,derivePrivateSwapOutputSigner,verifyPrivateSwapOutput,inspectPrivateSwapOutputClaim} from './family-private-swap-output-wire.mjs';
@@ -41,7 +41,7 @@ export async function createPrivateSwapHost({source,walletController,store,provi
  async function confirm(record,credit,block){
   let hash=record.transactionHash;
   if(!hash&&credit.claimed){const topic=abi.getEvent('PrivateSwapOutputDeposited').topicHash,
-   logs=await provider.getLogs({address:scope.gateway,topics:[topic,null,null,record.creditId],fromBlock:record.sourceBlock??output.deploymentBlock,toBlock:block.number});
+   logs=await readFamilyLogRange(provider,{address:scope.gateway,topics:[topic,null,null,record.creditId],fromBlock:record.sourceBlock??output.deploymentBlock,toBlock:block.number});
    if(logs.length!==1)fail('The canonical output claim is missing or ambiguous.');hash=logs[0].transactionHash;}
   if(!hash)return null;
   const [[tx,tx2],[a,b]]=await Promise.all([pair(p=>p.getTransaction(hash)),pair(p=>p.getTransactionReceipt(hash))]);
@@ -135,9 +135,9 @@ export async function createPrivateSwapHost({source,walletController,store,provi
   const saved=await store.read(key),cursor=saved[0];let from=cursor?.nextBlock??output.deploymentBlock;
   if(cursor?.blockHash&&(await provider.getBlock(cursor.anchorBlock))?.hash!==cursor.blockHash)from=output.deploymentBlock;
   if(from>block.number)return;
-  const to=Math.min(block.number,from+2047),topic=abi.getEvent('PrivateSwapOutputReady').topicHash,
-   poolTopic='0x'+output.pool.slice(2).padStart(64,'0'),request={address:scope.gateway,topics:[topic,null,poolTopic],fromBlock:from,toBlock:to},
-   [logs,other]=await pair(p=>p.getLogs(request));
+  const topic=abi.getEvent('PrivateSwapOutputReady').topicHash,poolTopic='0x'+output.pool.slice(2).padStart(64,'0');
+  const window=await readFamilyLogWindow({fromBlock:from,anchorBlock:block.number,read:(fromBlock,toBlock)=>pair(p=>p.getLogs({address:scope.gateway,topics:[topic,null,poolTopic],fromBlock,toBlock}))});
+  const to=window.toBlock,[logs,other]=window.value;
   const canonical=rows=>JSON.stringify(rows.map(l=>[l.blockHash,l.transactionHash,l.index,l.topics,l.data]));
   if(canonical(logs)!==canonical(other))fail('Output recovery events disagree.');
   for(const log of logs){if(log.removed)fail('Output recovery event was removed.');const e=abi.parseLog(log).args,creditId=e.creditId;

@@ -1,3 +1,4 @@
+import {readFamilyLogWindow} from './family-rpc.mjs';
 import {Interface,getAddress,keccak256} from 'ethers';
 import {getSharedConfirmedBlock} from './transaction-confirmations.mjs';
 const events=new Interface([
@@ -28,9 +29,13 @@ export async function verifyPublicPaymentReceipt({provider,verificationProvider,
    }
    return matched;
   };
-  for(let start=from;start<=anchor.number&&!found;start+=1000){
-   const filter={address:tx.to,fromBlock:start,toBlock:Math.min(start+999,anchor.number),topics:[events.getEvent('CanonicalEncryptedNote').topicHash]};
-   const [a,b]=await Promise.all([provider.getLogs(filter),verificationProvider.getLogs(filter)]);
+  let chunkBlocks=1000;
+  for(let start=from;start<=anchor.number&&!found;){
+   const window=await readFamilyLogWindow({fromBlock:start,anchorBlock:anchor.number,chunkBlocks,read:(fromBlock,toBlock)=>{
+    const filter={address:tx.to,fromBlock,toBlock,topics:[events.getEvent('CanonicalEncryptedNote').topicHash]};
+    return Promise.all([provider.getLogs(filter),verificationProvider.getLogs(filter)]);
+   }});
+   chunkBlocks=window.chunkBlocks;const [a,b]=window.value;start=window.toBlock+1;
    const first=matches(a),second=matches(b);
    if(first.length>1||JSON.stringify(first)!==JSON.stringify(second))fail();
    found=first[0];

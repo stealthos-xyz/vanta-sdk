@@ -147,7 +147,7 @@ async function initialize(value: FamilyBootstrap, secretPort: MessagePort) {
   try {release = getCompiledFamilyEvmRelease();}
   catch {throw Object.assign(Error("Compiled family release is not ready."), {code: "NOT_READY"});}
   if (release.pins.networkId !== compiledRelease.pins.networkId) fail();
-  ({provider,verificationProvider:independent}=createFamilyRpcProviders(endpoints.primary,endpoints.verification,chainId));
+  ({provider,verificationProvider:independent}=createFamilyRpcProviders(endpoints.primary,endpoints.verification,chainId,release.pins.genesisHash));
   live();
   const identity = {accountId: value.paymentRecipient?'payment-'+keccak256(toUtf8Bytes(session.subjectId)).slice(2):session.subjectId, address: value.session.wallet,
     networkId: release.pins.networkId, generationId: release.pins.generationId};

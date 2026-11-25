@@ -1,6 +1,6 @@
 import {getConfirmedBlock,getSharedConfirmedBlock} from './transaction-confirmations.mjs';
 import {readSharedFamilyHistory} from './family-shared-history.mjs';
-import {canonicalFamilyProvider} from './family-rpc.mjs';
+import {canonicalFamilyProvider,readFamilyLogWindow} from './family-rpc.mjs';
 /** Internal family recovery from the complete canonical public event stream.
  * No private commitment/nullifier filters, fee amounts, wallet keys or opening
  * data are sent to RPC. Results describe one finalized block, not a spend grant. */
@@ -42,23 +42,14 @@ const logIdentity = log => JSON.stringify([integer(log.blockNumber), hash(log.bl
 
 // Retry only explicit provider range limits; compare both sources for the
 // same reduced window before advancing the canonical scan cursor.
-function isLogRangeLimit(error) {
-  return [error, error?.error, error?.info?.error, error?.cause, error?.cause?.info?.error].some(value =>
-    value?.code === -32062 || /block range (?:is )?too large|(?:maximum|max) (?:allowed )?block range|(?:block range|range of blocks) (?:limit|exceeds)/iu.test(value?.message ?? ''));
-}
 async function readCanonicalLogWindow(provider, verificationProvider, address, topics, fromBlock, anchorBlock, chunkBlocks) {
-  for (;;) {
-    const toBlock = Math.min(anchorBlock, fromBlock + chunkBlocks - 1);
-    try {
-      const filter = { address, fromBlock, toBlock, topics };
-      const logs = await provider.getLogs(filter);
-      const other = verificationProvider ? await verificationProvider.getLogs(filter) : undefined;
-      return { toBlock, chunkBlocks, logs, other };
-    } catch (error) {
-      if (toBlock === fromBlock || !isLogRangeLimit(error)) throw error;
-      chunkBlocks = Math.floor((toBlock - fromBlock + 1) / 2);
-    }
-  }
+  const {toBlock,chunkBlocks:next,value}=await readFamilyLogWindow({fromBlock,anchorBlock,chunkBlocks,read:async(fromBlock,toBlock)=>{
+    const filter={address,fromBlock,toBlock,topics};
+    const logs=await provider.getLogs(filter);
+    const other=verificationProvider?await verificationProvider.getLogs(filter):undefined;
+    return {logs,other};
+  }});
+  return {toBlock,chunkBlocks:next,...value};
 }
 
 const WORD = /^0x[0-9a-f]{64}$/u;
@@ -137,17 +128,19 @@ export async function recoverFamilyCanonicalNotes({ provider, verificationProvid
   let previous = checkpoints.get(scope), discardedAnchor;
   if (!await usable(previous)) previous = undefined;
   if (displayCache) {
+    const legacyScope=JSON.stringify([context,deploymentBlock,true]);
+    const displayRecord=record=>readDisplayCheckpoint(!verificationProvider&&record?.scope===legacyScope?{...record,scope}:record,scope,deploymentBlock,verificationProvider);
     const saved = await displayCache.readCheckpoint(context.pool).catch(()=>null);
-    const local = readDisplayCheckpoint(saved, scope, deploymentBlock, verificationProvider);
+    const local = displayRecord(saved);
     if (local && (!previous || local.anchor.number > previous.anchor.number)) {
       if (await usable(local)) previous = local;
       else discardedAnchor = local.anchor;
     }
     // The shared historical checkpoint is distributed inside the signed SDK
     // and is used only for display. Spending still obtains its own complete
-    // independently verified inventory; no shared cursor enters that cache.
-    if (verificationProvider && useSharedHistory) {
-      const shared = readDisplayCheckpoint(await readSharedFamilyHistory(context, deploymentBlock, previous?.anchor.number), scope, deploymentBlock, verificationProvider);
+    // canonical inventory; no shared cursor enters that cache.
+    if (useSharedHistory) {
+      const shared = displayRecord(await readSharedFamilyHistory(context, deploymentBlock, previous?.anchor.number));
       if (shared && (!previous || shared.anchor.number > previous.anchor.number) && await usable(shared)) previous = shared;
     }
   }
@@ -188,7 +181,7 @@ export async function recoverFamilyCanonicalNotes({ provider, verificationProvid
   let pending, previousBlock = -1, previousIndex = -1;
   let persistedThrough = previous?.anchor.number ?? deploymentBlock - 1;
   const saveDisplayProgress = async through => {
-    if (!displayCache || !verificationProvider) return;
+    if (!displayCache) return;
     const blocks = await Promise.all(sources.map(source => source.getBlock(through)));
     const at = block(blocks[0]);
     if (at.number !== through || blocks.some(value => value?.number !== through || value.hash?.toLowerCase() !== at.hash) ||
@@ -233,9 +226,9 @@ export async function recoverFamilyCanonicalNotes({ provider, verificationProvid
       }
     }
     if (pending) fail();
-    // Save only complete, ordered event windows at an independently verified
+    // Save only complete, ordered event windows at a verified
     // canonical anchor. An interrupted sync resumes from its last safe window.
-    if (displayCache && verificationProvider && toBlock - persistedThrough >= 8000)
+    if (displayCache && toBlock - persistedThrough >= 8000)
       await saveDisplayProgress(toBlock);
     fromBlock = toBlock + 1;
   }
@@ -280,7 +273,7 @@ export async function recoverFamilyCanonicalNotes({ provider, verificationProvid
   await pin(provider); if (verificationProvider) await pin(verificationProvider);
   const saved = checkpoints.get(scope);
   // A durable display cursor can never populate the funded in-memory cursor.
-  // Funded actions keep the existing independent canonical recovery.
+  // Funded actions keep their separate canonical recovery.
   if(!previous?.displayOnly && (!saved || saved.anchor.number <= anchor.number)) {
     if(checkpoints.size >= 32 && !checkpoints.has(scope))checkpoints.clear();
     checkpoints.set(scope,{anchor,verificationProvider,nextRows:nextRows.slice(),encryptedRows:encryptedRows.slice(),

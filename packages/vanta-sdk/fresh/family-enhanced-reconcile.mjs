@@ -1,5 +1,5 @@
 import {getConfirmedBlock} from './transaction-confirmations.mjs';
-import {canonicalFamilyProvider} from './family-rpc.mjs';
+import {canonicalFamilyProvider,readFamilyLogWindow} from './family-rpc.mjs';
 /** Funding reconciliation belongs to the existing encrypted wallet journal.
  * This adds canonical independent claim observations without private filters. */
 import { enhancedAddress as address, enhancedField as field, enhancedFail as fail,
@@ -24,11 +24,17 @@ export async function readEnhancedClaimLogs({provider,second,domain,fromBlock,an
  const bothBlock=async number=>{const a=blockOf(await provider.getBlock(number)),b=second===provider?a:blockOf(await second.getBlock(number));if(a.hash!==b.hash)fail();return a;};
  if(previous&&(await bothBlock(previous.anchor.number)).hash!==previous.anchor.hash)previous=null;
  const logs=previous?previous.logs.slice():[],begin=previous?previous.anchor.number+1:fromBlock;
- for(let from=begin;from<=anchor.number;from+=1024){
-  const filter={address:domain.pool,fromBlock:from,toBlock:Math.min(anchor.number,from+1023),topics:[topic]},left=await provider.getLogs(filter),right=second===provider?left:await second.getLogs(filter);
+ let chunkBlocks=1000;
+ for(let from=begin;from<=anchor.number;){
+  const window=await readFamilyLogWindow({fromBlock:from,anchorBlock:anchor.number,chunkBlocks,read:async(fromBlock,toBlock)=>{
+   const filter={address:domain.pool,fromBlock,toBlock,topics:[topic]},left=await provider.getLogs(filter),right=second===provider?left:await second.getLogs(filter);
+   return [left,right];
+  }});
+  chunkBlocks=window.chunkBlocks;const [left,right]=window.value;
   if(!same(left.map(identity),right.map(identity)))fail();
-  for(const log of left){if(log.removed||log.blockNumber<from||log.blockNumber>filter.toBlock||address(log.address)!==domain.pool||
+  for(const log of left){if(log.removed||log.blockNumber<from||log.blockNumber>window.toBlock||address(log.address)!==domain.pool||
     word(log.blockHash.toLowerCase())!==(await bothBlock(log.blockNumber)).hash)fail();logs.push(log);}
+  from=window.toBlock+1;
  }
  if((await bothBlock(anchor.number)).hash!==anchor.hash)fail();
  if(scopes.size>=8&&!scopes.has(key))scopes.delete(scopes.keys().next().value);

@@ -1,3 +1,4 @@
+import {readFamilyLogWindow} from './family-rpc.mjs';
 import{prepareFamilyOperationFeeReview,assertFamilyReviewedFees} from './family-operation-review.mjs';
 import{prepareFamilyNetRoute} from './family-route-review.mjs';
 import {familyBridgeRoutes,familyBridgeRoutesForTarget,verifyFamilyBridgeGateway} from './family-bridge-gateway.mjs';
@@ -195,7 +196,7 @@ async function createNormalHost({walletController,store,provider,verificationPro
    const recipient=operation===0&&!batch?getAddress(input.recipient).toLowerCase():input.recipient;
    live();if(busy)fail('Another transfer is in progress.');busy=true;let id,reserved=false,saved=false;
    try{await enabled();if(typeof amountAtomic!=='string'||!/^[1-9][0-9]{0,36}$/u.test(amountAtomic)||BigInt(amountAtomic)>=(1n<<120n))fail('Enter a positive supported amount.');
-    await verifyOperation();const recovered=await inventory(),blocked=await fences.blocked(),initial=selectFamilyPrivateSendNotes(recovered,blocked,BigInt(expectedReview.totalDebitAtomic)+(operation===1?1n:2n),gas.width);
+    const [,recovered,blocked]=await Promise.all([verifyOperation(),inventory(),fences.blocked()]);const initial=selectFamilyPrivateSendNotes(recovered,blocked,BigInt(expectedReview.totalDebitAtomic)+(operation===1?1n:2n),gas.width);
     if(!initial)fail('Insufficient unlocked private balance.');
     const requestRoute=routed?{operation,receiver:getAddress(input.receiver).toLowerCase(),amount:amountAtomic,
      minimumOutput:input.minimumOutputAtomic,maximumDeliveryFee:input.maximumDeliveryFeeAtomic??'0',...(input.privateOutput?{...input.privateOutput}:{} )}:undefined;
@@ -261,23 +262,33 @@ async function createNormalHost({walletController,store,provider,verificationPro
    if(transactionHash!==undefined){if(!word(transactionHash)||!['submitting','included'].includes(row.phase))fail('Only a submitted transfer can recover a transaction hash.');
     row=await set(preparedId,r=>({...r,transactionHash}));}
    const block=await anchor();
-   if((await both('usedNonce',[row.q.nonce],block))[0]===true){
+   const settlementTopic=ABI.getEvent('PreAuditNormalSettlement').topicHash,originalHash=row.transactionHash;
+   const knownReceipts=originalHash?await Promise.all([provider.getTransactionReceipt(originalHash),verificationProvider.getTransactionReceipt(originalHash)]):null;
+   const settlementEvent=receipt=>receipt?.status===1&&receipt.blockNumber<=block.number?receipt.logs.filter(l=>l.address.toLowerCase()===d.pool&&l.topics[0]===settlementTopic&&l.topics[1]===row.q.nonce&&!l.removed):[];
+   const knownEvents=knownReceipts?.map(settlementEvent);
+   const knownSettled=knownEvents?.every(events=>events.length===1)&&knownEvents[0][0].data===knownEvents[1][0].data&&knownReceipts[0].blockHash===knownReceipts[1].blockHash;
+   const used=(await both('usedNonce',[row.q.nonce],block))[0]===true;
+   if(used&&!knownSettled){
     // Recover wallet replacements or a send whose RPC response was lost.
     // No retransmission occurs, and only the exact saved calldata may settle.
     let from=row.scanBlock??row.anchorBlock;
     if(row.scanAnchor){const [a,b]=await Promise.all([provider.getBlock(row.scanAnchor.number),verificationProvider.getBlock(row.scanAnchor.number)]);
      if(a?.hash!==row.scanAnchor.hash||b?.hash!==row.scanAnchor.hash)from=row.anchorBlock;}
-    for(let page=0;from<=block.number&&page<32;page++,from+=2048){
-     const filter={address:d.pool,fromBlock:from,toBlock:Math.min(from+2047,block.number),topics:[ABI.getEvent('PreAuditNormalSettlement').topicHash,row.q.nonce]},
-      [a,b]=await Promise.all([provider.getLogs(filter),verificationProvider.getLogs(filter)]),
+    let chunkBlocks=1000;
+    for(let page=0;from<=block.number&&page<32;page++){
+     const window=await readFamilyLogWindow({fromBlock:from,anchorBlock:block.number,chunkBlocks,read:(fromBlock,toBlock)=>{
+      const filter={address:d.pool,fromBlock,toBlock,topics:[settlementTopic,row.q.nonce]};
+      return Promise.all([provider.getLogs(filter),verificationProvider.getLogs(filter)]);
+     }});
+     chunkBlocks=window.chunkBlocks;const [a,b]=window.value,
       normalize=logs=>JSON.stringify(logs.map(l=>[l.address,l.blockNumber,l.blockHash,l.transactionHash,l.topics,l.data,l.removed===true]));
      live();if(a.length>1||b.length>1||normalize(a)!==normalize(b))fail('Canonical transfer events disagree.');
      if(a.length){const event=a[0];if(event.removed||!word(event.transactionHash))fail('Invalid canonical transfer event.');
       row=await set(preparedId,r=>({...r,transactionHash:event.transactionHash}));break;}
-     row=await set(preparedId,r=>({...r,scanBlock:Math.min(from+2048,block.number+1),scanAnchor:{number:block.number,hash:block.hash}}));
+     from=window.toBlock+1;row=await set(preparedId,r=>({...r,scanBlock:from,scanAnchor:{number:block.number,hash:block.hash}}));
     }
    }
-   if(row.transactionHash){const [tx,other,receipt,independent]=await Promise.all([provider.getTransaction(row.transactionHash),verificationProvider.getTransaction(row.transactionHash),provider.getTransactionReceipt(row.transactionHash),verificationProvider.getTransactionReceipt(row.transactionHash)]);
+   if(row.transactionHash){const [[tx,other],[receipt,independent]]=await Promise.all([Promise.all([provider.getTransaction(row.transactionHash),verificationProvider.getTransaction(row.transactionHash)]),row.transactionHash===originalHash&&knownReceipts?knownReceipts:Promise.all([provider.getTransactionReceipt(row.transactionHash),verificationProvider.getTransactionReceipt(row.transactionHash)])]);
     if(tx&&other&&(tx.hash.toLowerCase()!==row.transactionHash||other.hash.toLowerCase()!==row.transactionHash||
      BigInt(tx.chainId)!==BigInt(domain.chainId)||BigInt(other.chainId)!==BigInt(domain.chainId)||
      tx.data!==row.calldata||other.data!==row.calldata||tx.to?.toLowerCase()!==targetFor(row)||other.to?.toLowerCase()!==targetFor(row)||
@@ -285,7 +296,7 @@ async function createNormalHost({walletController,store,provider,verificationPro
     if(tx&&other&&receipt&&independent&&receipt.blockNumber<=block.number&&receipt.blockHash===independent.blockHash&&receipt.status===independent.status){
      const [a,b]=await Promise.all([provider.getBlock(receipt.blockNumber),verificationProvider.getBlock(receipt.blockNumber)]);
      if(a?.hash!==receipt.blockHash||b?.hash!==receipt.blockHash)fail('Saved transaction is not canonical.');
-     if(receipt.status===1){for(const nf of row.nullifiers)if((await both('nullifierSpent',[nf],block))[0]!==true)fail('Finalized transfer did not consume its inputs.');
+     if(receipt.status===1){if(!used)fail('Finalized transfer nonce is unused.');for(const nf of row.nullifiers)if((await both('nullifierSpent',[nf],block))[0]!==true)fail('Finalized transfer did not consume its inputs.');
       if(row.batch){
        const scope=batchScope(),topic=familyBatchPayoutAbi.getEvent('BatchPaid').topicHash;
        const events=receipt.logs.filter(l=>l.address.toLowerCase()===scope.gateway&&l.topics[0]===topic);
