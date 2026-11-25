@@ -2,18 +2,18 @@
 
 Integrate a private StealthOS wallet into your application on a supported deployment using the standalone, ESM-first `@stealthos/vanta-sdk`.
 
-**Current signed partner release: 0.4.65** · DogeOS Chikyu testnet (chain ID 6281971) · Updated 24 November 2026.
+**Current signed partner release: 0.4.66** · DogeOS Chikyu testnet (chain ID 6281971) · Updated 25 November 2026.
 
 ## Start here
 
-**Developer-experience candidate (0.4.66):** [API polish and migration guide](docs/DEVELOPER_EXPERIENCE.md) · [React example](examples/react/) · [Release process](docs/RELEASE_PROCESS.md) · [Developer portal source](docs/index.html). This source candidate does not replace the current signed 0.4.65 archive.
+**Developer experience (0.4.66):** [API and migration guide](docs/DEVELOPER_EXPERIENCE.md) · [React example](examples/react/) · [Release process](docs/RELEASE_PROCESS.md) · [Developer portal source](docs/index.html). Use the activated, immutable archive below.
 
 **Partner engineering:** Start with the [partner implementation guide (PDF)](docs/StealthOS_Vanta_Partner_Implementation_Guide.pdf) or [Markdown guide](docs/PARTNER_IMPLEMENTATION_GUIDE.md), [quickstart](docs/QUICKSTART.md) and [reference application](examples/vanilla-js/). See the [public Solidity contracts](https://github.com/stealthos-xyz/contracts).
 
 | Resource | What you will find |
 | --- | --- |
 | [Partner integration guide](docs/PARTNER_INTEGRATION.md) | Registration, setup, wallet lifecycle, fee review, all supported transaction flows, recovery and launch checklist |
-| [Signed SDK release](releases/0.4.65/) | Exact released npm archive and operator-signed publication |
+| [Signed SDK release](releases/0.4.66/) | Immutable archive download and operator-signed publication |
 | [Audit report (PDF)](docs/audit/Vanta_DOGE_Audit_Report_2026-11-24.pdf) | Full 28-page audit, including cryptography, adversarial security checks, findings and remediation |
 | [FYEO security code review + remediation results (PDF)](docs/audit/FYEO_StealthOS_Audit_with_Remediation_Results.pdf) | Original external scan and follow-up results: all 14 original findings no longer reported |
 | [Audit findings and assurance summary](docs/audit/README.md) | At-a-glance evidence, finding dispositions, scope and release boundaries |
@@ -26,28 +26,30 @@ Detailed references: [API](docs/API_REFERENCE.md) · [configuration](docs/CONFIG
 ## 1. Install the signed SDK
 
 ```sh
-npm install --save-exact https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/artifacts/objects/097e12aad803a824d4aab872cfd612b53195f510f91a2e799a00d29bb5e00940.tgz
+npm install --save-exact https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/artifacts/objects/27b20569f7fafcb6700bbc6ad6f2aa157651184ffbd46d4f11d5f8c13f649d97.tgz
 ```
 
-Commit your application's lockfile. The identical archive is also mirrored in [releases/0.4.65](releases/0.4.65/stealthos-vanta-sdk-0.4.65.tgz).
+Commit your application's lockfile. The exact archive is hosted at its content-addressed [StealthOS release URL](https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/artifacts/objects/27b20569f7fafcb6700bbc6ad6f2aa157651184ffbd46d4f11d5f8c13f649d97.tgz). The signed publication and download details are retained in [releases/0.4.66](releases/0.4.66/); previous repository archives remain intact.
 
-- SHA-256: `097e12aad803a824d4aab872cfd612b53195f510f91a2e799a00d29bb5e00940`
-- Size: 1,659,865 bytes
-- Source: [signed wrapper source revision](https://github.com/stealthos-xyz/vanta-sdk/commit/8d84ae5b5f302a61a9daa7fb0a5bbc059c06c47c)
-- [Signed publication](releases/0.4.65/publication.json) · [Live publication](https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/current)
+- SHA-256: `27b20569f7fafcb6700bbc6ad6f2aa157651184ffbd46d4f11d5f8c13f649d97`
+- Size: 1,667,080 bytes
+- Source: [signed wrapper source revision](https://github.com/stealthos-xyz/vanta-sdk/commit/1fb933321f71170e5d71ba0ae7a67f7d048bc360)
+- [Signed publication](releases/0.4.66/publication.json) · [Live publication](https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/current)
 
 Always use the configuration and worker assets for the same signed version and deployment generation. A development build or a candidate archive is not a signed release.
 
 ## 2. Register and connect your application
 
-Register your partner handle, supported assets, fees and exact HTTPS application origin in the [partner portal](https://partners.stealthos.xyz). Download the public configuration matching SDK 0.4.65. Serve it from your application origin.
+Register your partner handle, supported assets, fees and exact HTTPS application origin in the [partner portal](https://partners.stealthos.xyz). Download the public configuration matching SDK 0.4.66. Serve it from your application origin.
 
-Copy [examples/build-workers.mjs](examples/build-workers.mjs) to your application, then:
+Install esbuild and use the shipped worker setup command:
 
 ```sh
 npm install --save-dev esbuild
-node build-workers.mjs
+npx vanta-setup-workers
 ```
+
+The manual [worker builder](examples/build-workers.mjs) remains supported.
 
 This produces the module wallet worker and proof worker under `public/stealthos/`. The app must permit module workers, WebAssembly and HTTPS connections to its configured services.
 
@@ -69,9 +71,9 @@ Use the EIP-1193 provider selected by the customer's wallet connector. For produ
 
 Continue with the [complete partner integration guide](docs/PARTNER_INTEGRATION.md).
 
-## Release 0.4.65
+## Release 0.4.66
 
-The current release includes selected-asset recovery isolation, canonical transaction reconciliation, independent RPC support, shared public history checkpoints, adaptive log recovery, corrected rejected-deposit states and faster fee reviews and proof warmup across the supported transaction flows.
+0.4.66 retains 0.4.65's fast fee reviews, independent RPC checks, recovery and reconciliation. It adds typed developer APIs, progress/error helpers and a worker setup command, plus FYEO-related wallet credential and nonce reconciliation protections. Private-wallet passwords are mandatory; passwordless unlock is disabled. Public-payment journals remain separately scoped. The signed software release preserves the existing deployed contracts and ceremony.
 
 Use the package root for wallet and public-payment clients; use `/worker` and `/proof-worker` for worker assets. Optional network metadata, enrollment and recovery APIs live under `/network`, `/setup` and `/recovery`. See [public entry points](packages/vanta-sdk/README.md).
 
@@ -87,7 +89,7 @@ Use Node 24.14.1 and npm 11.11.0.
 
 ```sh
 npm ci
-npm run verify:release -- 0.4.65
+npm run verify:release -- 0.4.66
 npm test
 npm run build
 ```

@@ -1,12 +1,12 @@
-# Developer experience update (0.4.66 candidate)
+# Developer experience (signed SDK 0.4.66)
 
-**Status: unsigned development candidate.** The supported signed release remains 0.4.65 until the new archive, signature and deployment configuration are approved. Do not use a 0.4.65 configuration with the 0.4.66 package.
+**Status: signed and activated on DogeOS Chikyu testnet, 25 November 2026.** Use the [signed release](../releases/0.4.66/publication.json) and matching registered configuration. Do not use a 0.4.65 configuration with the 0.4.66 package.
 
 ## Simpler onboarding
 
 The existing partner wrapper remains the primary ESM entry point. The partner handle is bound from the registered configuration; passing it to a quote or preparation method is no longer required in TypeScript. Legacy calls still compile, and the configuration's registered handle overrides any caller value.
 
-Install esbuild in the application and run `npx vanta-setup-workers` after installing the matching signed SDK (available once 0.4.66 is released). An optional output-directory argument defaults to `public/stealthos`. The wallet and proof workers must remain together on the registered HTTPS origin. Existing manual worker installation is supported.
+Install esbuild in the application and run `npx vanta-setup-workers` after installing the matching signed SDK. An optional output-directory argument defaults to `public/stealthos`. The wallet and proof workers must remain together on the registered HTTPS origin. Existing manual worker installation is supported.
 
 ## Progress and errors
 
@@ -28,4 +28,4 @@ For enhanced claims and bridge/private swap outputs, completion requires the res
 - [React reference](../examples/react/) demonstrates wallet lifecycle and reviewed deposit. Reuse its client component in Next.js; [framework notes](FRAMEWORKS.md) explain the browser boundary.
 - [Security policy](../SECURITY.md), [licensing status](../LICENSING.md) and [release procedure](RELEASE_PROCESS.md).
 
-The signed 0.4.65 release and existing audit evidence remain intact. No proof, circuit, contract, fee, cryptographic primitive or underlying transaction authorization algorithm is intentionally modified in this developer-experience change. Candidate code must pass package/build/type checks and live integration qualification before a signed release.
+The historical signed 0.4.65 release remains intact. 0.4.66 additionally includes FYEO-related wallet credential and nonce reconciliation changes. Private-wallet passwordless unlock is disabled; the public-payment journal remains separate. The activated software release preserves the existing ceremony, proof bindings and deployed contract graph. A separate new contract deployment is required for contract-side remediation. Reference apps and CI are non-funded qualification; each partner must complete its own live registered-origin testnet acceptance.

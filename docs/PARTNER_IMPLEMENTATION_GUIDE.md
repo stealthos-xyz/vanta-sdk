@@ -1,6 +1,6 @@
 # StealthOS Vanta | Partner implementation guide
 
-**Signed SDK 0.4.65 · Partner engineering · 24 November 2026**
+**Signed SDK 0.4.66 · Partner engineering · 25 November 2026**
 
 Current supported deployment: DogeOS Chikyu testnet (chain ID 6281971). This guide is for any registered partner; use the signed SDK and configuration for the supported deployment. Other networks require their own approved release.
 
@@ -17,7 +17,7 @@ Each partner owns its application UI, provider selection, registered HTTPS origi
 ## 2. Onboarding prerequisites
 
 - Register the partner handle, exact HTTPS application origins, supported assets and fees at https://partners.stealthos.xyz. Register a separate HTTPS test origin if needed.
-- Download the current public partner configuration. It must match the signed SDK version, network, generation, partner handle ID and enabled assets. For 0.4.65 the supported network is `eip155:6281971`. See [configuration](CONFIGURATION.md).
+- Download the current public partner configuration. It must match the signed SDK version, network, generation, partner handle ID and enabled assets. For 0.4.66 the supported network is `eip155:6281971`. See [configuration](CONFIGURATION.md).
 - Provide the customer's selected EIP-1193 provider and two credential-free HTTPS RPC endpoints backed by independent sources, on distinct origins. The SDK permits a legacy single-endpoint configuration but that is not independent verification.
 - Use testnet funds and only registered assets/routes. New assets require their registration transaction. Do not assume an unregistered token or route is available.
 - Build and serve the two worker assets on the registered application origin. Keep the tab open during proving and wallet approval.
@@ -27,13 +27,13 @@ Each partner owns its application UI, provider selection, registered HTTPS origi
 Install the immutable archive with a pinned dependency:
 
 ```sh
-npm install --save-exact https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/artifacts/objects/097e12aad803a824d4aab872cfd612b53195f510f91a2e799a00d29bb5e00940.tgz
+npm install --save-exact https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/artifacts/objects/27b20569f7fafcb6700bbc6ad6f2aa157651184ffbd46d4f11d5f8c13f649d97.tgz
 npm install --save-dev esbuild
 ```
 
-SHA-256: `097e12aad803a824d4aab872cfd612b53195f510f91a2e799a00d29bb5e00940`; archive size: 1,659,865 bytes. Commit the lockfile. For source verification use Node 24.14.1/npm 11.11.0 in the SDK repository and run `npm ci` then `npm run verify:release -- 0.4.65`.
+SHA-256: `27b20569f7fafcb6700bbc6ad6f2aa157651184ffbd46d4f11d5f8c13f649d97`; archive size: 1,667,080 bytes. Commit the lockfile. For source verification use Node 24.14.1/npm 11.11.0 in the SDK repository and run `npm ci` then `npm run verify:release -- 0.4.66`.
 
-Copy the [worker builder](../examples/build-workers.mjs) into the application project and run it there. Host `/stealthos/app-wallet-worker.mjs` and `/stealthos/unified-bound4-bootstrap-worker.js` side by side. Serve the portal's downloaded configuration at `/stealthos-partner-config.json`. Use HTTPS, JavaScript MIME types and an appropriate CSP permitting the required module workers, WASM and configured network connections. See [browser deployment](BROWSER_COMPATIBILITY.md).
+Run `npx vanta-setup-workers` after installing esbuild. Alternatively copy the [worker builder](../examples/build-workers.mjs) into the application project and run it there. Host `/stealthos/app-wallet-worker.mjs` and `/stealthos/unified-bound4-bootstrap-worker.js` side by side. Serve the portal's downloaded configuration at `/stealthos-partner-config.json`. Use HTTPS, JavaScript MIME types and an appropriate CSP permitting the required module workers, WASM and configured network connections. See [browser deployment](BROWSER_COMPATIBILITY.md).
 
 ## 4. Connect and open a private wallet
 
@@ -51,7 +51,7 @@ const wallet = await openStealthOSPartnerApp({
 });
 ```
 
-The selected provider must expose the connected account on the configured supported network and support the SDK's sign-in and transaction requests. The SDK authenticates the session; do not build a parallel signing service. Branch on `hasBackup` and password settings. Call `createPrivateWallet({password, confirmRecoveryPhrase})` for a new wallet; the async callback must return true only after the user confirms safe offline storage. For recovery call `restoreWallet({password, phrase})`; for local unlock omit the phrase. Use `unlockRememberedWallet()` only when enabled. Do not log or transmit secrets.
+The selected provider must expose the connected account on the configured supported network and support the SDK's sign-in and transaction requests. The SDK authenticates the session; do not build a parallel signing service. Branch on `hasBackup` and password settings. Call `createPrivateWallet({password, confirmRecoveryPhrase})` for a new wallet; the async callback must return true only after the user confirms safe offline storage. For recovery call `restoreWallet({password, phrase})`; for local unlock omit the phrase. Private-wallet passwords are mandatory in 0.4.66; `getPasswordSettings()` reports `requirePassword: true` and `canUnlockWithoutPassword: false`. Do not offer passwordless unlock or call `setPasswordRequirement(false)`. Existing encrypted records are retained; users must enter their password (or restore from their recovery phrase). Do not log or transmit secrets.
 
 Choose the configured asset with `selectAsset(asset)`. Render `getCachedBalance()` as stale/display-only, then reconcile via `recoverNotes()`. Show available, reserved/pending and spendable values accurately; use atomic-unit strings and exact decimals. Encode the result of `receivingAddress()` with the root address helper or resolve a private handle. Lock/dispose on account, chain, page or session changes; discard stale reviews.
 
@@ -72,7 +72,7 @@ Use the quote-first flow for every funded action: **quote -> exact customer revi
 
 The deposit preparation wrapper already checks/requests token allowance when required; use the separate approveDepositAsset/approvePaymentAsset only if the UX explicitly stages the same reviewed allowance. An allowance approval is not a deposit. For routes, pass the same reviewed amount, receiver, minimum output, maximum delivery fee and slippage into quoteRouteFees. Use configured routes only. A private-output swap and a bridge can remain incomplete after source inclusion. A public payment link does not create a payer's private wallet.
 
-See [transaction examples](TRANSACTIONS.md) for exact invocation sequences and [API reference](API_REFERENCE.md) for method and result links. The [reference application](../examples/vanilla-js/) demonstrates the same flows with an explicit quote and execute UI.
+The registered partner handle is bound by the client; passing `partnerHandle` is optional. Use `VANTA_ROUTE.SWAP` / `VANTA_ROUTE.BRIDGE`, `onProgress`, `normalizeVantaError` and `reconcileTransaction` as documented in [developer experience](DEVELOPER_EXPERIENCE.md). See [transaction examples](TRANSACTIONS.md) for exact invocation sequences and [API reference](API_REFERENCE.md) for method and result links. The [reference application](../examples/vanilla-js/) demonstrates the same flows with an explicit quote and execute UI.
 
 ## 6. Recovery, fees and failure handling
 
@@ -90,9 +90,9 @@ The signed deployment and candidate audit remediation are distinct. Record the S
 
 - [Partner portal](https://partners.stealthos.xyz)
 - [SDK repository](https://github.com/stealthos-xyz/vanta-sdk)
-- [Signed release](../releases/0.4.65/publication.json)
+- [Signed release](../releases/0.4.66/publication.json)
 - [Solidity contracts and deployed source manifest](https://github.com/stealthos-xyz/contracts)
-- [Audit report and adversarial findings](audit/README.md)
+- [Audit report and adversarial findings](audit/README.md) · [FYEO original report and remediation results](audit/FYEO_StealthOS_Audit_with_Remediation_Results.pdf)
 - [Full integration guide](PARTNER_INTEGRATION.md)
 - [Framework notes](FRAMEWORKS.md) · [Upgrades](UPGRADING.md)
 

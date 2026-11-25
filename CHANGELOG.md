@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.4.66 (development candidate; not signed or activated)
+## 0.4.66 (signed and activated; 25 November 2026)
 
-Developer-interface polish: optional configuration-bound partner handle, typed withdrawal/routed responses, normalized transaction reconciliation status, sanitized typed errors, lifecycle callbacks, worker setup command, React reference integration, public CI, distribution metadata and documentation portal. No new contract or proving circuit changes. Current signed release remains 0.4.65.
+Developer-interface polish: optional configuration-bound partner handle, typed withdrawal/routed responses, normalized transaction reconciliation status, sanitized typed errors, lifecycle callbacks, worker setup command, React reference integration, public CI, distribution metadata and documentation portal. FYEO remediation includes mandatory private-wallet passwords, scoped one-use credential grants, isolated public-payment journal recovery and version-aware deposit nonce reconciliation. The existing signed deployment, keys and fee policy remain unchanged; revised contract code requires a separate approved deployment. See [signed publication](releases/0.4.66/publication.json), [release details](releases/0.4.66/) and [FYEO rescan](docs/audit/FYEO_StealthOS_Audit_with_Remediation_Results.pdf).
 
 ## 0.4.65 (signed; 24 November 2026)
 

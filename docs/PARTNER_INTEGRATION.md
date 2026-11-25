@@ -1,6 +1,6 @@
 # Partner integration guide
 
-**SDK 0.4.65 · DogeOS Chikyu testnet (6281971) · 24 November 2026**
+**SDK 0.4.66 · DogeOS Chikyu testnet (6281971) · 25 November 2026**
 
 This is the repository-level integration guide for the current signed release. The [audit report and findings](audit/README.md) are available separately. Partners integrate with the registered StealthOS service and existing signed pools; they do not need to run a ceremony, deploy their own pools, expose service signing keys, or host private wallet credentials.
 
@@ -9,7 +9,7 @@ For a shareable partner onboarding guide and reference app, see [partner impleme
 ## 1. Register the partner application
 
 1. Open the [partner portal](https://partners.stealthos.xyz). Register the partner handle, supported assets, applicable partner fees and each exact HTTPS app origin.
-2. Download the application's public configuration for the current signed release. Confirm `sdkVersion` is `0.4.65`, `networkId` is `eip155:6281971` and the generation matches the [signed publication](../releases/0.4.65/publication.json).
+2. Download the application's public configuration for the current signed release. Confirm `sdkVersion` is `0.4.66`, `networkId` is `eip155:6281971` and the generation matches the [signed publication](../releases/0.4.66/publication.json).
 3. Serve that configuration, for example at `/stealthos-partner-config.json`, on the registered application origin. Do not substitute another partner's handle, configuration or generation.
 4. Supply primary and verification HTTPS RPC URLs with distinct origins for independent endpoint verification. Legacy single-endpoint configuration does not provide independent verification. Do not include credentials in publicly served RPC URLs.
 5. Enable only assets and routes present in the signed configuration. A newly enabled asset requires its partner registration transaction; hiding an asset does not remove historical recovery rights.
@@ -17,17 +17,17 @@ For a shareable partner onboarding guide and reference app, see [partner impleme
 ## 2. Install and verify
 
 ```sh
-npm install --save-exact https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/artifacts/objects/097e12aad803a824d4aab872cfd612b53195f510f91a2e799a00d29bb5e00940.tgz
+npm install --save-exact https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/artifacts/objects/27b20569f7fafcb6700bbc6ad6f2aa157651184ffbd46d4f11d5f8c13f649d97.tgz
 npm install --save-dev esbuild
 ```
 
-Commit the lockfile. The identical signed archive is [available in the repository](../releases/0.4.65/stealthos-vanta-sdk-0.4.65.tgz); its SHA-256 is `097e12aad803a824d4aab872cfd612b53195f510f91a2e799a00d29bb5e00940` (1,659,865 bytes). For source verification, clone the SDK repository, use Node 24.14.1/npm 11.11.0, run `npm ci` and `npm run verify:release -- 0.4.65`. This checks the publication signature, archive digest and reproducible package.
+Commit the lockfile. The identical signed archive is [available from the immutable release URL](https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/artifacts/objects/27b20569f7fafcb6700bbc6ad6f2aa157651184ffbd46d4f11d5f8c13f649d97.tgz); its SHA-256 is `27b20569f7fafcb6700bbc6ad6f2aa157651184ffbd46d4f11d5f8c13f649d97` (1,667,080 bytes). For source verification, clone the SDK repository, use Node 24.14.1/npm 11.11.0, run `npm ci` and `npm run verify:release -- 0.4.66`. This checks the publication signature, archive digest and reproducible package.
 
 Use ESM imports. No CommonJS wrapper or private entry point is required.
 
 ## 3. Build and serve the workers
 
-Copy [build-workers.mjs](../examples/build-workers.mjs) into your app and run `node build-workers.mjs`. The example bundles `@stealthos/vanta-sdk/worker` into `public/stealthos/app-wallet-worker.mjs` and copies `@stealthos/vanta-sdk/proof-worker` next to it under its original filename, `unified-bound4-bootstrap-worker.js`. Serve the files as JavaScript from the registered app origin. Permit module workers, WASM and configured HTTPS endpoints in your CSP. Avoid widening worker or network permissions beyond the required resources.
+Run `npx vanta-setup-workers` after installing the exact SDK and esbuild, or copy [build-workers.mjs](../examples/build-workers.mjs) into your app and run `node build-workers.mjs`. The example bundles `@stealthos/vanta-sdk/worker` into `public/stealthos/app-wallet-worker.mjs` and copies `@stealthos/vanta-sdk/proof-worker` next to it under its original filename, `unified-bound4-bootstrap-worker.js`. Serve the files as JavaScript from the registered app origin. Permit module workers, WASM and configured HTTPS endpoints in your CSP. Avoid widening worker or network permissions beyond the required resources.
 
 ## 4. Open the wallet
 
@@ -56,8 +56,8 @@ Pass the selected wallet connector's EIP-1193 provider, not a guessed injected p
 | --- | --- |
 | Create | `createPrivateWallet({password, confirmRecoveryPhrase})` |
 | Restore | `restoreWallet({password, phrase})` |
-| Existing local wallet | `restoreWallet({password})`, or `unlockRememberedWallet()` when allowed by the returned wallet settings |
-| Password preferences | `getPasswordSettings()`, `setPasswordRequirement(requirePassword)` |
+| Existing local wallet | `restoreWallet({password})` |
+| Password protection | `getPasswordSettings()`; 0.4.66 requires passwords for private wallets |
 | Asset selection | `selectAsset(asset)` |
 | Immediate balance display | `getCachedBalance()` (display only) |
 | Verified notes and history | `recoverNotes()` |
@@ -65,7 +65,7 @@ Pass the selected wallet connector's EIP-1193 provider, not a guessed injected p
 | Handle lookup and claim | `handleAvailable`, `claimHandle`, `currentHandle`, `findHandle`, `resolveHandle` |
 | Lock or tear down | `lockWallet()`, `dispose()` |
 
-The create callback displays the phrase locally and returns a boolean only after the user confirms its safe storage. Never log, upload or include passwords, phrases, witnesses or private memo plaintext in analytics, support tickets, URLs or server-side application state. Keep wallet controls local. Use the exact asset decimals and integer atomic-unit strings for all values; do not convert them to floating point. Treat cached balances as display projections, not authorization to spend, and allow canonical recovery to finish. Reopen or lock the client when the connected account/network changes.
+Do not offer passwordless unlock. `unlockRememberedWallet()` and `setPasswordRequirement(false)` are legacy compatibility methods that cannot enable remembered private-wallet access in 0.4.66. Existing encrypted records are retained; unlock with the password or use the recovery phrase. The create callback displays the phrase locally and returns a boolean only after the user confirms its safe storage. Never log, upload or include passwords, phrases, witnesses or private memo plaintext in analytics, support tickets, URLs or server-side application state. Keep wallet controls local. Use the exact asset decimals and integer atomic-unit strings for all values; do not convert them to floating point. Treat cached balances as display projections, not authorization to spend, and allow canonical recovery to finish. Reopen or lock the client when the connected account/network changes.
 
 The SDK warms public proving artifacts without blocking the wallet home screen and verifies their hashes. Retain the normal approval and expiry checks even when a proof or balance is warm.
 
@@ -107,7 +107,7 @@ An ERC20 approval is not a deposit. Reconcile the result and pending history rat
 | Public batch | `quotePublicBatch({payments, partnerHandle})` | `prepareReviewedPublicBatch({quoteId})` | `authorizePublicBatch({intentId})`, `monitorPublicBatch({transactionId})` |
 | Swap / bridge | `quoteRoute({operation, amountAtomic, slippageBps, receiver})`, then `quoteRouteFees` with the bound venue quote fields | `prepareReviewedRoute({operation, quoteId})` | `executeRoute({operation, preparedId})`, `reconcileRoute({operation, preparedId})` |
 
-For route reviews use operation 4 for swap and 5 for bridge; pass the reviewed receiver, amount, minimum output, maximum delivery fee, and partner handle to `quoteRouteFees`. Use supported assets and receivers only. For public batches, `payments` is an array of `{recipient, amountAtomic}`. The registered partner wrapper binds the configured partner handle; passing it explicitly is compatible with the published method types. Refer to the [wallet client method types](../packages/vanta-sdk/browser/app-wallet.d.mts) and [public exports and quote types](../packages/vanta-sdk/api/wallet.d.mts) for exact return values.
+For route reviews use operation 4 for swap and 5 for bridge; pass the reviewed receiver, amount, minimum output, maximum delivery fee, and partner handle to `quoteRouteFees`. Use supported assets and receivers only. For public batches, `payments` is an array of `{recipient, amountAtomic}`. The registered partner wrapper binds the configured partner handle; passing it explicitly remains compatible, but is optional. Prefer `VANTA_ROUTE.SWAP` and `VANTA_ROUTE.BRIDGE`. See [developer experience](DEVELOPER_EXPERIENCE.md) for typed reconciliation, errors and progress. Refer to the [wallet client method types](../packages/vanta-sdk/browser/app-wallet.d.mts) and [public exports and quote types](../packages/vanta-sdk/api/wallet.d.mts) for exact return values.
 
 For public payment links, use the separate root export `openStealthOSPublicPayment({configuration, provider, recipient, workerUrl})` and its `quotePayment`, `approvePaymentAsset`, `prepareReviewedPayment`, `executePayment`, `reconcilePayment` and `listPendingPayments` methods. Dispose of the client when done.
 

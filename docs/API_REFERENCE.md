@@ -1,4 +1,4 @@
-# Public API reference (0.4.65)
+# Public API reference (0.4.66)
 
 The type declarations are authoritative. Import from supported package exports, never private file paths.
 
@@ -13,11 +13,11 @@ The type declarations are authoritative. Import from supported package exports, 
 
 [Partner wrapper signatures](../packages/vanta-sdk/browser/partner-app.d.mts) and [wallet client signatures](../packages/vanta-sdk/browser/app-wallet.d.mts) define input and return types. Key quote/status types: [deposit](../packages/vanta-sdk/fresh/family-deposit-host.d.mts), [private send](../packages/vanta-sdk/fresh/family-normal-host.d.mts), [withdrawal/batch](../packages/vanta-sdk/fresh/family-enhanced-host.d.mts), [enhanced status](../packages/vanta-sdk/fresh/enhanced-host.d.mts), [routes](../packages/vanta-sdk/fresh/family-routed-host.d.mts), [fee quote](../packages/vanta-sdk/fresh/family-operation-review.d.mts). Some lower-level methods are exposed for compatibility; use the reviewed methods in [TRANSACTIONS.md](TRANSACTIONS.md). Do not depend on undocumented object internals, raw worker commands or a generic authorization bypass.
 
-Wallet methods: createPrivateWallet, restoreWallet, unlockRememberedWallet, getPasswordSettings, setPasswordRequirement, selectAsset, getCachedBalance, recoverNotes, receivingAddress, publicReceivingIdentity, handleAvailable, claimHandle, checkHandle, currentHandle, findHandle, resolveHandle, lockWallet and dispose. The wrapper additionally provides previewNetworkGas for a session-authenticated estimate, not a spend authorization.
+Wallet methods: createPrivateWallet, restoreWallet, getPasswordSettings, selectAsset, getCachedBalance, recoverNotes, receivingAddress, publicReceivingIdentity, handleAvailable, claimHandle, checkHandle, currentHandle, findHandle, resolveHandle, lockWallet and dispose. Private-wallet passwords are mandatory. Legacy remembered-unlock methods cannot enable passwordless access. The wrapper additionally provides previewNetworkGas for a session-authenticated estimate, not a spend authorization.
 
-All funded methods and readback methods are documented in [TRANSACTIONS.md](TRANSACTIONS.md). The `authorizeWithdrawal` and `monitorWithdrawal` browser declarations currently use broad return types; regular withdrawal authorization/monitor returns a normal review with preparedId/phase, while enhanced authorization returns transactionId/status and monitor returns enhanced claim status. Validate the runtime shape before using. For historical-generation recovery, use [WALLET_RECOVERY.md](WALLET_RECOVERY.md).
+All funded methods and readback methods are documented in [TRANSACTIONS.md](TRANSACTIONS.md). The partner wrapper's typed overloads distinguish regular withdrawal authorization/monitor (normal review with preparedId/phase) from enhanced authorization (transactionId/status) and monitoring (enhanced claim status). For historical-generation recovery, use [WALLET_RECOVERY.md](WALLET_RECOVERY.md).
 
 
-## 0.4.66 candidate developer API
+## Developer API
 
-See [developer experience](DEVELOPER_EXPERIENCE.md) for the new public types, VANTA_ROUTE, normalized error/status helpers, lifecycle events and uniform reconcileTransaction entry point. These additions are candidate-only until the next signed release. The signed 0.4.65 API above remains unchanged.
+See [developer experience](DEVELOPER_EXPERIENCE.md) for the new public types, VANTA_ROUTE, normalized error/status helpers, lifecycle events and uniform reconcileTransaction entry point. These additions are available in the signed 0.4.66 archive.

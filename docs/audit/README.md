@@ -60,7 +60,7 @@ See the PDF for the evidence behind each finding. "Closed" means scoped evidence
 
 ## Scope and release boundary
 
-The report distinguishes historical signed releases, local/fork tests, disposable ceremony evidence and new candidate contract tests. The current signed partner SDK is [0.4.65](../../releases/0.4.65/publication.json). The candidate swap recovery correction does not alter an existing immutable deployment; the matching candidate code must be incorporated in the approved future deployment. Current coordinated live restoration of the operational data stores is not independently established by retained restore and disposable failover evidence. Final ceremony, final keys and deployment validation are separate release requirements. No third-party certification or blanket mainnet fund-safety conclusion is asserted.
+The report distinguishes historical signed releases, local/fork tests, disposable ceremony evidence and new candidate contract tests. The current signed partner SDK is [0.4.66](../../releases/0.4.66/publication.json). The candidate swap recovery correction does not alter an existing immutable deployment; the matching candidate code must be incorporated in the approved future deployment. Current coordinated live restoration of the operational data stores is not independently established by retained restore and disposable failover evidence. Final ceremony, final keys and deployment validation are separate release requirements. No third-party certification or blanket mainnet fund-safety conclusion is asserted.
 
 ## Report integrity
 
