@@ -7,12 +7,12 @@ The immutable signed release is the distribution authority. Publish only the exa
 Use the repository's pinned Node 24.14.1/npm 11.11.0 environment. Run:
 
 - `npm ci`
-- `npm run verify:release -- 0.4.65` (verify the existing signed artifact remains intact)
+- `npm run verify:release -- 0.4.66` (verify the existing signed artifact remains intact)
 - `npm test` (runtime tests and TypeScript consumers)
 - `npm run build` (development candidate archive)
 - Install the candidate into the two example applications, build the workers and execute testnet acceptance under an approved matching configuration.
 
-GitHub Actions performs the non-funded checks without publishing or deployment credentials. Record build, test, type and package results. Run the real registered-origin/browser testnet acceptance separately.
+For 0.4.66, the verifier checks the operator-signed publication and the immutable hosted archive, then rebuilds the pinned wrapper commit and compares exact bytes. Historical repository archives remain intact. GitHub Actions performs the non-funded checks without publishing or deployment credentials. Record build, test, type and package results. Run the real registered-origin/browser testnet acceptance separately.
 
 ## Public npm rollout
 

@@ -22,17 +22,17 @@ jobs:
       - name: Install pinned dependencies
         run: npm ci
       - name: Verify immutable signed release
-        run: npm run verify:release -- 0.4.65
+        run: |
+          npm run verify:release -- 0.4.65
+          npm run verify:release -- 0.4.66
       - name: SDK regression and TypeScript tests
         run: npm test
       - name: Build package candidate
         run: npm run build
-      - name: Install candidate into clean reference app
+      - name: Install signed SDK into clean reference app
         working-directory: examples/vanilla-js
         run: |
-          archive=$(find ../../.build -maxdepth 1 -name 'stealthos-vanta-sdk-*.tgz' -print -quit)
-          test -n "$archive"
-          npm install --no-save --ignore-scripts --package-lock=false "$archive"
+          npm install --ignore-scripts --package-lock=false
           npm test
           npm run build
           npm exec -- vanta-setup-workers public/stealthos
@@ -41,7 +41,5 @@ jobs:
       - name: Build React reference
         working-directory: examples/react
         run: |
-          archive=$(find ../../.build -maxdepth 1 -name 'stealthos-vanta-sdk-*.tgz' -print -quit)
-          test -n "$archive"
-          npm install --no-save --ignore-scripts --package-lock=false "$archive"
+          npm install --ignore-scripts --package-lock=false
           npm run build
