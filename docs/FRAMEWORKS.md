@@ -11,4 +11,4 @@ The [vanilla browser reference app](../examples/vanilla-js/) is the canonical sm
 
 ## React and Next.js reference
 
-See the [React reference application](../examples/react/) and its reusable client-only WalletPanel component. For Next.js, pass the provider from your existing client connector and build the worker files before next build. The React example uses the same reviewed SDK operations as the vanilla reference. The 0.4.66 candidate adds an optional progress callback and worker installation command; see [developer experience](DEVELOPER_EXPERIENCE.md).
+See the [React reference application](../examples/react/) and its reusable client-only WalletPanel component. For Next.js, pass the provider from your existing client connector and build the worker files before next build. The React example uses the same reviewed SDK operations as the vanilla reference. The signed 0.4.66 release adds an optional progress callback and worker installation command; see [developer experience](DEVELOPER_EXPERIENCE.md).

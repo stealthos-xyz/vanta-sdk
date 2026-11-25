@@ -1,6 +1,6 @@
 # React reference integration
 
-This small ESM React application reuses the SDK's existing reviewed deposit flow, wallet lifecycle and recovery APIs. It defaults to the immutable signed 0.4.65 archive; install a newer signed package only with its matching configuration. The expanded 0.4.66 API is a candidate until signed and activated.
+This small ESM React application reuses the SDK's existing reviewed deposit flow, wallet lifecycle and recovery APIs. It defaults to the immutable signed 0.4.66 archive; install a different signed package only with its matching configuration. The expanded 0.4.66 API is signed and active.
 
 1. Register a test HTTPS origin at https://partners.stealthos.xyz; download its matching configuration and save it as `public/stealthos-partner-config.json`.
 2. In this directory run `npm install` and `npm run build`; host `public/` at the registered HTTPS origin. The build uses the same worker setup as the vanilla example, resolving the installed package from the React project.

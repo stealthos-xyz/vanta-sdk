@@ -82,7 +82,6 @@ run('create', () => walletOpen((w,password) => w.createPrivateWallet({
   password, confirmRecoveryPhrase:async phrase => window.confirm('Store this recovery phrase safely offline. Never share it.\n\n'+phrase+'\n\nConfirm only after you have recorded it.')
 })));
 run('restore', () => walletOpen((w,password,phrase) => w.restoreWallet({password, ...(phrase ? {phrase} : {})})));
-run('remembered', () => walletOpen(w => w.unlockRememberedWallet()));
 run('selectAsset', async () => { invalidateReview(); await client.selectAsset($('asset').value.trim().toLowerCase()); selectedAsset = $('asset').value.trim().toLowerCase(); result({cached:client.getCachedBalance()}); status('Asset selected. Recover verified balance.'); });
 run('balance', async () => { const cached = client.getCachedBalance(); result({displayOnly:cached}); const value = await client.recoverNotes(); result(value); status('Recovery response. Inspect verified and available balances.'); });
 run('receive', async () => result({address:encodeVantaFamilyReceivingAddress(await client.receivingAddress())}));

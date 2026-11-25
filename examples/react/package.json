@@ -10,7 +10,7 @@
     "build": "node build.mjs"
   },
   "dependencies": {
-    "@stealthos/vanta-sdk": "https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/artifacts/objects/097e12aad803a824d4aab872cfd612b53195f510f91a2e799a00d29bb5e00940.tgz",
+    "@stealthos/vanta-sdk": "https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/artifacts/objects/27b20569f7fafcb6700bbc6ad6f2aa157651184ffbd46d4f11d5f8c13f649d97.tgz",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
