@@ -6,4 +6,4 @@ DogeOS Chikyu signed partner release. Selected-asset recovery isolation, canonic
 
 ## Partner documentation (repository only)
 
-Added DogeOS implementation guide, detailed API/configuration/transaction/fee/recovery/error/browser/framework references, reference app and contracts links. Signed archive and runtime remain immutable.
+Added partner-agnostic implementation guide, detailed API/configuration/transaction/fee/recovery/error/browser/framework references, reference app and contracts links. Signed archive and runtime remain immutable. The current deployment is Chikyu; onboarding is open to any eligible registered partner.

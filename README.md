@@ -1,12 +1,12 @@
 # Vanta SDK
 
-Integrate a private StealthOS wallet into your application on DogeOS Chikyu using the standalone, ESM-first `@stealthos/vanta-sdk`.
+Integrate a private StealthOS wallet into your application on a supported deployment using the standalone, ESM-first `@stealthos/vanta-sdk`.
 
 **Current signed partner release: 0.4.65** · DogeOS Chikyu testnet (chain ID 6281971) · Updated 24 November 2026.
 
 ## Start here
 
-**DogeOS engineering:** Start with the [partner implementation guide (PDF)](docs/StealthOS_Vanta_DogeOS_Partner_Implementation_Guide.pdf) or [Markdown guide](docs/DOGEOS_PARTNER_GUIDE.md), [quickstart](docs/QUICKSTART.md) and [reference application](examples/vanilla-js/). See the [public Solidity contracts](https://github.com/stealthos-xyz/contracts).
+**Partner engineering:** Start with the [partner implementation guide (PDF)](docs/StealthOS_Vanta_Partner_Implementation_Guide.pdf) or [Markdown guide](docs/PARTNER_IMPLEMENTATION_GUIDE.md), [quickstart](docs/QUICKSTART.md) and [reference application](examples/vanilla-js/). See the [public Solidity contracts](https://github.com/stealthos-xyz/contracts).
 
 | Resource | What you will find |
 | --- | --- |

@@ -4,7 +4,7 @@
 
 This is the repository-level integration guide for the current signed release. The [audit report and findings](audit/README.md) are available separately. Partners integrate with the registered StealthOS service and existing signed pools; they do not need to run a ceremony, deploy their own pools, expose service signing keys, or host private wallet credentials.
 
-For a shareable DogeOS onboarding guide and reference app, see [DogeOS implementation guide](DOGEOS_PARTNER_GUIDE.md) and [quickstart](QUICKSTART.md). Detailed operation examples and lifecycle states are in [TRANSACTIONS.md](TRANSACTIONS.md).
+For a shareable partner onboarding guide and reference app, see [partner implementation guide](PARTNER_IMPLEMENTATION_GUIDE.md) and [quickstart](QUICKSTART.md). Detailed operation examples and lifecycle states are in [TRANSACTIONS.md](TRANSACTIONS.md).
 
 ## 1. Register the partner application
 

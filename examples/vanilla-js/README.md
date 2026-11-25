@@ -1,4 +1,4 @@
-# DogeOS partner reference app (vanilla ESM)
+# Partner reference app (vanilla ESM)
 
 A small browser integration for the signed 0.4.65 SDK. It demonstrates connected wallet onboarding, encrypted backup, receiving addresses/handles, asset selection and balances, all reviewed funded operations, and manual history reconciliation. It is a testnet engineering reference, not a production wallet UI or a live acceptance certificate.
 
@@ -13,4 +13,4 @@ A small browser integration for the signed 0.4.65 SDK. It demonstrates connected
 
 The reference app uses a browser confirmation for phrase storage; replace it with your trusted secure local UI. Test account and chain changes, page background, CSP, RPC failures, native and token deposits, all enabled operations, mobile performance and restore before release. Not all SDK extensions (such as advanced historical generation exit UI) are implemented in the demo; see the recovery guide.
 
-[Implementation guide](../../docs/DOGEOS_PARTNER_GUIDE.md) · [Transactions](../../docs/TRANSACTIONS.md) · [Errors](../../docs/ERROR_HANDLING.md) · [Frameworks](../../docs/FRAMEWORKS.md)
+[Implementation guide](../../docs/PARTNER_IMPLEMENTATION_GUIDE.md) · [Transactions](../../docs/TRANSACTIONS.md) · [Errors](../../docs/ERROR_HANDLING.md) · [Frameworks](../../docs/FRAMEWORKS.md)

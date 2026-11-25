@@ -1,21 +1,23 @@
-# StealthOS Vanta | DogeOS partner implementation guide
+# StealthOS Vanta | Partner implementation guide
 
-**Signed SDK 0.4.65 · DogeOS Chikyu testnet · Chain ID 6281971 · 24 November 2026**
+**Signed SDK 0.4.65 · Partner engineering · 24 November 2026**
 
-[Download the standalone PDF](StealthOS_Vanta_DogeOS_Partner_Implementation_Guide.pdf).
+Current supported deployment: DogeOS Chikyu testnet (chain ID 6281971). This guide is for any registered partner; use the signed SDK and configuration for the supported deployment. Other networks require their own approved release.
 
-Audience: DogeOS wallet, frontend and platform engineers. This guide defines the supported partner integration boundary and testnet acceptance path. It is not authorization for mainnet custody.
+[Download the standalone PDF](StealthOS_Vanta_Partner_Implementation_Guide.pdf).
+
+Audience: partner wallet, frontend and platform engineers, including wallets, exchanges, dApps and other eligible integrations. This guide defines the supported partner integration boundary and testnet acceptance path. It is not authorization for mainnet custody.
 
 ## 1. Integration at a glance
 
 Integrate the existing Vanta privacy wallet into your browser application using its standalone ESM SDK. Users connect their existing EVM wallet, authenticate to the StealthOS service, and create or restore a local private wallet. The SDK handles signed deployment validation, local note recovery, quote preparation, proof generation and transaction reconciliation. The public wallet pays direct deposits; relayed operations follow the reviewed fee and gas policy. Private keys, recovery phrases and witnesses remain in the customer's trusted local wallet environment.
 
-DogeOS owns its application UI, provider selection, registered HTTPS origin, configuration hosting, customer consent and transaction status UX. StealthOS supplies the signed SDK, existing pool/registry/verifier deployment, partner portal, proof resources and authenticated services. Partners do not need to deploy pools, run a ceremony, hold protocol service secrets or implement custom cryptography.
+Each partner owns its application UI, provider selection, registered HTTPS origin, configuration hosting, customer consent and transaction status UX. StealthOS supplies the signed SDK, existing pool/registry/verifier deployment, partner portal, proof resources and authenticated services. Partners do not need to deploy pools, run a ceremony, hold protocol service secrets or implement custom cryptography.
 
 ## 2. Onboarding prerequisites
 
 - Register the partner handle, exact HTTPS application origins, supported assets and fees at https://partners.stealthos.xyz. Register a separate HTTPS test origin if needed.
-- Download the current public partner configuration. It must match SDK 0.4.65, network `eip155:6281971`, the signed generation, partner handle ID and enabled assets. See [configuration](CONFIGURATION.md).
+- Download the current public partner configuration. It must match the signed SDK version, network, generation, partner handle ID and enabled assets. For 0.4.65 the supported network is `eip155:6281971`. See [configuration](CONFIGURATION.md).
 - Provide the customer's selected EIP-1193 provider and two credential-free HTTPS RPC endpoints backed by independent sources, on distinct origins. The SDK permits a legacy single-endpoint configuration but that is not independent verification.
 - Use testnet funds and only registered assets/routes. New assets require their registration transaction. Do not assume an unregistered token or route is available.
 - Build and serve the two worker assets on the registered application origin. Keep the tab open during proving and wallet approval.
@@ -49,7 +51,7 @@ const wallet = await openStealthOSPartnerApp({
 });
 ```
 
-The selected provider must expose the connected account on Chikyu and support the SDK's sign-in and transaction requests. The SDK authenticates the session; do not build a parallel signing service. Branch on `hasBackup` and password settings. Call `createPrivateWallet({password, confirmRecoveryPhrase})` for a new wallet; the async callback must return true only after the user confirms safe offline storage. For recovery call `restoreWallet({password, phrase})`; for local unlock omit the phrase. Use `unlockRememberedWallet()` only when enabled. Do not log or transmit secrets.
+The selected provider must expose the connected account on the configured supported network and support the SDK's sign-in and transaction requests. The SDK authenticates the session; do not build a parallel signing service. Branch on `hasBackup` and password settings. Call `createPrivateWallet({password, confirmRecoveryPhrase})` for a new wallet; the async callback must return true only after the user confirms safe offline storage. For recovery call `restoreWallet({password, phrase})`; for local unlock omit the phrase. Use `unlockRememberedWallet()` only when enabled. Do not log or transmit secrets.
 
 Choose the configured asset with `selectAsset(asset)`. Render `getCachedBalance()` as stale/display-only, then reconcile via `recoverNotes()`. Show available, reserved/pending and spendable values accurately; use atomic-unit strings and exact decimals. Encode the result of `receivingAddress()` with the root address helper or resolve a private handle. Lock/dispose on account, chain, page or session changes; discard stale reviews.
 
@@ -80,7 +82,7 @@ Persist no private state in application telemetry. The SDK's encrypted local jou
 
 ## 7. Testnet acceptance
 
-Before handing the integration to users, demonstrate each enabled flow with real Chikyu testnet receipts and the exact signed archive/configuration. Check native and enabled ERC20 deposits, allowance rejection, recipient recovery, private transfer, normal and enhanced withdrawal, public batch, available swap and CCIP routes, handle claims and public payment links. Exercise expired quotes, insufficient funds, account/chain switches, disconnected RPC, reload after submission, repeated clicks, encrypted backup restore on a second device and mobile browser behavior. Verify correct balance, fee debit, recipient output, canonical finality and no duplicate submissions.
+Before handing the integration to users, demonstrate each enabled flow with real receipts on the supported testnet and the exact signed archive/configuration. Check native and enabled ERC20 deposits, allowance rejection, recipient recovery, private transfer, normal and enhanced withdrawal, public batch, available swap and CCIP routes, handle claims and public payment links. Exercise expired quotes, insufficient funds, account/chain switches, disconnected RPC, reload after submission, repeated clicks, encrypted backup restore on a second device and mobile browser behavior. Verify correct balance, fee debit, recipient output, canonical finality and no duplicate submissions.
 
 The signed deployment and candidate audit remediation are distinct. Record the SDK version, generation, test origin, supported operation, sanitized result and public receipt IDs. Do not share recovery words or private transaction journals. Mainnet release requires separate final ceremony, deployment and activation validation.
 
@@ -94,4 +96,4 @@ The signed deployment and candidate audit remediation are distinct. Record the S
 - [Full integration guide](PARTNER_INTEGRATION.md)
 - [Framework notes](FRAMEWORKS.md) · [Upgrades](UPGRADING.md)
 
-DogeOS engineering can begin by registering the test origin and downloading its configuration, then building the reference app and completing the acceptance checklist. Reference examples require that real registration, supported routes, connected test wallet and working service/RPC endpoints are available. No live partner acceptance run is represented by this documentation.
+Any partner engineering team can begin by registering its test origin and downloading its own configuration, then building the reference app and completing the acceptance checklist. Reference examples require that real registration, supported routes, connected test wallet and working service/RPC endpoints are available. No live partner acceptance run is represented by this documentation.
