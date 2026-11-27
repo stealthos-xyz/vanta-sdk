@@ -933,7 +933,8 @@ async function invoke(command, payload, history) {
           store,
           identity: privateIdentity,
           generationId: compiledRelease.pins.generationId,
-          pools: resources.funding.pools
+          pools: resources.funding.pools,
+          liveHistory: true
         });
         if (command !== "create") cachedBalance = await balanceCache.readSnapshot().catch(() => null);
         await backend.rememberIfAllowed().catch(() => false);

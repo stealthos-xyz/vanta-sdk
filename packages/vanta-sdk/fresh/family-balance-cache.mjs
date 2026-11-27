@@ -1,12 +1,14 @@
 /** Encrypted, local balance presentation. No spend openings or lock decisions
  * are restored from storage. The caller binds the namespace to the unlocked
  * private identity within the account, network and generation store. */
+import {createLiveFamilyHistoryReader} from './family-shared-history.mjs';
 const WORD = /^0x[0-9a-f]{64}$/u;
 const UNITS = /^(?:0|[1-9][0-9]{0,77})$/u;
 const validAnchor = row => Number.isSafeInteger(row?.blockNumber) && row.blockNumber >= 0 &&
   typeof row.blockHash === 'string' && WORD.test(row.blockHash);
 
-export function createFamilyBalanceCache({store, identity, generationId, pools}) {
+export function createFamilyBalanceCache({store, identity, generationId, pools, liveHistory=false}) {
+  const readSharedCheckpoint=liveHistory?createLiveFamilyHistoryReader():undefined;
   const namespace = 'family-balance-display-v1/'+identity;
   const assets = new Map(pools.map(pool=>[pool.pool,pool]));
   const validSnapshot = record => {
@@ -20,6 +22,7 @@ export function createFamilyBalanceCache({store, identity, generationId, pools})
     });
   };
   return Object.freeze({
+    ...(readSharedCheckpoint?{readSharedCheckpoint}:{}),
     async readSnapshot() {
       const rows = await store.read(namespace);
       return rows.length === 1 && validSnapshot(rows[0]) ? rows[0] : null;

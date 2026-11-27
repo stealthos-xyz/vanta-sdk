@@ -308,7 +308,7 @@ async function invoke(command: FamilyCommand, payload: Record<string, unknown>, 
           'STEALTHOS_FAMILY_BALANCE_DISPLAY_V1', identity.masterPublicKey.toString(), hexlify(identity.viewingPublicKey),
         ])));
         balanceCache = createFamilyBalanceCache({store, identity:privateIdentity,
-          generationId:compiledRelease.pins.generationId, pools:resources.funding.pools});
+          generationId:compiledRelease.pins.generationId, pools:resources.funding.pools,liveHistory:true});
         if (command !== 'create') cachedBalance = await balanceCache.readSnapshot().catch(()=>null);
         await backend!.rememberIfAllowed().catch(()=>false);
       }

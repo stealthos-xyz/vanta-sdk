@@ -11,6 +11,7 @@ export interface FamilyRecoveryProvider {
 }
 export interface FamilyDisplayCheckpointCache {
   readCheckpoint(pool:string):Promise<unknown>;
+  readSharedCheckpoint?(context:Readonly<FamilyNoteDomain>,deploymentBlock:number,afterBlock?:number):Promise<unknown>;
   saveCheckpoint(pool:string,checkpoint:unknown,discardedAnchor?:Readonly<{number:number;hash:string}>):Promise<void>;
 }
 export function recoverFamilyCanonicalNotes(input: {

@@ -140,6 +140,8 @@ export async function recoverFamilyCanonicalNotes({ provider, verificationProvid
     // and is used only for display. Spending still obtains its own complete
     // canonical inventory; no shared cursor enters that cache.
     if (useSharedHistory) {
+      const latest=displayRecord(await displayCache.readSharedCheckpoint?.(context,deploymentBlock,previous?.anchor.number));
+      if(latest&&(!previous||latest.anchor.number>previous.anchor.number)&&await usable(latest))previous=latest;
       const shared = displayRecord(await readSharedFamilyHistory(context, deploymentBlock, previous?.anchor.number));
       if (shared && (!previous || shared.anchor.number > previous.anchor.number) && await usable(shared)) previous = shared;
     }
