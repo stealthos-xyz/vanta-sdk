@@ -44,3 +44,9 @@ test('legacy verification adapter aliases the active trust source and fallback r
  assert.equal(canonicalFamilyProvider(pair.verificationProvider),pair.provider);
  pair.verificationProvider.destroy();pair.provider.destroy();
 });
+
+test('a rejected batch reports incompatibility without skipping individual read verification',async()=>{
+ let rejected=0,requests=0;const primary=async x=>{requests++;if(Array.isArray(x))return x.map(r=>({id:r.id,error:{code:-32600,message:'batch not supported'}}));return result(x);};
+ const response=await routeFamilyRpcPayload([p('eth_call'),p('eth_getCode',2)],primary,undefined,()=>rejected++);
+ assert.equal(rejected,1);assert.equal(requests,3);assert.deepEqual(response,[{id:1,result:'ok'},{id:2,result:'ok'}]);
+});

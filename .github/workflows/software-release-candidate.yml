@@ -1,4 +1,4 @@
-name: SDK 0.4.67 release candidate
+name: SDK 0.4.68 release candidate
 on:
   push:
     branches: [main]
@@ -26,13 +26,14 @@ jobs:
       - run: npm install -g npm@11.11.0 --no-audit --no-fund
       - run: npm ci
       - run: npm run verify:release -- 0.4.66
+      - run: npm run verify:release -- 0.4.67
       - run: npm test
       - run: npm run build
       - name: Construct exact unsigned publication and record hashes
         run: node scripts/prepare-software-release.mjs
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: unsigned-sdk-0.4.67
+          name: unsigned-sdk-0.4.68
           path: .release-candidate/
           include-hidden-files: true
           retention-days: 14

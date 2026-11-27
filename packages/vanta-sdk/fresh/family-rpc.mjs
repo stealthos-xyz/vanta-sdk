@@ -35,17 +35,17 @@ const request=url=>{const r=new FetchRequest(url);r.timeout=8000;r.setThrottlePa
 const parse=value=>{const u=new URL(value);if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash)throw Error('A credential-free HTTPS family RPC is required.');return u.href;};
 // Log requests are never batched together. Other reads use small batches;
 // explicit batch rejection falls back to individual primary requests.
-export async function routeFamilyRpcPayload(payload,primary,backup){
+export async function routeFamilyRpcPayload(payload,primary,backup,onBatchRejected=()=>{}){
  const items=Array.isArray(payload)?payload:[payload];
- if(items.length>1&&items.some(p=>p.method==='eth_getLogs'||!reads.has(p.method)))return (await Promise.all(items.map(p=>routeFamilyRpcPayload(p,primary,backup)))).flat();
+ if(items.length>1&&items.some(p=>p.method==='eth_getLogs'||!reads.has(p.method)))return (await Promise.all(items.map(p=>routeFamilyRpcPayload(p,primary,backup,onBatchRejected)))).flat();
  let result;
  try{result=await primary(payload);}
  catch(error){
-  if(items.length>1&&batchRejected(error))return (await Promise.all(items.map(p=>routeFamilyRpcPayload(p,primary,backup)))).flat();
+  if(items.length>1&&batchRejected(error)){onBatchRejected();return (await Promise.all(items.map(p=>routeFamilyRpcPayload(p,primary,backup,onBatchRejected)))).flat();}
   if(!backup||!items.every(p=>reads.has(p.method))||!transport(error))throw error;
   return backup(payload);
  }
- if(items.length>1&&result.some(r=>r.error&&batchRejected(r.error)))return (await Promise.all(items.map(p=>routeFamilyRpcPayload(p,primary,backup)))).flat();
+ if(items.length>1&&result.some(r=>r.error&&batchRejected(r.error))){onBatchRejected();return (await Promise.all(items.map(p=>routeFamilyRpcPayload(p,primary,backup,onBatchRejected)))).flat();}
  if(!backup)return result;
  return Promise.all(result.map(async r=>{
   const item=items.find(p=>p.id===r.id);
@@ -61,7 +61,8 @@ class FamilyReadProvider extends JsonRpcProvider{
   this.secondary=secondary?new JsonRpcProvider(request(secondary),chainId,{batchMaxCount:1}):null;
  }
  async _send(payload){
-  const primary=p=>super._send(p);
+  // Remember explicit batch incompatibility for this provider instance.
+  const primary=async p=>this.singleReads&&Array.isArray(p)?(await Promise.all(p.map(item=>super._send(item)))).flat():super._send(p);
   const backup=this.secondary?async p=>{
    // Check signed network identity before trusting a fallback response.
    this.checking??=Promise.all([
@@ -74,7 +75,7 @@ class FamilyReadProvider extends JsonRpcProvider{
    if(Array.isArray(p))return (await Promise.all(p.map(item=>this.secondary._send(item)))).flat();
    return this.secondary._send(p);
   }:undefined;
-  return routeFamilyRpcPayload(payload,primary,backup);
+  return routeFamilyRpcPayload(payload,primary,backup,()=>{this.singleReads=true;});
  }
  destroy(){this.secondary?.destroy();super.destroy();}
 }

@@ -87,13 +87,12 @@ export async function createVantaFamilyDepositHost({walletController,store,provi
   const gates=release.lock.contracts.filter(row=>row.name==='native-screening-clearance');
   if(gates.length!==1)fail('This signed generation does not support direct deposits.');
   const clearance=address(gates[0].address);await pinCode(clearance,block);
-  const values={};for(const method of ["asset","feeSigner","feePolicyHash","protocolFeeRecipient","partnerFeeRecipient","combinedFeePartnerVerifier"])
-   values[method]=(await both(d.pool,ABI,method,[],block))[0];
+  const values=Object.fromEntries(await Promise.all(["asset","feeSigner","feePolicyHash","protocolFeeRecipient","partnerFeeRecipient","combinedFeePartnerVerifier"].map(async method=>[method,(await both(d.pool,ABI,method,[],block))[0]])));
   if(address(values.asset)!==d.asset)fail("signed custody asset differs");
   const adapter=address(values.combinedFeePartnerVerifier);await pinCode(adapter,block);
-  for(const [method,value] of [["releaseSetupId",d.setupId],["releaseGenerationId",resources.generationId],
-   ["releaseFamilyTag",resources.familyTag],["releaseChainId",resources.chainId]])
+  await Promise.all([["releaseSetupId",d.setupId],["releaseGenerationId",resources.generationId],["releaseFamilyTag",resources.familyTag],["releaseChainId",resources.chainId]].map(async([method,value])=>{
    if(BigInt((await both(adapter,ADAPTER,method,[],block))[0])!==BigInt(value))fail("deposit adapter activation differs");
+  }));
   const registered=address((await both(adapter,ADAPTER,"registry",[],block))[0]);
   const role=release.lock.contracts.filter(v=>v.name==="partner-registry");
   if(role.length!==1||address(role[0].address)!==registered)fail("unapproved deposit registry");

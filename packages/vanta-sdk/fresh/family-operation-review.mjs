@@ -32,7 +32,7 @@ export async function prepareFamilyOperationFeeReview({provider,verificationProv
  if(![0,1,3,4,5].includes(operation))fail('Invalid amount or operation.');
  const release=getCompiledFamilyEvmRelease(releaseContext),resources=selectVantaFamilyFundingResources(release,getCompiledVantaFamilyProofResources(release,releaseContext),asset),d=resources.deployment;
  const roles=release.lock.contracts.filter(p=>p.name==='partner-registry');if(roles.length!==1)fail('Missing signed registry.');const registry=roles[0];
- const a=await provider.getBlock('latest'),b=await verificationProvider.getBlock('latest'),height=Math.min(a?.number,b?.number);if(!Number.isSafeInteger(height))fail('Canonical block unavailable.');
+ const [a,b]=await Promise.all([provider.getBlock('latest'),verificationProvider.getBlock('latest')]),height=Math.min(a?.number,b?.number);if(!Number.isSafeInteger(height))fail('Canonical block unavailable.');
  const [x,y,ca,cb]=await Promise.all([provider.getBlock(height),verificationProvider.getBlock(height),provider.getCode(registry.address,height),verificationProvider.getCode(registry.address,height)]);
  if(!x?.hash||x.hash!==y?.hash||keccak256(ca)!==registry.codehash||keccak256(cb)!==registry.codehash)fail('Signed registry or canonical block differs.');
  const both=async(to,abi,name,args=[])=>{const tx={to,data:abi.encodeFunctionData(name,args),blockTag:height},[a,b]=await Promise.all([provider.call(tx),verificationProvider.call(tx)]);if(a!==b)fail('Canonical fee reads disagree.');return abi.decodeFunctionResult(name,a);};

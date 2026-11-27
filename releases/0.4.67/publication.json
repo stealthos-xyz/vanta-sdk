@@ -1,0 +1,603 @@
+{
+  "artifactBasePath": "api/release/artifacts/",
+  "bootstrapSoftwareSources": {
+    "contracts/src/vanta/VantaEnhancedFundingLogicPreAudit.sol": "223b44d489bd155362b4d185648e656a2c0a32c40ee11b55efce1914c449a568",
+    "contracts/src/vanta/VantaFamilyAdditionalAssetFeeVaultPreAudit.sol": "c893b1a743a3f5ea5aadd79668a309bd0557203e2c4e6500d6850793531ce5ef",
+    "contracts/src/vanta/VantaFamilyBatchPayout.sol": "4bda536392c95ceac2f50907c88a16bdf8544bfa1e24bab21eb4e460d7dc7d11",
+    "contracts/src/vanta/VantaFamilyChikyuRouteGatewayPreAudit.sol": "e6bfec1226c1e67e93d72b5bb088a139c26dcd208d00348d5d4369f44ea2a0a8",
+    "contracts/src/vanta/VantaFamilyCombinedFeePartnerAdapterPreAudit.sol": "1d01b864f684f2b2c3f7d656affbccb6229489bb19ac532b5ca621e033edcd20",
+    "contracts/src/vanta/VantaFamilyDirectDepositPoolPreAudit.sol": "8e4af903a54df2732fd6b9f3ae11b02f118902b7dde810ce221700a297d2856a",
+    "contracts/src/vanta/VantaFamilyEnhancedFeeAdapterPreAudit.sol": "5a96aeeaf8639a9c06d8d9e083058218989e3e1df7c1ab4d9597795e7037a874",
+    "contracts/src/vanta/VantaFamilyEnhancedPoolPreAudit.sol": "faa113ec1d3174f1b6c742f473edfdbf315dca96db5a464497efdef9e9597174",
+    "contracts/src/vanta/VantaFamilyHandleBootstrapFactory.sol": "c4ebb4b277a566ac339900b54c5709de1371218c0261f4e2d3dfab7fdf58c208",
+    "contracts/src/vanta/VantaFamilyNoAppendExitCustodyPreAudit.sol": "ebf53ebdb170ffb9fbf988c36dcd145715712473c06a01d6aca6239600d81fff",
+    "contracts/src/vanta/VantaFamilyPartnerKzgRegistrarPreAudit.sol": "5a11e4dbc49a4b9af46829629cb51ae09388c29dce6a90269379a461855981f1",
+    "contracts/src/vanta/VantaFamilyPartnerKzgRegistryPreAudit.sol": "2cfdd31246bb8668f04f61d6fa809ec87d6efe7c4bde7f127c454e8d6097b8c6",
+    "contracts/src/vanta/VantaFamilyPrivateSwapOutput.sol": "a91db48a3752876f32867acf49d24f3b0105402b0ea65557d88395738dbdc6bb",
+    "contracts/src/vanta/VantaFamilyProtocolFeePolicy.sol": "de9d44d672e1dc1c270253f48a8b073e101fcb311bcc891db919ae8014fcdc07",
+    "contracts/src/vanta/VantaFamilyPublicFeeVaultPreAudit.sol": "5e0a57929c8c3bebbfd797d96a055dbeec29689f5f326c971208df4cda844602",
+    "contracts/src/vanta/VantaFamilyUnifiedPoolPreAudit.sol": "c68bc3a2e19c20747ffdc25ea8d5ed11c4dd3718aecc0b66de5ee3828167c4bd",
+    "contracts/src/vanta/VantaNativeSwapWalletClearance.sol": "75506b73ebbaba00a872054a994df93ceaa064a530bcd608dfa91e201d9b6787",
+    "contracts/src/vanta/VantaNativeWalletClearance.sol": "ce88e925e342de7a342efd22b383413b450e68e95e7fdd2d76d9a2d39974ce2c"
+  },
+  "generationId": "0x2acecbe256faf24f04b0c5ddd06a40cfa7d832677ce6e476e2eb69fa2321c7e0",
+  "genesisHash": "0xf9f7c524dce38b51a4d28ec2f18680773e5ba9d3f5f430d0e05f92cfeb65b1bc",
+  "lockId": "0x57e6d1e911046c7810dc3ae934fc85a155a4c1ba8ca6f6b09e24e8995ed961d4",
+  "networkId": "eip155:6281971",
+  "ownershipProfile": "protocol-relayer-v1",
+  "resourcesSha256": "ccb808096517224c5bf4f4649cb2802fd2960a2f7c449e0a258fd961aedb9da4",
+  "schema": "stealthos-browser-sdk-publication-v1",
+  "sdkBundle": {
+    "path": "objects/e0b56e7ef0d21b1612fb9775a60aaff9bf9ecaf5d472ce7f7bc6331c1c7aa1a6.mjs",
+    "bytes": 2194563,
+    "sha256": "e0b56e7ef0d21b1612fb9775a60aaff9bf9ecaf5d472ce7f7bc6331c1c7aa1a6"
+  },
+  "sdkPackage": {
+    "path": "objects/dcda8b710350becf2bb9501fb482fac1a54e405abfdf8f8bdec76d76a4efb881.tgz",
+    "bytes": 1669629,
+    "sha256": "dcda8b710350becf2bb9501fb482fac1a54e405abfdf8f8bdec76d76a4efb881"
+  },
+  "sdkRelease": {
+    "activation": {
+      "familyId": "dogeos",
+      "familyTag": "0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445",
+      "generationId": "0x2acecbe256faf24f04b0c5ddd06a40cfa7d832677ce6e476e2eb69fa2321c7e0",
+      "network": {
+        "genesisHash": "0xf9f7c524dce38b51a4d28ec2f18680773e5ba9d3f5f430d0e05f92cfeb65b1bc",
+        "id": "eip155:6281971",
+        "role": "testnet"
+      },
+      "revision": 6,
+      "schema": "stealthos-family-network-activation-v1",
+      "setupId": "0xb4676558822d9964f45f716c27ea00f0f22f629b799dfaf61cb446db60e1ed70",
+      "signature": "0x6ab985fc32525011292d8ee299fb53d2e31782c6253aec9c7dcc843fd52a2b6050ed4534a2822562059ba1dcdbfb2349ac8bf905b956a9522c86f8dadc26d1221c"
+    },
+    "lock": {
+      "contracts": [
+        {
+          "address": "0x29A73099227d348171fB3Bb6aa16263C105AACC3",
+          "codehash": "0xdff8d4f111b2be3c2ff3641818d43e84a5c5d4144e60c2573985c62d54d52dd3",
+          "kind": "bootstrap",
+          "name": "ccip-bnm-bootstrap"
+        },
+        {
+          "address": "0xa8D6209316729dA2cC7bDf37d4077Af2E46FdBb2",
+          "codehash": "0xf85dc2f3d446faf9bf391f2d4714a0a7d5735ee7beab9e1c00a8a54b7f507990",
+          "kind": "bootstrap",
+          "name": "native-bootstrap"
+        },
+        {
+          "address": "0xf3c128bA0903a8e85105096193f00f5EB4fda3ed",
+          "codehash": "0x1d0fe7d53d2b7ec894dbb99cb2133a4fc9d9eb072352690726d7a89df7a7fc64",
+          "kind": "bootstrap",
+          "name": "token-bootstrap"
+        },
+        {
+          "address": "0x41B1134f986a93020703EcCc89931080895f1254",
+          "codehash": "0xd6e10a33c9d1b9ec9e4a8712fcacdfb6ed9e1d450332da832eb02226016c58e5",
+          "kind": "bootstrap",
+          "name": "usdc-bootstrap"
+        },
+        {
+          "address": "0xb57BFFB8D02E59558a42CB56541299a6213c076B",
+          "codehash": "0xa3e0fcac7ddf463e1be3b5e9a8f107592eb876f418c8dca9958bfdd9dc988366",
+          "kind": "pool",
+          "name": "ccip-bnm-pool"
+        },
+        {
+          "address": "0xd2e97e1197f4F1A78D125c518deCa494237b7362",
+          "codehash": "0x61c7b77eb6139d693ac04aeadf0056883c097787c6ba11eb024fa581b06c7a6a",
+          "kind": "pool",
+          "name": "native-pool"
+        },
+        {
+          "address": "0xEd4397660cD48Cf26a7FC195272005207B4eF93C",
+          "codehash": "0xb33705a93b7ddb7967a7e1a0c6a26324ea7af31ea5f7ebd3272ec77ce1a0bac5",
+          "kind": "pool",
+          "name": "token-pool"
+        },
+        {
+          "address": "0xc9c1A05607Ca20cAc2bd47503638F6be666F7601",
+          "codehash": "0x8aa22742a27c0cfd1cd65d927b0bbe39c2c224bff60e937818b16de5009bee28",
+          "kind": "pool",
+          "name": "usdc-pool"
+        },
+        {
+          "address": "0x7E243Bc192C0106EB4C59BBb6be42fDB328E92b5",
+          "codehash": "0x46a952cb326ad62f51ba900f2806e04b279fd762d83a058941eac2fa34909de2",
+          "kind": "registry",
+          "name": "partner-registry"
+        },
+        {
+          "address": "0x5B06144783Efc88A48D2F3D7E18428e338bEa6d5",
+          "codehash": "0xce2bc593530eceb7b69eb77cc5cde36e3a998bb1bb82cf46d5c2275cd8937a4a",
+          "kind": "verifier",
+          "name": "aggregate"
+        },
+        {
+          "address": "0x509b5dC9D39242C20E7E812086b0259fe96A856e",
+          "codehash": "0x702da16aa335ab43587575398e66597b320d1f181f79e4858b49db253bed4497",
+          "kind": "verifier",
+          "name": "batch-payout-escrow"
+        },
+        {
+          "address": "0x6A656fc96946d1Ff244D7d246F18050CCF501c00",
+          "codehash": "0xf3c1013008100fb316668adb2c083ae167d0ee28c024834fecf296f9e62e2fb4",
+          "kind": "verifier",
+          "name": "batch-payout-gateway"
+        },
+        {
+          "address": "0xB1134A9a68774d87f35De8406e9Cc01945f87061",
+          "codehash": "0x6c99752547128c9e486615cc9aa12d4e1b0b3bf115aca4213dfb3450a38e8e6a",
+          "kind": "verifier",
+          "name": "bundle"
+        },
+        {
+          "address": "0x25D5E5375e01Ed39Dc856bDCA5040417fD45eA3F",
+          "codehash": "0xf7d64e986fc068b96bccf90327d4dbbc5ba8dd5db4c927dddb91fd17eae5b013",
+          "kind": "verifier",
+          "name": "canonical-token"
+        },
+        {
+          "address": "0x4A92387cE022FDae06c2e49020be7B24AAB16070",
+          "codehash": "0xbdcf4ef9a26ddbd853f009c68f9408c17523032ca3935d3f92f6bf3d0679324e",
+          "kind": "verifier",
+          "name": "ccip-bnm-asset"
+        },
+        {
+          "address": "0x4ed1db6DF910Fe4c58fDcDBC97f28EeA9791558C",
+          "codehash": "0x315444b412b34dee38e0d49372efdbd094dfe4ddc268568e9f69472dbe119167",
+          "kind": "verifier",
+          "name": "ccip-bnm-combined-fee"
+        },
+        {
+          "address": "0xCEcfE56CB4Bb513b6B051eaA55a44845B9d7035a",
+          "codehash": "0x2c601a02b41843045f4c8389eb43dfd8241454c90c82152afda04c8f55b1ae53",
+          "kind": "verifier",
+          "name": "ccip-bnm-enhanced-fee"
+        },
+        {
+          "address": "0xE507cd544B32d4cA9bcd7810068E33f1Fa3902c9",
+          "codehash": "0xb053b2b9aff01851dbf9019c3569b490cc9e4048c61abc6645821f140b4ceb17",
+          "kind": "verifier",
+          "name": "ccip-bnm-vault-0"
+        },
+        {
+          "address": "0xe45c42Bba0B450240Ac8AA33B7396A79FB8Fb72b",
+          "codehash": "0xd0b650c6532c34fc27caa335d5a4f235e5eec73b70e363887f1bd206f9ec0365",
+          "kind": "verifier",
+          "name": "combined-fee-partner"
+        },
+        {
+          "address": "0x1d071eCCEb54b6Efc3Be26e20c57591E4EF70F93",
+          "codehash": "0xff3fdf98b19664bc44457af577b7435c1714e69996482a7c7fe0e94f59ee3540",
+          "kind": "verifier",
+          "name": "enhanced-authorization"
+        },
+        {
+          "address": "0x4c83d1eA2E48b057B4c603B30B8d5cF90Fa331Ac",
+          "codehash": "0x3020378571d67543c420a51b703dbde059d4c5aee86d7fa3d707d2ab389a0347",
+          "kind": "verifier",
+          "name": "enhanced-claim"
+        },
+        {
+          "address": "0xf2763002982cdDB84F0AD5bF246Df218FaA258BF",
+          "codehash": "0x9b37bcab7931d6b81e7011593646f2f79ea179a34c515dcbf8903d861e0b437c",
+          "kind": "verifier",
+          "name": "enhanced-fee-partner"
+        },
+        {
+          "address": "0x9fa4E7EB89b4CeAa4E761184D519eF4f015A7955",
+          "codehash": "0x1c3db7095ae082997c24e91e06b1e5716eb8a225b36c743eadf686efdc6be5da",
+          "kind": "verifier",
+          "name": "exit"
+        },
+        {
+          "address": "0x403eDCDE57c78eda1A9d323b70EA92bA9B4993Da",
+          "codehash": "0xef8e2763ac48bb12c37520fc24fee7acfa3f4afb30be5850b1814954d5110cbf",
+          "kind": "verifier",
+          "name": "exit-statement-eight"
+        },
+        {
+          "address": "0xaEfe2bD24653E10AFB80accD71a33948556049Ea",
+          "codehash": "0x63610ddc5b395ddd16480a3c418ae6cfab22e712529f3096316182f1b7beeb4a",
+          "kind": "verifier",
+          "name": "exit-statement-thirty-two"
+        },
+        {
+          "address": "0x7A3Bf3fd5EEfD7e2a2767D34577E547B1992935f",
+          "codehash": "0xc13a5f23d8d8ad57c50ce9ad9de5fff338859114563e90e419d46b56532da290",
+          "kind": "verifier",
+          "name": "gate0"
+        },
+        {
+          "address": "0xE8a81d30DB501730D3dD13d5239ce05da273f2ea",
+          "codehash": "0xc8d37e6b5380d662a31cf8caae298d1c085eabc79048d06da772284816ae8136",
+          "kind": "verifier",
+          "name": "gate1"
+        },
+        {
+          "address": "0x324954D841ecF9e572D953974d28B54818b3e97f",
+          "codehash": "0x58c500572072467568ebaca5f0ede7c8522dd601a2211e3d7e080a3ff801bf9c",
+          "kind": "verifier",
+          "name": "handle-adapter"
+        },
+        {
+          "address": "0x77D2b0d3a73B8C833560DAF608c70f9225fcCFCA",
+          "codehash": "0xa97db27498636f6c7fac63f45c2adc9fd0f1ff6fed36139baaae59e6755a969a",
+          "kind": "verifier",
+          "name": "handle-register"
+        },
+        {
+          "address": "0x77323D6F2d112BB50f3Aa105B9F24218B17037b7",
+          "codehash": "0xa3768d79e83371dde89976a00ff61cac9b31ce82c5dbc59e491bdc5b56b73341",
+          "kind": "verifier",
+          "name": "handle-registry"
+        },
+        {
+          "address": "0x78bAF85bB97c7E9E25e54d9ED6952e7013ce4e7E",
+          "codehash": "0xe960266d6764e1567daf85f7bd3f498c061fc355bfe6bc26b3116f74d90249ae",
+          "kind": "verifier",
+          "name": "hasher"
+        },
+        {
+          "address": "0x0b3E7339a6f6dBbf2Ed4F51073cb9cda574Ce541",
+          "codehash": "0xf8eedc71c75ff8b5a303ae79739a598893b9ba42bc0ad10f00df30f5c3757a39",
+          "kind": "verifier",
+          "name": "kzg"
+        },
+        {
+          "address": "0x99871Ca5636aF1D4f629faF894FDc7070c9550E9",
+          "codehash": "0x2be75c4d82588974c21b4cb6336da076261222982bf4a8cefccaa7f2710bca52",
+          "kind": "verifier",
+          "name": "kzg-row-keys"
+        },
+        {
+          "address": "0xA1c23DB24D9efF5a2E3aE98930c5c15Ec735eA3d",
+          "codehash": "0xa12efd55db0c85bf2aded736835cf92ff83490b42a5d9bddb16eb9da767d4ee1",
+          "kind": "verifier",
+          "name": "library-0"
+        },
+        {
+          "address": "0xaEf1335474D784C7BeACFd92C142B98E1D213C56",
+          "codehash": "0xacaca3add15a8e634954358a7b869e50fa66ffb9d2050d41f9c5436f7c1b2dbd",
+          "kind": "verifier",
+          "name": "library-1"
+        },
+        {
+          "address": "0xE50D5C281cE720bF14D45988A7A79b1c467eF9dd",
+          "codehash": "0x3d43427fda19fed077e95b866bfd10cda524cfd91ee2a27b73aba1ef965b94a1",
+          "kind": "verifier",
+          "name": "library-2"
+        },
+        {
+          "address": "0xC0d040946FAAeF62B9BbFa547fCA6689c7aDB07D",
+          "codehash": "0x1df324a005d77263edcc6fc21286b8861cbc3cef42b42b8015aca8e0d9883100",
+          "kind": "verifier",
+          "name": "library-3"
+        },
+        {
+          "address": "0x655165C5c7FA747a6526FE0a15146ccf795f5D78",
+          "codehash": "0xa059875fb6f8f30e26cef26c252f38cdcbeee4194e155b495d4c3c6424cddd68",
+          "kind": "verifier",
+          "name": "library-4"
+        },
+        {
+          "address": "0x06fc82ac7A47F18c6A9FEc68C363B42Ea0C2dCd5",
+          "codehash": "0xc5163697c465b1ad8d74d5943fd6a5c76e338c77d97d4fa1e194848dea33ce15",
+          "kind": "verifier",
+          "name": "link"
+        },
+        {
+          "address": "0x04807398391DDEB42b920Ec855f2e5Aa95093001",
+          "codehash": "0xf2e3f54d576c0aee9297d02b135813a261d4fd2ee6bc4cfd94dd29d6b1ac7f34",
+          "kind": "verifier",
+          "name": "native-combined-fee"
+        },
+        {
+          "address": "0xfa97bbb5C8343e0B6C8B41190539d09CE5a7572b",
+          "codehash": "0x0d41df8ab32a1636c68aa27eb4b7b02718a2c5d27c416edba53a43ea5b9d455a",
+          "kind": "verifier",
+          "name": "native-enhanced-fee"
+        },
+        {
+          "address": "0x8aBEff5CC6A03cAa2ae31714b9B12a3Dedb85DCe",
+          "codehash": "0xf9e9e2b7b3437b7bb4165f9b26174f22679fe22bdc8083660c9aad03ba1e970a",
+          "kind": "verifier",
+          "name": "native-screening-clearance"
+        },
+        {
+          "address": "0x3474e922d4Fe08d9D4E8dDeD9F17e9fBeb1697C2",
+          "codehash": "0xfa39b4576a9153e3e57c58e45fd1b0e91b60807a8d69df44db9e7b35f6c67b46",
+          "kind": "verifier",
+          "name": "native-vault-0"
+        },
+        {
+          "address": "0x7E92E062b33F8712f118CbD4523cF1117Ca27aA4",
+          "codehash": "0x315327fe4cfc6567584fecd4fa459b4016a52f32e2b551941ecdd5986b05a967",
+          "kind": "verifier",
+          "name": "normal"
+        },
+        {
+          "address": "0x4956AaA031559FE0d57CCcbd277Bfcb53952F079",
+          "codehash": "0x039c4cb8841c8ad3ed6cc84498f1a3d488c70de8e852059cb7f016338809492c",
+          "kind": "verifier",
+          "name": "normal-statement-eight"
+        },
+        {
+          "address": "0xa50846eb43fdDbc0E4eB20788e3915fe25ab1570",
+          "codehash": "0x32fb29ab97e293f0f2052b72aeedef278008fcc15b6adedfbac632ea278b9c29",
+          "kind": "verifier",
+          "name": "normal-statement-thirty-two"
+        },
+        {
+          "address": "0xDb3C426CA59A8FBf7D7AA649821a826b5650011C",
+          "codehash": "0x67b8e410fc3c73ea855b2f54b234dd8e6f1a9470ad1a0d888029d36328e8a5e8",
+          "kind": "verifier",
+          "name": "partner-owner"
+        },
+        {
+          "address": "0x5372b6A3483D86aa2D9a0121df53bE069FF5Fca2",
+          "codehash": "0x7fefee90ee19da0eef3fe01dbc926d64124639b0aea4c0a3a387ab84fce78c90",
+          "kind": "verifier",
+          "name": "partner-registrar"
+        },
+        {
+          "address": "0x806045Bf4cAD45ab958218165e6C8093bC36701A",
+          "codehash": "0x4a317a656a1fc098104e9030806b3b0f97d60c2e2115099232c3d4c4ae12e5fc",
+          "kind": "verifier",
+          "name": "partner-updater"
+        },
+        {
+          "address": "0x846d9457709a2E77403ec21C1077228fC1699072",
+          "codehash": "0x354b26999e434f8256d168395315e1f51fc15bf49bf2e6bb58fc549bd597e7da",
+          "kind": "verifier",
+          "name": "poseidon2"
+        },
+        {
+          "address": "0x2cc2818781520CD0023e56a390A607797886b282",
+          "codehash": "0xe247ac4f3d40602f0ac0604b0f1fe631237cbc64d3e29a5d5e45721f2d94fa81",
+          "kind": "verifier",
+          "name": "poseidon3"
+        },
+        {
+          "address": "0x6120c0d93Bb29c2c8A989965618353169156dB07",
+          "codehash": "0x5a31170277d2a27c7bfebc0bd00e7c00e32b9decbfc2fa07b8ef2a2e9cea364c",
+          "kind": "verifier",
+          "name": "private-swap-gateway"
+        },
+        {
+          "address": "0xFd2723371303DE7dBBB909981af5a6fa15270caE",
+          "codehash": "0xfa0cae74b51aa57d53a1b62d6a40b62a88e9a71c38a7143b544e61567994efe3",
+          "kind": "verifier",
+          "name": "private-swap-output-escrow"
+        },
+        {
+          "address": "0x4C5FEc9Fc4E34508253CFB0204660bC11C72e225",
+          "codehash": "0x3f6876c4bdd80ce4ab423f0428930ece5923de73ad7c649b86dbfdaf04e02d7f",
+          "kind": "verifier",
+          "name": "protocol-fee-policy"
+        },
+        {
+          "address": "0x524B83ae8208490151339c626fd0E35b964483e3",
+          "codehash": "0x99dc8b2d1824c42cbf5d866a8d01685c7a5a4001a2b1fc9b91478bc1013aafd2",
+          "kind": "verifier",
+          "name": "route-ccip"
+        },
+        {
+          "address": "0xe58df513B94B93f6F7847074b92D35ab5EbF3F38",
+          "codehash": "0x0ab7c9ab6662a793161a5770226de4863f93caa5cd77693bf387c4b40b79de8b",
+          "kind": "verifier",
+          "name": "route-gateway"
+        },
+        {
+          "address": "0xC653e745FC613a03D156DACB924AE8e9148B18dc",
+          "codehash": "0xae6a1390251735e658b69a6c140d0258e266d9cf98a0118b685a34633475c149",
+          "kind": "verifier",
+          "name": "route-muchfi"
+        },
+        {
+          "address": "0xF6BDB158A5ddF77F1B83bC9074F6a472c58D78aE",
+          "codehash": "0xbd6ed8c4ef62daa1628f9d0259f01f08f1a3a085c71227865442c826cb1f2b5c",
+          "kind": "verifier",
+          "name": "route-wrappeddoge"
+        },
+        {
+          "address": "0xdff0c3EaF76e4C53AC614c134C9E748E69C4353f",
+          "codehash": "0x74f4fdbe10afed5d6c554d7e97b74869e9876d069caadab849cd6c2884d43fd1",
+          "kind": "verifier",
+          "name": "token-combined-fee"
+        },
+        {
+          "address": "0xd21330fa2286E70F9FECBa08cfB4a4ED8a5c97ce",
+          "codehash": "0x0aead9054d2d783f13e7447da05b4669c3d9b397c6cdc9dc4dd1b0f411f9c496",
+          "kind": "verifier",
+          "name": "token-enhanced-fee"
+        },
+        {
+          "address": "0x6D102d1F5826e3526788d712E7D9B576414d0f14",
+          "codehash": "0x13c55e341da7ce2e6e08c5f80b1c9cedf3fae2dea9439d0339167ba4500a6357",
+          "kind": "verifier",
+          "name": "token-vault-0"
+        },
+        {
+          "address": "0xD19d2Ffb1c284668b7AFe72cddae1BAF3Bc03925",
+          "codehash": "0xf7d64e986fc068b96bccf90327d4dbbc5ba8dd5db4c927dddb91fd17eae5b013",
+          "kind": "verifier",
+          "name": "usdc-asset"
+        },
+        {
+          "address": "0xEF3aAAD36c418615c50621e399F449119d592eF4",
+          "codehash": "0x14dde396b5e5d05cf2fb988ee9faa7ba7b1a35f8bacbfed9f0737af7263babe9",
+          "kind": "verifier",
+          "name": "usdc-combined-fee"
+        },
+        {
+          "address": "0xFfCa7ac847FeCd13Fb657922Ca61948792efc9B6",
+          "codehash": "0xc854dcb5b4e409df518bdef2f4a7774a92ece0f7a0de1b079b708769a75dc372",
+          "kind": "verifier",
+          "name": "usdc-enhanced-fee"
+        },
+        {
+          "address": "0x85d86538B2E1762afC7F70639678062FF11ab3D4",
+          "codehash": "0xd04b0d950233ba765b77b6b3d3b8f0db6de090bb49d2e2734310add9bc577b0c",
+          "kind": "verifier",
+          "name": "usdc-vault-0"
+        }
+      ],
+      "familyId": "dogeos",
+      "familyTag": "0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445",
+      "generationId": "0x2acecbe256faf24f04b0c5ddd06a40cfa7d832677ce6e476e2eb69fa2321c7e0",
+      "lockId": "0x57e6d1e911046c7810dc3ae934fc85a155a4c1ba8ca6f6b09e24e8995ed961d4",
+      "network": {
+        "genesisHash": "0xf9f7c524dce38b51a4d28ec2f18680773e5ba9d3f5f430d0e05f92cfeb65b1bc",
+        "id": "eip155:6281971",
+        "role": "testnet"
+      },
+      "relayerConfigSha256": "98622383f147333fd3caf4db5940166f89cf65cc1f8871e826c93245aa292580",
+      "schema": "stealthos-family-deployment-lock-v1",
+      "setupId": "0xb4676558822d9964f45f716c27ea00f0f22f629b799dfaf61cb446db60e1ed70",
+      "signature": "0x50cbd3b720d21fefc083e1e87f47a8a9c526c2dab3315f377bd4ab33cd653d1f2d42aeab1d05fd91af33a1dd1db1acc084e5d7294fe4445a284cf90f13c6a7921c"
+    },
+    "networkPolicy": {
+      "familyId": "dogeos",
+      "networks": [
+        {
+          "genesisHash": "0xf9f7c524dce38b51a4d28ec2f18680773e5ba9d3f5f430d0e05f92cfeb65b1bc",
+          "id": "eip155:6281971",
+          "role": "testnet"
+        }
+      ],
+      "schema": "stealthos-reviewed-family-networks-v1",
+      "sourceNetworkId": "eip155:6281971"
+    },
+    "pins": {
+      "familyId": "dogeos",
+      "generationId": "0x2acecbe256faf24f04b0c5ddd06a40cfa7d832677ce6e476e2eb69fa2321c7e0",
+      "genesisHash": "0xf9f7c524dce38b51a4d28ec2f18680773e5ba9d3f5f430d0e05f92cfeb65b1bc",
+      "lockId": "0x57e6d1e911046c7810dc3ae934fc85a155a4c1ba8ca6f6b09e24e8995ed961d4",
+      "networkId": "eip155:6281971",
+      "networkPolicySha256": "cd543f25008e339075bea5f879364b02a05eda526b287fc741ee7319a9d1cf9a",
+      "relayerConfigSha256": "98622383f147333fd3caf4db5940166f89cf65cc1f8871e826c93245aa292580",
+      "setupId": "0xb4676558822d9964f45f716c27ea00f0f22f629b799dfaf61cb446db60e1ed70"
+    },
+    "proving": {
+      "circuits": [
+        {
+          "familyTag": "0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445",
+          "id": "combined-fee-partner",
+          "r1csSha256": "a1d25f967d987591fd676c79f1c4eeaee88c9c5cde9e95a116684d19a06d66d9",
+          "sourceSha256": "6a50aef5fa3ef8effcabe72ca5cd755142dd5fc709151ea3f568739b1d7c5fc7"
+        },
+        {
+          "familyTag": "0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445",
+          "id": "enhanced-authorization",
+          "r1csSha256": "35692724d64ba7225b2dea934211789376f4e19385b8c53b56b67943514fe2b3",
+          "sourceSha256": "6a50aef5fa3ef8effcabe72ca5cd755142dd5fc709151ea3f568739b1d7c5fc7"
+        },
+        {
+          "familyTag": "0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445",
+          "id": "enhanced-claim",
+          "r1csSha256": "cbdee4a4e7bdff1afa48c101622c27f9488fdec3d8c445cf7c920c89fe4e14b4",
+          "sourceSha256": "6a50aef5fa3ef8effcabe72ca5cd755142dd5fc709151ea3f568739b1d7c5fc7"
+        },
+        {
+          "familyTag": "0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445",
+          "id": "enhanced-fee-partner",
+          "r1csSha256": "97fbed398a25ef618fe7c880c442f0bffdef801decf61618b9ab5140b0fa6e35",
+          "sourceSha256": "6a50aef5fa3ef8effcabe72ca5cd755142dd5fc709151ea3f568739b1d7c5fc7"
+        },
+        {
+          "familyTag": "0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445",
+          "id": "gate0-exit-32",
+          "r1csSha256": "9003ad2975772dd42181180f002f68aecfb93df514d5072f588850727df29762",
+          "sourceSha256": "6a50aef5fa3ef8effcabe72ca5cd755142dd5fc709151ea3f568739b1d7c5fc7"
+        },
+        {
+          "familyTag": "0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445",
+          "id": "gate0-exit-8",
+          "r1csSha256": "e11e3ec2cfae1566afc1dd4ea13a43ab09a0a822540149ab231cdaab51dfdd54",
+          "sourceSha256": "6a50aef5fa3ef8effcabe72ca5cd755142dd5fc709151ea3f568739b1d7c5fc7"
+        },
+        {
+          "familyTag": "0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445",
+          "id": "gate0-normal-32",
+          "r1csSha256": "1b16c403ee12f4f9e30b87fe9c1fbbff80b1a35df99f3ca0bb671e2cd0ccbc6f",
+          "sourceSha256": "6a50aef5fa3ef8effcabe72ca5cd755142dd5fc709151ea3f568739b1d7c5fc7"
+        },
+        {
+          "familyTag": "0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445",
+          "id": "gate0-normal-8",
+          "r1csSha256": "a31f0a9d73a82c0c79fb0937bfc2dcf704556088919cb30513c9e2d4e5d06958",
+          "sourceSha256": "6a50aef5fa3ef8effcabe72ca5cd755142dd5fc709151ea3f568739b1d7c5fc7"
+        },
+        {
+          "familyTag": "0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445",
+          "id": "handle-register",
+          "r1csSha256": "593617ac14c03dea7c8afe82fee41aa75530c3e1538cdae100a439b1a299c45e",
+          "sourceSha256": "cc65db7cb2ec4ff286f9a5108e4fe6d5c2978b791656dbe492e075e28143177f"
+        },
+        {
+          "familyTag": "0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445",
+          "id": "partner-owner",
+          "r1csSha256": "e54c79d4e2756f670de4eaabce2fbb0d18591eca549036c31115fd83c5527d34",
+          "sourceSha256": "e779485a237eb8c15d2437f363b03baea0279d20872cb22a6e9165d0cf1bd74b"
+        },
+        {
+          "familyTag": "0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445",
+          "id": "payout-aggregate",
+          "r1csSha256": "d687ed54d6f7aa33bc82a6aa0939e77fde7a2c773b099ff629ce1406edb2472e",
+          "sourceSha256": "6a50aef5fa3ef8effcabe72ca5cd755142dd5fc709151ea3f568739b1d7c5fc7"
+        }
+      ],
+      "driver": {
+        "engine": "STREAM_BOUND4",
+        "familyId": "dogeos",
+        "familyTag": "0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445",
+        "networkId": "eip155:6281971",
+        "partnerPolicyScheme": "kzg-caulk-plus-cclink-v1",
+        "schema": "stealthos-family-bound4-driver-v2",
+        "workerCount": 4
+      },
+      "resourcesSha256": "ccb808096517224c5bf4f4649cb2802fd2960a2f7c449e0a258fd961aedb9da4"
+    },
+    "schema": "stealthos-family-sdk-release-v2",
+    "setup": {
+      "artifactInventorySha256": "6cb7b5b34d1de4680f404041172889861ab7346e4187f4ba221ed0567151613d",
+      "beaconAnchors": {
+        "phase1": "f5e80a3622182cc08c40799f32bbea900d8e04d2ff6cac87d568ac676731eac9",
+        "terminal": "0c0d4742ab445a70ed59ebe5489dc042d70199945166af2c4c4246bfcd6cb9a3"
+      },
+      "ceremonyId": "dogeos-kzg-live-20261114",
+      "ceremonyReleaseHash": "f59e3577e9b88e341edc09a0ae1961ee911548eec7ef1668cf61a0402cb849ab",
+      "circuitInventorySha256": "9d7377393f4992673eae8a3d2fb653b299dcf61aced6ed6c1295775248e0a4ec",
+      "constructionPlanSha256": "366cf2399629fd662dca064c5786f384bfdb97900b3309d13dd5ae67f3e5a9ac",
+      "family": {
+        "activationAuthority": "0x1162ae2D023773aa526D63C11da14E4E40209093",
+        "id": "dogeos",
+        "namespace": "eip155",
+        "tag": "0x0d7e28190dad8c216f3b244bf15b182aebe3698b85e928461c3b148b4439c445"
+      },
+      "schema": "stealthos-reusable-family-setup-v1",
+      "setupId": "0xb4676558822d9964f45f716c27ea00f0f22f629b799dfaf61cb446db60e1ed70",
+      "sourceNetwork": {
+        "chainId": 6281971,
+        "name": "DogeOS Chikyu"
+      },
+      "transcriptSha256": "42cd84b0bf13faea21ab94f2d8c60e76bd87e0f455d3ffceb0e5d8f3dfeb6be4",
+      "verifierKeysSha256": "4a9911d22ec41208c9dd0b0c445e3408617887e221867ae3cba77f4f9feae06c"
+    }
+  },
+  "sdkReleaseSha256": "8a9b88c8d035312af46d16064deb2dceaec6cd4c72815cd00c580a45f853905c",
+  "sdkWorker": {
+    "path": "objects/87040b79a3175d2d9905f57a8cf2537a450dc8277dd2ad96f0fd520c1f231cd6.js",
+    "bytes": 31727,
+    "sha256": "87040b79a3175d2d9905f57a8cf2537a450dc8277dd2ad96f0fd520c1f231cd6"
+  },
+  "setupId": "0xb4676558822d9964f45f716c27ea00f0f22f629b799dfaf61cb446db60e1ed70",
+  "sourceCommit": "7111c058558c1fb558e2497e4bc7c36d59446f77",
+  "version": "0.4.67",
+  "wrapperSourceCommit": "9e516704f3f540e68011a7d4dfd6bc8b755faeea",
+  "signature": "0xcd90e82dae788e9cca61264f43fdcba3252efdcac05e5a003e6487557fbcbf8721336f52d159b8007b1267245c81b5db1a8ae6afd5a5b265986bb60c29fc2ee61b",
+  "artifactBaseUrl": "https://stealthos.xyz/ceremony/dogeos/kzg-live-001/api/release/artifacts/"
+}

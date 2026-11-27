@@ -43,7 +43,7 @@ const expected = await readFile(join(release, archive)).catch(async error => {
 assert.equal(expected.length, publication.sdkPackage.bytes);
 assert.equal(createHash('sha256').update(expected).digest('hex'), publication.sdkPackage.sha256);
 await using destination = await mkdtempDisposable(join(tmpdir(), 'vanta-sdk-pack-'));
-if (version === '0.4.66') {
+if (['0.4.66','0.4.67'].includes(version)) {
   // This publication was qualified by rebuilding the pinned wrapper commit,
   // not by packing its pre-build generated browser files.
   const revision = publication.wrapperSourceCommit;

@@ -10,16 +10,16 @@ import {keccak256,toUtf8Bytes} from 'ethers';
 import {assertSignedChikyuSdkPublication} from './sdk-publication-signature.mjs';
 
 const root=resolve(import.meta.dirname,'..'), destination=resolve(process.argv[2]??join(root,'.release-candidate'));
-const previous=JSON.parse(await readFile(join(root,'releases/0.4.66/publication.json'),'utf8'));
+const previous=JSON.parse(await readFile(join(root,'releases/0.4.67/publication.json'),'utf8'));
 const priorDigest=assertSignedChikyuSdkPublication(previous);
 const {signature,artifactBaseUrl,...prior}=previous;
 const version=JSON.parse(await readFile(join(root,'packages/vanta-sdk/package.json'),'utf8')).version;
-assert.equal(version,'0.4.67');
+assert.equal(version,'0.4.68');
 const wrapperSourceCommit=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();
 assert.match(wrapperSourceCommit,/^[a-f0-9]{40}$/u);
 const archive='stealthos-vanta-sdk-'+version+'.tgz';
 await mkdir(destination,{recursive:true});
-const extract=await mkdtemp(join(root,'.release-0467-'));
+const extract=await mkdtemp(join(root,'.release-0468-'));
 try{
  execFileSync('tar',['-xzf',join(root,'.build',archive),'-C',extract]);
  await copyFile(join(root,'.build',archive),join(destination,archive));
