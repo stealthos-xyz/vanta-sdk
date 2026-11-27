@@ -24,6 +24,7 @@ export function recoverFamilyCanonicalNotes(input: {
   confirmedAnchor?: Readonly<{number:number;hash:string}>;
   displayCache?: FamilyDisplayCheckpointCache;
   useSharedHistory?: boolean;
+  signal?:AbortSignal;
 }): Promise<Readonly<{
   schema: "vanta-family-canonical-note-recovery-v1";
   safeForFunds: false;

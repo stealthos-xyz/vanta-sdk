@@ -86,7 +86,7 @@ export function createVantaFamilyEnhancedHost(options: VantaFamilyEnhancedHostOp
    * privacy phrase flow, then import the backup and reconcile canonically. */
   exportRecoveryBackup(): Promise<EnhancedEncryptedRecoveryBackup>;
   importRecoveryBackup(backup: EnhancedEncryptedRecoveryBackup): Promise<Readonly<{ restored: number }>>;
-  recoverNotes(options?:{displayCache?:import("./family-note-recovery.mjs").FamilyDisplayCheckpointCache}): Promise<Readonly<{ generationId: string; blockNumber: number; blockHash: string;
+  recoverNotes(options?:{displayCache?:import("./family-note-recovery.mjs").FamilyDisplayCheckpointCache;signal?:AbortSignal}): Promise<Readonly<{ generationId: string; blockNumber: number; blockHash: string;
     complete:boolean; unavailablePools:readonly Readonly<{pool:string;asset:string;assetSymbol:string;reason:'history-unavailable'|'local-history-unavailable'}>[];
     receivedTransactions: readonly Readonly<{pool: string; transactionHash: string; blockNumber: number; amountAtomic: string; memo?: string}>[];
     pools: readonly Readonly<{ asset: string; assetDecimals: number; pool: string; spendableBalanceUnits: string;

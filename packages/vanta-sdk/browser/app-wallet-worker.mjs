@@ -405,6 +405,7 @@ var independent;
 var backend;
 var store;
 var balanceCache;
+var activeDisplayRecovery;
 var wallet;
 var enhanced;
 var deposit;
@@ -1089,12 +1090,13 @@ async function invoke(command, payload, history) {
   }
   if (command === "recoverNotes") {
     if (Object.keys(payload).length) fail2();
-    const cache = balanceCache;
-    const summary = await enhanced.recoverNotes({ displayCache: cache });
-    live();
-    await cache?.saveSnapshot(summary).catch(() => {
-    });
-    return summary;
+    const cache = balanceCache, abort = new AbortController(); activeDisplayRecovery = abort;
+    try {
+      const summary = await enhanced.recoverNotes({ displayCache: cache, signal: abort.signal });
+      abort.signal.throwIfAborted(); live();
+      await cache?.saveSnapshot(summary).catch(() => {});
+      return summary;
+    } finally { if (activeDisplayRecovery === abort) activeDisplayRecovery = void 0; }
   }
   if (command === "exportRecoveryBackup") {
     if (Object.keys(payload).length) fail2();
@@ -1214,6 +1216,9 @@ async function invoke(command, payload, history) {
 }
 var lastId = 0;
 scope.addEventListener("message", async ({ data, ports }) => {
+  if (data?.kind === "pauseDisplayRecovery" && Object.keys(data).join() === "kind") {
+    activeDisplayRecovery?.abort(Object.assign(Error("Balance recovery paused for a transaction."), { code: "RECOVERY_SUPERSEDED" })); return;
+  }
   if (!data || !Number.isSafeInteger(data.id) || data.id <= lastId || busy) return;
   lastId = data.id;
   busy = true;
@@ -1244,7 +1249,7 @@ scope.addEventListener("message", async ({ data, ports }) => {
       publicWithdrawal?.dispose();
       publicWithdrawal = void 0;
     }
-    const stages = { selectAsset: "Wallet asset", claimHandle: "Handle claim", checkHandle: "Handle status", findHandle: "Handle recovery", handleAvailable: "Handle availability", currentHandle: "Handle recovery", openPublicPayment: "Wallet session", reconcileDeposit: "Deposit status", quotePrivateSend: "Transfer fee review", prepareReviewedPrivateSend: "Transfer preparation", preparePrivateSend: "Transfer preparation", quoteRouteFees: "Route fee review", prepareReviewedRoute: "Route preparation", prepareRoute: "Route preparation", quotePublicBatch: "Batch fee review", prepareReviewedPublicBatch: "Batch preparation", authorizePublicBatch: "Batch submission", quoteWithdrawal: "Withdrawal fee review", prepareReviewedWithdrawal: "Withdrawal preparation", prepare: "Withdrawal preparation", authorize: "Transaction authorization", authorizeWithdrawal: "Transaction authorization", executePrivateSend: "Transaction authorization", executeRoute: "Transaction authorization" };
+    const stages = { recoverNotes: "Private balance recovery", selectAsset: "Wallet asset", claimHandle: "Handle claim", checkHandle: "Handle status", findHandle: "Handle recovery", handleAvailable: "Handle availability", currentHandle: "Handle recovery", openPublicPayment: "Wallet session", reconcileDeposit: "Deposit status", quotePrivateSend: "Transfer fee review", prepareReviewedPrivateSend: "Transfer preparation", preparePrivateSend: "Transfer preparation", quoteRouteFees: "Route fee review", prepareReviewedRoute: "Route preparation", prepareRoute: "Route preparation", quotePublicBatch: "Batch fee review", prepareReviewedPublicBatch: "Batch preparation", authorizePublicBatch: "Batch submission", quoteWithdrawal: "Withdrawal fee review", prepareReviewedWithdrawal: "Withdrawal preparation", prepare: "Withdrawal preparation", authorize: "Transaction authorization", authorizeWithdrawal: "Transaction authorization", executePrivateSend: "Transaction authorization", executeRoute: "Transaction authorization" };
     if (stages[data.command]) error = depositFailure(error?.cause ?? error, stages[data.command]);
     const code = error?.code;
     const hasBackup = await backend?.hasRecoveryPhrase().catch(() => false) ?? false;

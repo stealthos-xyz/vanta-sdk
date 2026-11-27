@@ -98,7 +98,8 @@ export function summarizeFamilyReceivedTransactions(notes) {
   return frozen([...received.values()]);
 }
 
-export async function recoverFamilyCanonicalNotes({ provider, verificationProvider, delivery, wallet, deploymentBlock, chunkBlocks = 1000, confirmedAnchor, displayCache, useSharedHistory = true }) {
+export async function recoverFamilyCanonicalNotes({ provider, verificationProvider, delivery, wallet, deploymentBlock, chunkBlocks = 1000, confirmedAnchor, displayCache, useSharedHistory = true, signal }) {
+  const checkAbort=()=>signal?.throwIfAborted();checkAbort();
   if (!provider || !delivery || typeof delivery.decrypt !== "function" || typeof delivery.walletRecipient !== "function") fail();
   const context = validateFamilyNoteDomain(delivery.context);
   // Reject a locked or internally inconsistent wallet before distinguishing
@@ -141,21 +142,25 @@ export async function recoverFamilyCanonicalNotes({ provider, verificationProvid
     // canonical inventory; no shared cursor enters that cache.
     if (useSharedHistory) {
       const latest=displayRecord(await displayCache.readSharedCheckpoint?.(context,deploymentBlock,previous?.anchor.number));
+      checkAbort();
       if(latest&&(!previous||latest.anchor.number>previous.anchor.number)&&await usable(latest))previous=latest;
       const shared = displayRecord(await readSharedFamilyHistory(context, deploymentBlock, previous?.anchor.number));
       if (shared && (!previous || shared.anchor.number > previous.anchor.number) && await usable(shared)) previous = shared;
     }
   }
   const read = async (name, args = []) => {
+    checkAbort();
     const request = { to: context.pool, data: ABI.encodeFunctionData(name, args), blockTag: anchor.number };
     const data = await provider.call(request);
     if (verificationProvider && (await verificationProvider.call(request)).toLowerCase() !== data.toLowerCase()) fail();
-    return ABI.decodeFunctionResult(name, data);
+    checkAbort();return ABI.decodeFunctionResult(name, data);
   };
   async function pin(source) {
+    checkAbort();
     const [network, genesis, anchored, finalized, code] = await Promise.all([
       source.getNetwork(), source.getBlock(0), source.getBlock(anchor.number), getConfirmedBlock(source), source.getCode(context.pool, anchor.number),
     ]);
+    checkAbort();
     if (BigInt(network.chainId) !== BigInt(context.chainId) || block(genesis).hash !== context.genesisHash ||
         block(anchored).hash !== anchor.hash || block(finalized).number < anchor.number ||
         code === "0x" || keccak256(code) !== context.poolCodehash) fail();
@@ -194,13 +199,16 @@ export async function recoverFamilyCanonicalNotes({ provider, verificationProvid
     persistedThrough = through;
   };
   for (let fromBlock = previous ? previous.anchor.number + 1 : deploymentBlock; fromBlock <= anchor.number;) {
+    checkAbort();
     const window = await readCanonicalLogWindow(provider, verificationProvider, context.pool, [TOPICS], fromBlock, anchor.number, chunkBlocks);
+    checkAbort();
     const { toBlock, logs, other } = window;
     chunkBlocks = window.chunkBlocks;
     if (verificationProvider && (other.length !== logs.length || logs.some((log, index) => logIdentity(log) !== logIdentity(other[index])))) fail();
     const numbers = [...new Set(logs.map(log => integer(log.blockNumber)))];
     const blocks = new Map(await Promise.all(numbers.map(async number => [number, block(await provider.getBlock(number))])));
     for (const log of logs) {
+      checkAbort();
       const number = integer(log.blockNumber), index = integer(log.index ?? log.logIndex);
       if (log.removed || address(log.address) !== context.pool || number < fromBlock || number > toBlock ||
           hash(log.blockHash) !== blocks.get(number).hash || number < previousBlock || (number === previousBlock && index <= previousIndex)) fail();
@@ -243,6 +251,7 @@ export async function recoverFamilyCanonicalNotes({ provider, verificationProvid
   let openings = walletCache.get(privateScope);
   if (!openings) { openings = new Map(); if(walletCache.size >= 8)walletCache.clear(); walletCache.set(privateScope, openings); }
   for (const row of encryptedRows) {
+    checkAbort();
     let owned;
     const key = JSON.stringify([row.blockHash,row.transactionHash,row.row,row.commitment,row.envelopeHash]);
     try {
@@ -273,6 +282,7 @@ export async function recoverFamilyCanonicalNotes({ provider, verificationProvid
   // A reorg during local decryption invalidates the complete inventory. A newer
   // finalized descendant is allowed; the returned block explicitly fixes scope.
   await pin(provider); if (verificationProvider) await pin(verificationProvider);
+  checkAbort();
   const saved = checkpoints.get(scope);
   // A durable display cursor can never populate the funded in-memory cursor.
   // Funded actions keep their separate canonical recovery.

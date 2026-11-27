@@ -172,3 +172,11 @@ test('review recovery reuses the verified display cursor; funded inventory still
  assert.equal(funded.resumedDisplayCheckpoint,undefined);assert.equal(funded.balanceAtomicAtAnchor,'17');
  assert.deepEqual(scans,[0,1000,2000]);
 });
+
+test('an interrupted display recovery stops before scanning or changing a canonical inventory',async()=>{
+ const f=fixture({head:10001,eventBlock:999}),abort=new AbortController();
+ const original=f.primary.getLogs.bind(f.primary);let reads=0;
+ f.primary.getLogs=async filter=>{reads++;const value=await original(filter);abort.abort(Error('display cancelled'));return value;};
+ await assert.rejects(f.run(f.secondary,{signal:abort.signal,useSharedHistory:false}),/display cancelled/);
+ assert.equal(reads,1);
+});

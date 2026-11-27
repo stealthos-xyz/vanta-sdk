@@ -146,7 +146,7 @@ async function createStealthOSAppWallet(input) {
   let historyRelayContext = null;
   let opened = null, expiry;
   let queue = Promise.resolve();
-  let quoteRevision = 0;
+  let quoteRevision = 0, recoveryRevision = 0, runningRecovery = false;
   const pending = /* @__PURE__ */ new Map();
   const selected = async () => {
     const accounts = await input.provider.request({ method: "eth_accounts" });
@@ -404,7 +404,11 @@ async function createStealthOSAppWallet(input) {
   }
   const command = (name, payload = {}) => {
     const started = revision;
-    const quoteCommand = ["quoteWithdrawal", "quotePrivateSend", "quoteRouteFees", "quotePublicBatch"].includes(name), quoteStamp = quoteCommand ? ++quoteRevision : quoteRevision;
+    const quoteCommand = ["quoteDeposit", "quoteWithdrawal", "quotePrivateSend", "quoteRouteFees", "quotePublicBatch"].includes(name), quoteStamp = quoteCommand ? ++quoteRevision : quoteRevision;
+    if (/^(quote|prepare|authorize|execute)/u.test(name) || name === "selectAsset") {
+      recoveryRevision++; if (runningRecovery) worker?.postMessage({ kind: "pauseDisplayRecovery" });
+    }
+    const recoveryStamp = recoveryRevision;
     const operation = queue.then(async () => {
       if (quoteCommand && quoteStamp !== quoteRevision) throw Error("Fee preview superseded.");
       if (!worker || !session || started !== revision || session.expiresAt <= Date.now() / 1e3 || await selected() !== session.wallet) throw unavailable();
@@ -463,10 +467,15 @@ async function createStealthOSAppWallet(input) {
         historyRelayContext = { networkId: release2.pins.networkId, generationId: release2.pins.generationId, pool: pool.pool };
       }
       try {
+        if (name === "recoverNotes") {
+          if (recoveryStamp !== recoveryRevision) throw Object.assign(Error("Balance recovery paused for a transaction."), { code: "RECOVERY_SUPERSEDED" });
+          runningRecovery = true;
+        }
         const result = await send({ kind: "invoke", command: name, payload });
         if (started !== revision) throw unavailable();
         return result;
       } finally {
+        if (name === 'recoverNotes') runningRecovery = false;
         historyRelayContext = null;
         if (signing) {
           activeConsentIntentId = null;

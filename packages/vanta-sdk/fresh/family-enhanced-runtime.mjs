@@ -116,13 +116,14 @@ export async function createVantaEnhancedCandidateHost({ wallet, store, provider
           value.assetSymbol !== context.assetSymbol || value.assetDecimals !== context.assetDecimals) fail();
       live();
     };
-    const recovery = async displayCache => {
+    const recovery = async (displayCache,signal) => {
+      signal?.throwIfAborted();
       // Only unsigned, expired preparations can release their local note locks.
       // Armed/uncertain submissions keep their fences until reconciliation.
       const expired = await update(rows => expireEnhancedUnsignedPreparations(rows,now()));
       for (const id of expired) await fences.releaseUnsigned(id);
-      live(); const inventory = await recoverFamilyCanonicalNotes({ provider, verificationProvider, delivery, wallet, deploymentBlock: d.deploymentBlock, displayCache });
-      live(); if (!inventory.complete) fail(); return inventory;
+      live(); const inventory = await recoverFamilyCanonicalNotes({ provider, verificationProvider, delivery, wallet, deploymentBlock: d.deploymentBlock, displayCache,signal });
+      signal?.throwIfAborted();live(); if (!inventory.complete) fail(); return inventory;
     };
     const bound = async intent => {
       checkContext(intent.context); const r = await read(intent.intentId);
@@ -491,17 +492,18 @@ export async function createVantaEnhancedCandidateHost({ wallet, store, provider
         });
         sessionFor("recover"); return Object.freeze({ restored: preparations.length });
       },
-      async recoverNotes({displayCache}={}) {
-      const summary=await recoverFamilyBalanceSummary({primaryInventory:await recovery(displayCache),resources:balanceResources,store,
-        reconcileUnsigned:args=>reconcileFamilyUnsignedReservations({...args,store,provider,verificationProvider,signal:controller.signal}),
+      async recoverNotes({displayCache,signal}={}) {
+      signal?.throwIfAborted();
+      const summary=await recoverFamilyBalanceSummary({primaryInventory:await recovery(displayCache,signal),resources:balanceResources,store,
+        reconcileUnsigned:args=>{signal?.throwIfAborted();return reconcileFamilyUnsignedReservations({...args,store,provider,verificationProvider,signal:controller.signal});},
         recover:async(r,confirmedAnchor)=>{
-          live();const pin=r.deployment;
+          signal?.throwIfAborted();live();const pin=r.deployment;
           let poolDelivery=balanceDeliveries.get(pin.pool);
           if(!poolDelivery){poolDelivery=createFamilyNoteDelivery({engine:noteEngine,domain:{...domain,pool:pin.pool,asset:pin.asset,poolCodehash:pin.poolCodehash,
             nativeGlueSha256:r.profiles.normal8.runtime.glue.sha256,nativeWasmSha256:r.profiles.normal8.runtime.wasm.sha256}});balanceDeliveries.set(pin.pool,poolDelivery);}
-          return recoverFamilyCanonicalNotes({provider,verificationProvider,delivery:poolDelivery,wallet,deploymentBlock:pin.deploymentBlock,confirmedAnchor,displayCache});
+          return recoverFamilyCanonicalNotes({provider,verificationProvider,delivery:poolDelivery,wallet,deploymentBlock:pin.deploymentBlock,confirmedAnchor,displayCache,signal});
         }});
-      live();return summary;
+      signal?.throwIfAborted();live();return summary;
     } });
   } catch (error) { dispose(); throw error; }
 }

@@ -39,6 +39,7 @@ let provider: JsonRpcProvider, independent: JsonRpcProvider;
 let backend: Awaited<ReturnType<typeof createFamilyWalletStoreBackend>> | undefined;
 let store: ReturnType<typeof createVantaHostAtomicStore> | undefined;
 let balanceCache: ReturnType<typeof createFamilyBalanceCache> | undefined;
+let activeDisplayRecovery:AbortController|undefined;
 let wallet: ReturnType<typeof createVantaLocalPrivacyWallet> | undefined;
 let enhanced: Awaited<ReturnType<typeof createVantaFamilyEnhancedHost>> | undefined;
 let deposit: Awaited<ReturnType<typeof createVantaFamilyDepositHost>> | undefined;
@@ -418,11 +419,13 @@ async function invoke(command: FamilyCommand, payload: Record<string, unknown>, 
   }
   if (command === "recoverNotes") {
     if (Object.keys(payload).length) fail();
-    const cache = balanceCache;
-    const summary = await enhanced!.recoverNotes({displayCache:cache});
-    live();
-    await cache?.saveSnapshot(summary).catch(()=>{});
-    return summary;
+    const cache=balanceCache,abort=new AbortController();activeDisplayRecovery=abort;
+    try{
+      const summary=await enhanced!.recoverNotes({displayCache:cache,signal:abort.signal});
+      abort.signal.throwIfAborted();live();
+      await cache?.saveSnapshot(summary).catch(()=>{});
+      return summary;
+    }finally{if(activeDisplayRecovery===abort)activeDisplayRecovery=undefined;}
   }
   if (command === "exportRecoveryBackup") {if (Object.keys(payload).length) fail(); return enhanced!.exportRecoveryBackup();}
   if (command === "importRecoveryBackup") {
@@ -522,6 +525,9 @@ async function invoke(command: FamilyCommand, payload: Record<string, unknown>, 
 }
 let lastId = 0;
 scope.addEventListener("message", async ({data, ports}) => {
+  if(data?.kind==="pauseDisplayRecovery"&&Object.keys(data).join()==="kind"){
+    activeDisplayRecovery?.abort(Object.assign(Error("Balance recovery paused for a transaction."),{code:"RECOVERY_SUPERSEDED"}));return;
+  }
   if (!data || !Number.isSafeInteger(data.id) || data.id <= lastId || busy) return;
   lastId = data.id; busy = true; const revision = epoch;
   try {
@@ -540,7 +546,7 @@ scope.addEventListener("message", async ({data, ports}) => {
     if(['prepareReviewedPrivateSend','preparePrivateSend'].includes(data.command)){privateSend?.dispose();privateSend=undefined;}
     if(['prepareReviewedRoute','prepareRoute'].includes(data.command)){const op=data.payload?.operation;if(op===4||op===5){routedHosts.get(op)?.dispose();routedHosts.delete(op);}}
     if(['prepareReviewedWithdrawal','prepareReviewedPublicBatch'].includes(data.command)){publicWithdrawal?.dispose();publicWithdrawal=undefined;}
-    const stages:Record<string,string>={selectAsset:'Wallet asset',claimHandle:'Handle claim',checkHandle:'Handle status',findHandle:'Handle recovery',handleAvailable:'Handle availability',currentHandle:'Handle recovery',openPublicPayment:'Wallet session',reconcileDeposit:'Deposit status',quotePrivateSend:'Transfer fee review',prepareReviewedPrivateSend:'Transfer preparation',preparePrivateSend:'Transfer preparation',quoteRouteFees:'Route fee review',prepareReviewedRoute:'Route preparation',prepareRoute:'Route preparation',quotePublicBatch:'Batch fee review',prepareReviewedPublicBatch:'Batch preparation',authorizePublicBatch:'Batch submission',quoteWithdrawal:'Withdrawal fee review',prepareReviewedWithdrawal:'Withdrawal preparation',prepare:'Withdrawal preparation',authorize:'Transaction authorization',authorizeWithdrawal:'Transaction authorization',executePrivateSend:'Transaction authorization',executeRoute:'Transaction authorization'};
+    const stages:Record<string,string>={recoverNotes:'Private balance recovery',selectAsset:'Wallet asset',claimHandle:'Handle claim',checkHandle:'Handle status',findHandle:'Handle recovery',handleAvailable:'Handle availability',currentHandle:'Handle recovery',openPublicPayment:'Wallet session',reconcileDeposit:'Deposit status',quotePrivateSend:'Transfer fee review',prepareReviewedPrivateSend:'Transfer preparation',preparePrivateSend:'Transfer preparation',quoteRouteFees:'Route fee review',prepareReviewedRoute:'Route preparation',prepareRoute:'Route preparation',quotePublicBatch:'Batch fee review',prepareReviewedPublicBatch:'Batch preparation',authorizePublicBatch:'Batch submission',quoteWithdrawal:'Withdrawal fee review',prepareReviewedWithdrawal:'Withdrawal preparation',prepare:'Withdrawal preparation',authorize:'Transaction authorization',authorizeWithdrawal:'Transaction authorization',executePrivateSend:'Transaction authorization',executeRoute:'Transaction authorization'};
     if(stages[data.command])error=depositFailure((error as {cause?:unknown})?.cause??error,stages[data.command]);
     const code = (error as {code?: unknown})?.code;
     const hasBackup = await backend?.hasRecoveryPhrase().catch(() => false) ?? false;

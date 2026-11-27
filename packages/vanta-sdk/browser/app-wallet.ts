@@ -122,7 +122,7 @@ export async function createStealthOSAppWallet(input: {
   let historyRelayContext: {networkId: string; generationId: string; pool: string} | null = null;
   let opened: OpenedWallet | null = null, expiry: ReturnType<typeof setTimeout> | undefined;
   let queue: Promise<unknown> = Promise.resolve();
-  let quoteRevision=0;
+  let quoteRevision=0,recoveryRevision=0,runningRecovery=false;
   const pending = new Map<number, {accept(value: unknown): void; reject(error: Error): void; timer: ReturnType<typeof setTimeout>}>();
   const selected = async () => {
     const accounts = await input.provider.request({method: "eth_accounts"});
@@ -309,7 +309,11 @@ export async function createStealthOSAppWallet(input: {
   }
   const command = <T,>(name: FamilyCommand, payload: object = {}, ui?: SecretUi) => {
     const started = revision;
-    const quoteCommand=["quoteWithdrawal","quotePrivateSend","quoteRouteFees","quotePublicBatch"].includes(name),quoteStamp=quoteCommand?++quoteRevision:quoteRevision;
+    const quoteCommand=["quoteDeposit","quoteWithdrawal","quotePrivateSend","quoteRouteFees","quotePublicBatch"].includes(name),quoteStamp=quoteCommand?++quoteRevision:quoteRevision;
+    if(/^(quote|prepare|authorize|execute)/u.test(name)||name==="selectAsset"){
+      recoveryRevision++;if(runningRecovery)worker?.postMessage({kind:"pauseDisplayRecovery"});
+    }
+    const recoveryStamp=recoveryRevision;
     const operation = queue.then(async () => {
       if(quoteCommand&&quoteStamp!==quoteRevision)throw Error("Fee preview superseded.");
       if (!worker || !session || started !== revision || session.expiresAt <= Date.now() / 1000 ||
@@ -351,10 +355,15 @@ export async function createStealthOSAppWallet(input: {
       if (grant && secretGrant) throw unavailable("STATE_CHANGED");
       try {
         if (grant) secretGrant = grant;
+        if(name==="recoverNotes"){
+          if(recoveryStamp!==recoveryRevision)throw Object.assign(Error("Balance recovery paused for a transaction."),{code:"RECOVERY_SUPERSEDED"});
+          runningRecovery=true;
+        }
         const result = await send({kind: "invoke", command: name, payload});
         if (started !== revision) throw unavailable(); return result as T;
       } finally {
         if (grant && secretGrant === grant) secretGrant = null;
+        if(name==='recoverNotes')runningRecovery=false;
         historyRelayContext = null;
         if (signing) { activeConsentIntentId = null; consentAttempted = false; }
         if(name==='claimHandle'){activeHandleName=null;handleSubmissionAttempted=false;}

@@ -2,7 +2,7 @@
  * recovery material, raw RPC payload or stack across the wallet boundary. */
 import {id} from 'ethers';
 const known=new WeakSet();
-export const DEPOSIT_STAGES=Object.freeze(['Wallet asset','Handle claim','Handle submission','Handle status','Handle recovery','Handle availability','Batch fee review','Batch preparation','Batch submission','Transfer fee review','Transfer preparation','Route fee review','Route preparation','Withdrawal fee review','Withdrawal preparation','Transaction authorization','Wallet session','Supported asset','Pool bindings','Receiving routes','Partner fee policy','Private note encryption','Native wallet screening','Deposit intent','Proof generation','Append keys','Recovery verification','Contract simulation','Pending deposit journal','Deposit approval','Wallet submission','Deposit status']);
+export const DEPOSIT_STAGES=Object.freeze(['Wallet asset','Private balance recovery','Handle claim','Handle submission','Handle status','Handle recovery','Handle availability','Batch fee review','Batch preparation','Batch submission','Transfer fee review','Transfer preparation','Route fee review','Route preparation','Withdrawal fee review','Withdrawal preparation','Transaction authorization','Wallet session','Supported asset','Pool bindings','Receiving routes','Partner fee policy','Private note encryption','Native wallet screening','Deposit intent','Proof generation','Append keys','Recovery verification','Contract simulation','Pending deposit journal','Deposit approval','Wallet submission','Deposit status']);
 const errors=new Map(['UnapprovedPreAuditSetup','InvalidQuote','InvalidSignature','FeeAuthorizationRequired','InvalidEncryptedNote','InvalidRow','InvalidProof','InvalidSource','Replay','InsufficientEscrow','AssetTransferMismatch','ReentrantCall','DepositCapacityReached','InvalidClearance','Unauthorized'].map(n=>[id(n+'()').slice(0,10),n]));
 const safe=text=>typeof text==='string'&&text.length<=300&&!/[{}\r\n]|0x[0-9a-f]{32,}|(?:password|mnemonic|recovery phrase|seed|witness)\s*[:=]/iu.test(text);
 /** Classify local preparation failures without transporting Rust exceptions,
@@ -70,13 +70,15 @@ export function depositFailure(error,stage){
  const fundedOperation=/^(?:Handle|Batch|Transfer|Route|Withdrawal|Transaction)/u.test(stage);
  const code=typeof error?.code==='string'&&/^[A-Z_]{1,64}$/u.test(error.code)?error.code:fundedOperation?'TRANSACTION_FAILED':'DEPOSIT_FAILED';
  const nested=error?.info?.error??error?.error;
- const rpcMessage=String(nested?.message??error?.shortMessage??'').toLowerCase();
+ const rpcMessage=String(nested?.message??error?.shortMessage??error?.message??'').toLowerCase();
  let data=error?.data??nested?.data;if(data&&typeof data==='object')data=data.data??data.result??data.originalError?.data;
  const selector=typeof data==='string'&&/^0x[0-9a-f]{8}/iu.test(data)?data.slice(0,10).toLowerCase():null;
  let cause;
  if(code===DEPOSIT_USER_REJECTED&&stage==='Wallet submission')cause='The transaction was cancelled in the connected wallet. No deposit was submitted.';
  else if(code===DEPOSIT_SUBMISSION_REJECTED&&stage==='Wallet submission')cause='The wallet request was not submitted because its reviewed transaction or connected account no longer matched.';
  else if(code===DEPOSIT_INSUFFICIENT_FUNDS&&stage==='Wallet submission')cause='The connected wallet does not have enough native tokens to cover this deposit and its network fee.';
+ else if(code==='RECOVERY_SUPERSEDED'&&stage==='Private balance recovery')cause='Balance recovery paused for a transaction.';
+ else if(code==='CANONICAL_STATE_REJECTED'&&stage==='Private balance recovery')cause='The canonical pool history could not be verified. Refresh to retry.';
  else if(selector&&errors.has(selector))cause='Contract reverted: '+errors.get(selector)+' ('+selector+').';
  else if(/rate.?limit|too many requests/u.test(rpcMessage)||nested?.code===-32005)cause='RPC rate limit reached.';
  else if(/insufficient (?:funds|balance)/u.test(rpcMessage))cause='RPC rejected the deposit simulation: insufficient funds for value and gas.';
