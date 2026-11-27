@@ -10,6 +10,8 @@ export const CHIKYU_SOFTWARE_ADMIN_RECOVERY=Object.freeze({
  originalAuthority:'0x1162ae2D023773aa526D63C11da14E4E40209093',
  authority:'0xD167119e077F2Af7a0d248913D5f7A0F640332B0',
  minimumVersion:'0.4.43',
+ additionalAuthority:'0x892F54D4bD8d0d52C6D36206a2aD16980A594129',
+ additionalMinimumVersion:'0.4.68',
 });
 export function familyPublicationAuthority(publication,originalAuthority){
  const r=CHIKYU_SOFTWARE_ADMIN_RECOVERY,version=/^0\.4\.(0|[1-9][0-9]*)$/u.exec(publication?.version??'');
@@ -18,4 +20,16 @@ export function familyPublicationAuthority(publication,originalAuthority){
  const pins=publication.sdkRelease?.pins;
  if(!['networkId','genesisHash','setupId','generationId','lockId'].every(k=>publication[k]===r[k]&&pins?.[k]===r[k]))return originalAuthority;
  return r.authority;
+}
+
+/** Additive, software-only authority. Historical publications retain their
+ * original single signer; the new wallet cannot validate a different setup,
+ * network, generation, lock, or any release before 0.4.68. */
+export function familyPublicationAuthorities(publication,originalAuthority){
+ const r=CHIKYU_SOFTWARE_ADMIN_RECOVERY,primary=familyPublicationAuthority(publication,originalAuthority);
+ const patch=Number(publication?.version?.split('.')[2]);
+ return Object.freeze(originalAuthority?.toLowerCase()===r.originalAuthority.toLowerCase()&&primary===r.authority&&Number.isSafeInteger(patch)&&patch>=Number(r.additionalMinimumVersion.split('.')[2])?[primary,r.additionalAuthority]:[primary]);
+}
+export function isFamilyPublicationAuthority(publication,originalAuthority,signer){
+ return typeof signer==='string'&&familyPublicationAuthorities(publication,originalAuthority).some(authority=>typeof authority==='string'&&authority.toLowerCase()===signer.toLowerCase());
 }
